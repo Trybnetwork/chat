@@ -280,6 +280,12 @@
           <p id="dirStateNote" style="margin-top:10px;"></p>
         </div>
         <div class="card">
+          <h4>Message notifications</h4>
+          <p>Get notified when a new message arrives while TrybChat is closed. On iPhone, this works after adding TrybChat to your Home Screen.</p>
+          <button class="btn navy" id="pushToggleBtn" type="button" style="margin-top:12px;">Turn on notifications</button>
+          <p id="pushStateNote" style="margin-top:10px;"></p>
+        </div>
+        <div class="card">
           <h4>TrybCoin balance</h4>
           <p><b style="font-family:Manrope,sans-serif;font-size:19px;color:var(--ink);" id="profCoins">0 TN</b><br>Spend it in TrybNetwork — trade, play games, or buy miners. Profits land in your Main Balance.</p>
         </div>
@@ -834,7 +840,72 @@ function renderProfile(){
   $("profMemberBtn").textContent = S.access && S.access.member_active ? "Renew membership — $12 / 6 months" : "Get membership — $12 / 6 months";
   paintWallet();
   renderDirToggle();
+  paintPushRow();
 }
+/* ---------------- push notifications ---------------- */
+var TC_VAPID_PUBLIC = "BBnQlJ8Q45D5sGHZZjdU8zGV_x3vY3hUnwQxEMsxQuNO0iWnYHwJPRMBQb5VY21NhZ562psOLgBZtJbuRHhs6Yo";
+function pushSupported(){ return ("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window); }
+function b64urlToBytes(s){
+  var pad = "=".repeat((4 - (s.length % 4)) % 4);
+  var raw = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  var out = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+function paintPushRow(){
+  var btn = $("pushToggleBtn"), note = $("pushStateNote");
+  if (!btn) return;
+  if (!pushSupported()){
+    btn.style.display = "none";
+    note.textContent = "Notifications aren't available in this browser. On iPhone, add TrybChat to your Home Screen first, then turn them on here.";
+    return;
+  }
+  if (Notification.permission === "denied"){
+    btn.style.display = "none";
+    note.textContent = "Notifications are blocked for this site in your browser settings.";
+    return;
+  }
+  navigator.serviceWorker.ready.then(function(reg){
+    reg.pushManager.getSubscription().then(function(sub){
+      if (sub){
+        btn.textContent = "Turn off notifications";
+        note.textContent = "On — you'll be notified about new messages.";
+      } else {
+        btn.textContent = "Turn on notifications";
+        note.textContent = "Off.";
+      }
+    }).catch(function(){});
+  }).catch(function(){});
+}
+function togglePush(){
+  var btn = $("pushToggleBtn");
+  if (!pushSupported() || !sb) return;
+  btn.disabled = true;
+  navigator.serviceWorker.ready.then(function(reg){
+    reg.pushManager.getSubscription().then(function(sub){
+      if (sub){
+        var ep = sub.endpoint;
+        sub.unsubscribe().catch(function(){}).then(function(){
+          sb.rpc("tc_drop_push_sub", { p_endpoint: ep }).catch(function(){});
+          btn.disabled = false; paintPushRow();
+        });
+        return;
+      }
+      Notification.requestPermission().then(function(perm){
+        if (perm !== "granted"){ btn.disabled = false; paintPushRow(); return; }
+        reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(TC_VAPID_PUBLIC) })
+          .then(function(newSub){
+            var j = newSub.toJSON();
+            sb.rpc("tc_save_push_sub", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_ua: navigator.userAgent })
+              .then(function(){ btn.disabled = false; paintPushRow(); })
+              .catch(function(){ btn.disabled = false; toast("Couldn't save", "Notifications couldn't be registered — try again."); });
+          })
+          .catch(function(){ btn.disabled = false; toast("Couldn't subscribe", "Your browser refused the subscription."); });
+      });
+    }).catch(function(){ btn.disabled = false; });
+  }).catch(function(){ btn.disabled = false; });
+}
+$("pushToggleBtn").addEventListener("click", togglePush);
 function renderDirToggle(){
   $("listedBtn").classList.toggle("on", S.listed);
   $("privateBtn").classList.toggle("on", !S.listed);
