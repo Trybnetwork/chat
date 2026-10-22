@@ -33,7 +33,7 @@
   .avatar.sm{ width:38px; height:38px; font-size:14px; }
   .avatar.lg{ width:64px; height:64px; font-size:24px; }
   .wordmark{ font-family:"Manrope",sans-serif; font-weight:800; font-size:21px; letter-spacing:.4px; flex:1; }
-  .wordmark .wm-a{ color:var(--navy); } .wordmark .wm-b{ color:var(--gold); }
+  .wordmark .wm-a{ color:var(--navy); } .wordmark .wm-b{ color:var(--navy); }
   .tn-pill{ display:flex; align-items:center; gap:7px; background:#FBF3DC; border:1.5px solid #EBD9A0; color:var(--ink); border-radius:999px; padding:7px 13px; font-family:"Manrope",sans-serif; font-weight:800; font-size:14.5px; }
   .tn-pill img{ width:19px; height:19px; border-radius:50%; }
   .icon-btn{ position:relative; width:44px; height:44px; border-radius:50%; border:1.5px solid var(--line); background:#fff; display:grid; place-items:center; color:var(--navy); flex:none; }
@@ -59,26 +59,39 @@
   .chat-row:active{ background:var(--soft2); }
   .chat-main{ flex:1; min-width:0; }
   .chat-top{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
-  .chat-name{ font-family:"Manrope",sans-serif; font-weight:800; font-size:15.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chat-name{ font-family:"Manrope",sans-serif; font-weight:800; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chat-row .avatar{ width:54px; height:54px; font-size:19px; }
+  .chat-row.unread .chat-last{ color:var(--ink); font-weight:600; }
+  .chat-search{ margin:4px 16px 6px; background:#EFF0F5; border-radius:999px; display:flex; align-items:center; gap:9px; padding:11px 16px; color:var(--mut); }
+  .chat-search input{ flex:1; background:none; border:none; outline:none; font-size:15px; color:var(--ink); font-family:inherit; min-width:0; }
+  .strip{ display:flex; gap:15px; overflow-x:auto; padding:8px 16px 12px; scrollbar-width:none; }
+  .strip::-webkit-scrollbar{ display:none; }
+  .strip .s-item{ width:58px; flex:none; text-align:center; background:none; border:none; padding:0; font-family:inherit; }
+  .strip .s-item .avatar{ width:56px; height:56px; font-size:20px; margin:0 auto; }
+  .strip .s-item span{ display:block; font-size:11.5px; color:var(--ink); margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .thread-card{ text-align:center; padding:16px 12px 10px; }
+  .thread-card .avatar{ margin:0 auto 9px; }
+  .thread-card .tc-name{ font-family:"Manrope",sans-serif; font-weight:800; font-size:19px; }
+  .thread-card .tc-meta{ font-size:13px; color:var(--mut); margin-top:3px; line-height:1.55; }
   .chat-time{ font-size:11px; color:#9AA0BD; font-weight:600; flex:none; }
   .chat-last{ font-size:13.5px; color:var(--mut); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; display:flex; align-items:center; gap:6px; }
-  .unread-dot{ margin-left:auto; min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--gold); color:var(--navy); font-size:11.5px; font-weight:800; display:grid; place-items:center; flex:none; }
+  .unread-dot{ margin-left:auto; min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--navy); color:#fff; font-size:11.5px; font-weight:800; display:grid; place-items:center; flex:none; }
   .empty-note{ text-align:center; color:var(--mut); font-size:14px; padding:34px 30px; line-height:1.6; }
 
   /* ---------- thread ---------- */
   .thread-head{ display:flex; align-items:center; gap:11px; padding:12px 16px; border-bottom:1px solid #EFF0F5; position:sticky; top:0; background:#fff; z-index:20; }
   .back-btn{ width:42px; height:42px; flex:none; display:grid; place-items:center; background:var(--soft); border:1.5px solid var(--line); border-radius:12px; color:var(--navy); }
   .msgs{ flex:1; padding:16px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
-  .msg{ max-width:78%; padding:10px 13px; border-radius:16px; font-size:14.5px; line-height:1.45; word-wrap:break-word; white-space:pre-wrap; }
-  .msg.them{ background:var(--soft); align-self:flex-start; border-bottom-left-radius:6px; }
-  .msg.me{ background:var(--navy); color:#fff; align-self:flex-end; border-bottom-right-radius:6px; }
+  .msg{ max-width:78%; padding:10px 14px; border-radius:20px; font-size:14.5px; line-height:1.45; word-wrap:break-word; white-space:pre-wrap; }
+  .msg.them{ background:#EFF0F5; align-self:flex-start; border-bottom-left-radius:5px; }
+  .msg.me{ background:var(--navy); color:#fff; align-self:flex-end; border-bottom-right-radius:5px; }
   .msg .mtime{ display:block; font-size:10px; opacity:.55; margin-top:4px; text-align:right; }
   .msg .msender{ display:block; font-size:11px; font-weight:700; color:var(--gold-dark); margin-bottom:3px; }
   .input-row{ display:flex; gap:10px; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid #EFF0F5; background:#fff; position:sticky; bottom:0; }
-  .input-row input{ flex:1; background:var(--soft2); border:1.5px solid var(--line); border-radius:999px; padding:12px 17px; font-size:14.5px; outline:none; color:var(--ink); }
+  .input-row input{ flex:1; background:#EFF0F5; border:1.5px solid transparent; border-radius:999px; padding:12px 17px; font-size:14.5px; outline:none; color:var(--ink); }
   .input-row input:focus{ border-color:var(--gold); }
-  .send-btn{ width:47px; height:47px; flex:none; border-radius:50%; background:var(--navy); border:1px solid var(--gold); color:var(--gold); display:grid; place-items:center; }
-  .photo-btn{ width:47px; height:47px; flex:none; border-radius:50%; background:var(--soft); border:1.5px solid var(--line); color:var(--navy); display:grid; place-items:center; }
+  .send-btn{ width:47px; height:47px; flex:none; border-radius:50%; background:var(--navy); border:none; color:#fff; display:grid; place-items:center; }
+  .photo-btn{ width:42px; height:42px; flex:none; border-radius:50%; background:none; border:none; color:var(--navy); display:grid; place-items:center; }
   .photo-strip{ display:none; align-items:center; gap:10px; padding:10px 16px 0; background:#fff; }
   .photo-strip.on{ display:flex; }
   .photo-strip img{ width:52px; height:52px; object-fit:cover; border-radius:10px; border:1.5px solid var(--line); }
@@ -102,7 +115,7 @@
   .dock{ display:flex; border-top:1px solid #EFF0F5; background:#fff; position:sticky; bottom:0; z-index:30; padding-bottom:env(safe-area-inset-bottom); }
   .dock button{ flex:1; background:none; border:none; padding:10px 0 9px; display:flex; flex-direction:column; align-items:center; gap:3px; color:#9AA0BD; font-size:11.5px; font-weight:700; font-family:"Manrope",sans-serif; }
   .dock button.active{ color:var(--navy); }
-  .dock button.active svg{ color:var(--gold-dark); }
+  .dock button.active svg{ color:var(--navy); }
 
   /* ---------- generic panels ---------- */
   .view-title{ font-family:"Manrope",sans-serif; font-size:24px; font-weight:800; margin:16px 0 4px; }
@@ -214,6 +227,8 @@
             <span class="bdg hidden" id="reqBadge">0</span>
           </button>
         </div>
+        <div class="chat-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chatSearch" type="text" placeholder="Search chats"></div>
+        <div class="strip" id="friendsStrip"></div>
         <div class="pad" id="bannerSlot"></div>
         <div id="chatList"></div>
       </div>
@@ -667,22 +682,47 @@ function renderChatList(){
     host.innerHTML = '<div class="empty-note">No conversations yet.<br>Add friends to start chatting — every message you send earns TrybCoin.</div>';
     return;
   }
-  var html = "";
+  var q = (S.chatQuery || "").toLowerCase();
+  var html = "", shown = 0;
   S.chats.forEach(function(c){
     var d = chatDisplay(c);
-    var av = d.avatarUrl ? '<img src="' + esc(d.avatarUrl) + '" alt="">' : esc(initials(d.avatarName));
     var last;
     if (c.last_kind === "voice") last = (c.last_sender === S.user.id ? "You: " : "") + "🎤 Voice message";
     else if (c.last_kind === "photo") last = (c.last_sender === S.user.id ? "You: " : "") + "📷 " + (c.last_body || "Photo");
     else last = c.last_body ? ((c.last_sender === S.user.id ? "You: " : "") + c.last_body) : "Say hello 👋";
-    html += '<button class="chat-row" type="button" data-chat="' + c.chat_id + '">' +
+    if (q && (d.name + " " + last).toLowerCase().indexOf(q) < 0) return;
+    shown++;
+    var av = d.avatarUrl ? '<img src="' + esc(d.avatarUrl) + '" alt="">' : esc(initials(d.avatarName));
+    html += '<button class="chat-row' + (c.unread > 0 ? " unread" : "") + '" type="button" data-chat="' + c.chat_id + '">' +
       '<span class="avatar">' + av + '</span>' +
       '<span class="chat-main"><span class="chat-top"><span class="chat-name">' + esc(d.name) + '</span><span class="chat-time">' + esc(c.last_at ? fmtTime(c.last_at) : "") + '</span></span>' +
       '<span class="chat-last"><span style="overflow:hidden;text-overflow:ellipsis;">' + esc(last) + '</span>' +
       (c.unread > 0 ? '<span class="unread-dot">' + c.unread + '</span>' : '') + '</span></span></button>';
   });
+  host.innerHTML = shown ? html : '<div class="empty-note">No chats match your search.</div>';
+}
+$("chatSearch").addEventListener("input", function(){ S.chatQuery = $("chatSearch").value.trim(); renderChatList(); });
+function renderStrip(){
+  var host = $("friendsStrip"); if (!host) return;
+  var html = "";
+  (S.friends || []).forEach(function(f){
+    var pid = f.requester_id === S.user.id ? f.addressee_id : f.requester_id;
+    var p = S.profileCache[pid]; if (!p) return;
+    var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
+    html += '<button class="s-item" type="button" data-stripdm="' + pid + '"><span class="avatar">' + av + '</span><span>' + esc((p.full_name || "").split(" ")[0] || "Friend") + '</span></button>';
+  });
   host.innerHTML = html;
 }
+$("friendsStrip").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest("[data-stripdm]") : null;
+  if (!b) return;
+  var pid = b.getAttribute("data-stripdm");
+  loadChats().then(function(){
+    var c = S.chats.find(function(x){ return x.peer_id === pid; });
+    if (c) openChat(c);
+    else toast("No chat yet", "Your conversation will appear in Chats.");
+  });
+});
 $("chatList").addEventListener("click", function(e){
   var b = e.target.closest ? e.target.closest("[data-chat]") : null;
   if (!b) return;
@@ -764,9 +804,19 @@ function toggleVoice(path){
   S.voiceAudio.play().catch(function(){ toast("Couldn't play", "The voice message couldn't be played."); });
 }
 $("lightbox").addEventListener("click", function(){ $("lightbox").classList.remove("on"); });
+function threadCardHTML(){
+  var c = S.currentChat; if (!c) return "";
+  var d = chatDisplay(c);
+  var av = d.avatarUrl ? '<img src="' + esc(d.avatarUrl) + '" alt="">' : esc(initials(d.avatarName));
+  var meta;
+  if (c.kind === "dm") meta = (d.sub ? esc(d.sub) + "<br>" : "") + "You're friends on TrybChat";
+  else if (c.chat_id === COMMUNITY_ID) meta = "The official TrybNetwork community chat";
+  else meta = esc(d.sub) + " · Group chat";
+  return '<div class="thread-card"><span class="avatar lg">' + av + '</span><div class="tc-name">' + esc(d.name) + '</div><div class="tc-meta">' + meta + '</div></div>';
+}
 function renderMessages(){
   var host = $("msgList"); if (!host) return;
-  host.innerHTML = S.messages.map(msgHTML).join("");
+  host.innerHTML = threadCardHTML() + S.messages.map(msgHTML).join("");
   host.scrollTop = host.scrollHeight;
 }
 function sendCurrent(){
@@ -1192,6 +1242,7 @@ function loadFriends(q){
     return Promise.all(Object.keys(ids).map(senderProfile)).then(function(){
       S.friends = frows;
       renderFriends(frows);
+      renderStrip();
       renderDirectory(results[1].data || []);
       renderDirNote();
     });
