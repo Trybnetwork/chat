@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TrybChat — Chat, connect & earn TrybCoin</title>
+<meta name="description" content="TrybChat is the TrybNetwork chat app. Message friends, join the community, and earn TrybCoin for every message you send.">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#0B1132; --gold:#C9A24B; --gold-dark:#9A7B2D; --ink:#0B1132; --mut:#6B7086; --line:#E6E7EE; --soft:#F2F3F8; --soft2:#F8F9FC; --green:#1D9D63; --red:#B3261E; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family:"Inter",system-ui,sans-serif; background:#EEF0F6; color:var(--ink); }
+  .phone{ max-width:480px; margin:0 auto; min-height:100dvh; background:#fff; display:flex; flex-direction:column; position:relative; box-shadow:0 0 40px rgba(11,17,50,.08); }
+  button{ font-family:inherit; cursor:pointer; }
+  input{ font-family:inherit; }
+  .hidden{ display:none !important; }
+
+  /* ---------- header ---------- */
+  .app-head{ display:flex; align-items:center; gap:11px; padding:14px 16px 10px; position:sticky; top:0; background:#fff; z-index:30; }
+  .avatar{ width:44px; height:44px; border-radius:50%; background:var(--navy); color:var(--gold); display:grid; place-items:center; font-family:"Manrope",sans-serif; font-weight:800; font-size:16px; flex:none; overflow:hidden; }
+  .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .avatar.sm{ width:38px; height:38px; font-size:14px; }
+  .avatar.lg{ width:64px; height:64px; font-size:24px; }
+  .wordmark{ font-family:"Manrope",sans-serif; font-weight:800; font-size:21px; letter-spacing:.4px; flex:1; }
+  .wordmark .wm-a{ color:var(--navy); } .wordmark .wm-b{ color:var(--gold); }
+  .tn-pill{ display:flex; align-items:center; gap:7px; background:#FBF3DC; border:1.5px solid #EBD9A0; color:var(--ink); border-radius:999px; padding:7px 13px; font-family:"Manrope",sans-serif; font-weight:800; font-size:14.5px; }
+  .tn-pill img{ width:19px; height:19px; border-radius:50%; }
+  .icon-btn{ position:relative; width:44px; height:44px; border-radius:50%; border:1.5px solid var(--line); background:#fff; display:grid; place-items:center; color:var(--navy); flex:none; }
+  .icon-btn .bdg{ position:absolute; top:-4px; right:-4px; min-width:19px; height:19px; padding:0 5px; border-radius:999px; background:var(--gold); color:var(--navy); font-size:11px; font-weight:800; display:grid; place-items:center; border:2px solid #fff; }
+
+  /* ---------- banner cards ---------- */
+  .pad{ padding:0 16px; }
+  .banner{ border-radius:18px; padding:16px; margin:6px 0 4px; }
+  .banner.trial{ background:var(--navy); color:#fff; }
+  .banner.renew{ background:#FFF8E7; border:1.5px solid var(--gold); color:var(--ink); }
+  .banner h4{ margin:0 0 4px; font-family:"Manrope",sans-serif; font-size:16.5px; display:flex; align-items:center; gap:8px; }
+  .banner p{ margin:0 0 6px; font-size:13.5px; line-height:1.55; opacity:.85; }
+  .banner .rate-line{ font-weight:700; opacity:1; }
+  .btn{ display:block; width:100%; text-align:center; border:none; border-radius:13px; padding:14px 16px; font-family:"Manrope",sans-serif; font-weight:800; font-size:15px; }
+  .btn.gold{ background:var(--gold); color:var(--navy); }
+  .btn.navy{ background:var(--navy); color:#fff; border:1px solid var(--gold); }
+  .btn.ghost{ background:var(--soft); color:var(--navy); border:1.5px solid var(--line); }
+  .btn:disabled{ opacity:.55; cursor:default; }
+  .banner .btn{ margin-top:10px; }
+
+  /* ---------- chat list ---------- */
+  .chat-row{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:#fff; border:none; border-bottom:1px solid #EFF0F5; padding:13px 16px; }
+  .chat-row:active{ background:var(--soft2); }
+  .chat-main{ flex:1; min-width:0; }
+  .chat-top{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+  .chat-name{ font-family:"Manrope",sans-serif; font-weight:800; font-size:15.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chat-time{ font-size:11px; color:#9AA0BD; font-weight:600; flex:none; }
+  .chat-last{ font-size:13.5px; color:var(--mut); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; display:flex; align-items:center; gap:6px; }
+  .unread-dot{ margin-left:auto; min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--gold); color:var(--navy); font-size:11.5px; font-weight:800; display:grid; place-items:center; flex:none; }
+  .empty-note{ text-align:center; color:var(--mut); font-size:14px; padding:34px 30px; line-height:1.6; }
+
+  /* ---------- thread ---------- */
+  .thread-head{ display:flex; align-items:center; gap:11px; padding:12px 16px; border-bottom:1px solid #EFF0F5; position:sticky; top:0; background:#fff; z-index:20; }
+  .back-btn{ width:42px; height:42px; flex:none; display:grid; place-items:center; background:var(--soft); border:1.5px solid var(--line); border-radius:12px; color:var(--navy); }
+  .msgs{ flex:1; padding:16px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+  .msg{ max-width:78%; padding:10px 13px; border-radius:16px; font-size:14.5px; line-height:1.45; word-wrap:break-word; white-space:pre-wrap; }
+  .msg.them{ background:var(--soft); align-self:flex-start; border-bottom-left-radius:6px; }
+  .msg.me{ background:var(--navy); color:#fff; align-self:flex-end; border-bottom-right-radius:6px; }
+  .msg .mtime{ display:block; font-size:10px; opacity:.55; margin-top:4px; text-align:right; }
+  .msg .msender{ display:block; font-size:11px; font-weight:700; color:var(--gold-dark); margin-bottom:3px; }
+  .input-row{ display:flex; gap:10px; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid #EFF0F5; background:#fff; position:sticky; bottom:0; }
+  .input-row input{ flex:1; background:var(--soft2); border:1.5px solid var(--line); border-radius:999px; padding:12px 17px; font-size:14.5px; outline:none; color:var(--ink); }
+  .input-row input:focus{ border-color:var(--gold); }
+  .send-btn{ width:47px; height:47px; flex:none; border-radius:50%; background:var(--navy); border:1px solid var(--gold); color:var(--gold); display:grid; place-items:center; }
+
+  /* ---------- dock ---------- */
+  .dock{ display:flex; border-top:1px solid #EFF0F5; background:#fff; position:sticky; bottom:0; z-index:30; padding-bottom:env(safe-area-inset-bottom); }
+  .dock button{ flex:1; background:none; border:none; padding:10px 0 9px; display:flex; flex-direction:column; align-items:center; gap:3px; color:#9AA0BD; font-size:11.5px; font-weight:700; font-family:"Manrope",sans-serif; }
+  .dock button.active{ color:var(--navy); }
+  .dock button.active svg{ color:var(--gold-dark); }
+
+  /* ---------- generic panels ---------- */
+  .view-title{ font-family:"Manrope",sans-serif; font-size:24px; font-weight:800; margin:16px 0 4px; }
+  .card{ background:#fff; border:1.5px solid var(--line); border-radius:18px; padding:16px; margin-top:12px; }
+  .card h4{ margin:0 0 6px; font-family:"Manrope",sans-serif; font-size:16px; }
+  .card p{ margin:0; font-size:13.5px; color:var(--mut); line-height:1.55; }
+  .how-list{ list-style:none; margin:6px 0 0; padding:0; }
+  .how-list li{ display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid #EFF0F5; font-size:14px; }
+  .how-list li:last-child{ border-bottom:none; }
+  .how-list li b{ font-family:"Manrope",sans-serif; text-align:right; }
+  .how-list li span{ color:var(--mut); }
+  .capbar{ height:9px; background:var(--soft); border-radius:99px; overflow:hidden; margin-top:10px; }
+  .capbar i{ display:block; height:100%; background:var(--gold); border-radius:99px; }
+  .sect-title{ font-family:"Manrope",sans-serif; font-weight:800; font-size:15px; margin:20px 0 4px; display:flex; align-items:center; gap:8px; }
+  .sect-title .cnt{ background:var(--soft); border-radius:99px; padding:1px 9px; font-size:12px; color:var(--mut); }
+  .user-row{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid #EFF0F5; }
+  .user-row:last-child{ border-bottom:none; }
+  .user-row .chat-main .chat-name{ font-size:15px; }
+  .user-row .uname{ font-size:12.5px; color:var(--mut); margin-top:1px; }
+  .mini-btn{ border:none; border-radius:999px; padding:8px 15px; font-family:"Manrope",sans-serif; font-weight:800; font-size:13px; flex:none; }
+  .mini-btn.navy{ background:var(--navy); color:#fff; }
+  .mini-btn.gold{ background:var(--gold); color:var(--navy); }
+  .mini-btn.ghost{ background:var(--soft); color:var(--navy); border:1.5px solid var(--line); }
+  .mini-btn:disabled{ opacity:.55; }
+  .search-input{ width:100%; background:var(--soft2); border:1.5px solid var(--line); border-radius:13px; padding:12px 15px; font-size:14.5px; outline:none; margin-top:12px; }
+  .search-input:focus{ border-color:var(--gold); }
+  .toggle-row{ display:flex; gap:8px; margin-top:10px; }
+  .toggle-row button{ flex:1; border-radius:12px; padding:11px; font-family:"Manrope",sans-serif; font-weight:800; font-size:14px; border:1.5px solid var(--line); background:#fff; color:var(--mut); }
+  .toggle-row button.on{ background:var(--navy); color:#fff; border-color:var(--navy); }
+
+  /* ---------- auth / paywall / sheet / toast ---------- */
+  .gate{ flex:1; display:flex; flex-direction:column; justify-content:center; padding:28px 22px; }
+  .gate .logo{ text-align:center; margin-bottom:8px; }
+  .gate h1{ text-align:center; font-family:"Manrope",sans-serif; font-size:27px; margin:0 0 6px; }
+  .gate .sub{ text-align:center; color:var(--mut); font-size:14.5px; line-height:1.6; margin:0 0 22px; }
+  .field{ margin-bottom:13px; }
+  .field label{ display:block; font-size:12.5px; font-weight:700; color:var(--mut); margin-bottom:6px; }
+  .field input{ width:100%; background:var(--soft2); border:1.5px solid var(--line); border-radius:13px; padding:13px 15px; font-size:15px; outline:none; }
+  .field input:focus{ border-color:var(--gold); }
+  .err{ color:var(--red); font-size:13.5px; min-height:18px; margin:2px 0 10px; line-height:1.5; }
+  .gate .foot{ text-align:center; font-size:13.5px; color:var(--mut); margin-top:18px; line-height:1.7; }
+  .gate .foot a{ color:var(--gold-dark); font-weight:700; text-decoration:none; }
+  .overlay{ position:fixed; inset:0; background:rgba(5,7,26,.55); display:none; align-items:flex-end; justify-content:center; z-index:60; }
+  .overlay.show{ display:flex; }
+  .sheet{ background:#fff; width:100%; max-width:480px; border-radius:22px 22px 0 0; padding:22px 20px calc(20px + env(safe-area-inset-bottom)); }
+  .sheet h3{ font-family:"Manrope",sans-serif; font-size:20px; margin:0 0 6px; }
+  .sheet .sheet-sub{ color:var(--mut); font-size:14px; line-height:1.6; margin:0 0 14px; }
+  .sheet .rowline{ display:flex; justify-content:space-between; font-size:14.5px; padding:9px 0; border-bottom:1px solid #EFF0F5; }
+  .sheet .rowline b{ font-family:"Manrope",sans-serif; }
+  .toasts{ position:fixed; left:50%; transform:translateX(-50%); bottom:26px; z-index:90; display:flex; flex-direction:column; gap:8px; width:min(92vw,440px); }
+  .toast{ background:var(--navy); color:#fff; border:1px solid var(--gold); border-radius:14px; padding:13px 16px; font-size:14px; box-shadow:0 14px 34px rgba(11,17,50,.3); }
+  .toast b{ display:block; font-family:"Manrope",sans-serif; margin-bottom:2px; }
+  .spin-note{ text-align:center; color:var(--mut); font-size:13.5px; padding:16px; }
+</style>
+</head>
+<body>
+<div class="phone" id="phoneRoot">
+
+  <!-- ======================= AUTH ======================= -->
+  <div id="authScreen" class="gate hidden">
+    <div class="logo"><span class="avatar lg" style="margin:0 auto;">T</span></div>
+    <h1><span style="color:var(--navy)">TRYB</span><span style="color:var(--gold)">CHAT</span></h1>
+    <p class="sub">Chat, connect &amp; earn TrybCoin.<br>Sign in with your TrybNetwork account.</p>
+    <form id="loginForm">
+      <div class="field"><label for="liId">Username or email</label><input id="liId" type="text" autocomplete="username" placeholder="@username or you@email.com"></div>
+      <div class="field"><label for="liPass">Password</label><input id="liPass" type="password" autocomplete="current-password" placeholder="Your password"></div>
+      <div class="err" id="liErr"></div>
+      <button class="btn navy" id="liBtn" type="submit">Sign in</button>
+    </form>
+    <p class="foot">New to TrybNetwork?<br><a href="https://app.trybnetwork.com/" target="_blank" rel="noopener">Create your account in the TrybNetwork app</a></p>
+  </div>
+
+  <!-- ======================= PAYWALL ======================= -->
+  <div id="paywallScreen" class="gate hidden">
+    <div class="logo"><span class="avatar lg" id="pwAvatar" style="margin:0 auto;">?</span></div>
+    <h1 id="pwTitle">Your free month has ended</h1>
+    <p class="sub" id="pwSub">Your TrybCoin is yours — it stays in your TrybNetwork wallet. Renew your membership to keep using TrybChat.</p>
+    <div class="card" style="margin:0 0 14px;">
+      <div class="rowline" style="display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px;"><span>Your TrybCoin</span><b id="pwCoins">0 TN</b></div>
+      <div class="rowline" style="display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px;"><span>Main Balance</span><b id="pwMain">$0.00</b></div>
+      <div class="rowline" style="display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px;"><span>Membership — 6 months</span><b>$12.00</b></div>
+    </div>
+    <div class="err" id="pwErr"></div>
+    <button class="btn gold" id="pwPayBtn" type="button">Pay $12 from Main Balance</button>
+    <button class="btn ghost" id="pwOutBtn" type="button" style="margin-top:10px;">Sign out</button>
+    <p class="foot">Need funds? <a href="https://app.trybnetwork.com/" target="_blank" rel="noopener">Deposit in the TrybNetwork app</a></p>
+  </div>
+
+  <!-- ======================= APP ======================= -->
+  <div id="appScreen" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+
+    <!-- Chats tab -->
+    <div id="tabChats" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div id="chatsListWrap" style="overflow-y:auto;flex:1;">
+        <div class="app-head">
+          <span class="avatar" id="myAvatar">?</span>
+          <div class="wordmark"><span class="wm-a">TRYB</span><span class="wm-b">CHAT</span></div>
+          <span class="tn-pill"><img src="https://app.trybnetwork.com/trybcoin.png" alt=""> <span id="tnPillBal">0</span> TN</span>
+          <button class="icon-btn" id="addFriendsBtn" type="button" aria-label="Add friends">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+            <span class="bdg hidden" id="reqBadge">0</span>
+          </button>
+        </div>
+        <div class="pad" id="bannerSlot"></div>
+        <div id="chatList"></div>
+      </div>
+
+      <!-- Thread -->
+      <div id="threadWrap" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+        <div class="thread-head">
+          <button class="back-btn" id="threadBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span class="avatar sm" id="threadAvatar">?</span>
+          <div class="chat-main"><div class="chat-name" id="threadName">Chat</div><div class="uname" id="threadSub" style="font-size:12.5px;color:var(--mut);"></div></div>
+        </div>
+        <div class="msgs" id="msgList"></div>
+        <div class="input-row">
+          <input id="msgInput" type="text" placeholder="Message…" autocomplete="off" maxlength="2000">
+          <button class="send-btn" id="sendBtn" type="button" aria-label="Send"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Add friends -->
+      <div id="friendsWrap" class="hidden" style="overflow-y:auto;flex:1;">
+        <div class="thread-head">
+          <button class="back-btn" id="friendsBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div class="chat-main"><div class="chat-name" style="font-size:18px;">Add friends</div></div>
+        </div>
+        <div class="pad">
+          <input class="search-input" id="dirSearch" type="text" placeholder="Search name or @username…" autocomplete="off">
+          <div id="dirPrivateNote"></div>
+          <div id="reqSection"></div>
+          <div id="friendSection"></div>
+          <div class="sect-title">All TrybChat users</div>
+          <div id="dirList"></div>
+          <p style="font-size:12.5px;color:#9AA0BD;line-height:1.6;margin:14px 0 26px;">Some TrybChat users choose to stay private and don't appear here.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Earn tab -->
+    <div id="tabEarn" class="hidden" style="overflow-y:auto;flex:1;">
+      <div class="pad">
+        <div class="view-title">Earn</div>
+        <div class="card">
+          <h4>Today</h4>
+          <div style="display:flex;gap:22px;margin-top:8px;">
+            <div><div style="font-family:Manrope,sans-serif;font-weight:800;font-size:21px;" id="earnTodayTn">0 TN</div><div style="font-size:12px;color:var(--mut);">Earned from sending today</div></div>
+            <div><div style="font-family:Manrope,sans-serif;font-weight:800;font-size:21px;" id="earnTodaySent">0</div><div style="font-size:12px;color:var(--mut);">Messages sent</div></div>
+          </div>
+          <div class="capbar"><i id="earnCapBar" style="width:0%"></i></div>
+          <p style="margin-top:8px;" id="earnCapText">0 / 150 TN daily cap</p>
+        </div>
+        <div class="card">
+          <h4>How earning works</h4>
+          <ul class="how-list">
+            <li><span>Per message you send — free month</span><b>+1 TN</b></li>
+            <li><span>Per message you send — members</span><b>+5 TN</b></li>
+            <li><span>Replies you receive</span><b>No earning</b></li>
+            <li><span>Daily cap — for everyone</span><b>150 TN</b></li>
+            <li><span>Your earnings</span><b>Never locked</b></li>
+          </ul>
+          <p style="margin-top:10px;">Real messages earn — repeated, very short, or spam messages don't. Your TrybCoin lands in your TrybNetwork wallet, ready to trade, play and mine with.</p>
+        </div>
+        <div class="card">
+          <h4>Membership</h4>
+          <p id="earnMemberLine">—</p>
+          <p id="earnRateLine" style="margin-top:4px;font-weight:700;color:var(--ink);">—</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile tab -->
+    <div id="tabProfile" class="hidden" style="overflow-y:auto;flex:1;">
+      <div class="pad">
+        <div class="view-title">Profile</div>
+        <div class="card" style="display:flex;align-items:center;gap:14px;">
+          <span class="avatar lg" id="profAvatar">?</span>
+          <div><div style="font-family:Manrope,sans-serif;font-weight:800;font-size:18px;" id="profName">—</div><div style="color:var(--mut);font-size:13.5px;" id="profUser">@—</div></div>
+        </div>
+        <div class="card">
+          <h4>Membership</h4>
+          <p id="profMemberLine">—</p>
+          <p id="profRateLine" style="margin-top:4px;font-weight:700;color:var(--ink);">—</p>
+          <button class="btn gold" id="profMemberBtn" type="button" style="margin-top:12px;">Get membership — $12 / 6 months</button>
+        </div>
+        <div class="card">
+          <h4>Directory listing</h4>
+          <p>Listed users appear in the All TrybChat users directory and in search. Private users appear in neither.</p>
+          <div class="toggle-row">
+            <button id="listedBtn" type="button">Listed</button>
+            <button id="privateBtn" type="button">Private</button>
+          </div>
+          <p id="dirStateNote" style="margin-top:10px;"></p>
+        </div>
+        <div class="card">
+          <h4>TrybCoin balance</h4>
+          <p><b style="font-family:Manrope,sans-serif;font-size:19px;color:var(--ink);" id="profCoins">0 TN</b><br>Spend it in TrybNetwork — trade, play games, or buy miners. Profits land in your Main Balance.</p>
+        </div>
+        <button class="btn ghost" id="signOutBtn" type="button" style="margin:16px 0 30px;">Sign out</button>
+      </div>
+    </div>
+
+    <!-- Dock -->
+    <nav class="dock" id="dock">
+      <button id="dockChats" class="active" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5z"/></svg>Chats</button>
+      <button id="dockEarn" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c-.6-1-1.7-1.5-3-1.5-1.7 0-3 .9-3 2.2 0 2.9 6 1.5 6 4.1 0 1.3-1.3 2.2-3 2.2-1.3 0-2.4-.5-3-1.5"/></svg>Earn</button>
+      <button id="dockProfile" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ======================= SUBSCRIBE SHEET ======================= -->
+<div class="overlay" id="subOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <h3 id="subTitle">TrybChat Membership</h3>
+    <p class="sheet-sub" id="subDesc">Full access to TrybChat for 6 months — and earn 5 TN per message, 5× faster than the free month.</p>
+    <div class="rowline"><span>Membership — 6 months</span><b>$12.00</b></div>
+    <div class="rowline"><span>Your Main Balance</span><b id="subMainBal">$0.00</b></div>
+    <div class="err" id="subErr" style="margin-top:10px;"></div>
+    <button class="btn gold" id="subPayBtn" type="button">Pay $12 — Join for 6 months</button>
+    <button class="btn ghost" id="subCloseBtn" type="button" style="margin-top:10px;">Not now</button>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+var SUPABASE_URL = "https://zvubytosshkxpbpvgcsw.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_c1sl1Mw4Y5EMWjkmYSzEow_m5Yowqk0";
+var sb = null;
+try { sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null; } catch (e) { sb = null; }
+
+var COMMUNITY_ID = "00000000-0000-0000-0000-00000000c001";
+var DAILY_CAP = 150;
+var S = {
+  user: null, profile: null, wallet: null, access: null, listed: true,
+  chats: [], currentChat: null, messages: [], requests: [], friends: [],
+  earnedToday: 0, sentToday: 0, profileCache: {}, rtStarted: false
+};
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function initials(name){ var p = String(name || "?").trim().split(/\s+/); return ((p[0] || "?")[0] + (p.length > 1 ? p[p.length-1][0] : "")).toUpperCase(); }
+function toast(title, body){
+  var t = document.createElement("div"); t.className = "toast";
+  t.innerHTML = "<b>" + esc(title) + "</b>" + (body ? esc(body) : "");
+  $("toasts").appendChild(t);
+  setTimeout(function(){ t.remove(); }, 4200);
+}
+function paintAvatar(el, name, url){
+  if (!el) return;
+  if (url) el.innerHTML = '<img src="' + esc(url) + '" alt="">';
+  else el.textContent = initials(name);
+}
+function fmtDate(ts){
+  try { return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Africa/Lagos" }); }
+  catch (e) { return ""; }
+}
+function fmtTime(ts){
+  try {
+    var d = new Date(ts), now = new Date();
+    var sameDay = d.toDateString() === now.toDateString();
+    var yest = new Date(now); yest.setDate(now.getDate() - 1);
+    if (sameDay) return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Africa/Lagos" });
+    if (d.toDateString() === yest.toDateString()) return "Yesterday";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "Africa/Lagos" });
+  } catch (e) { return ""; }
+}
+function fmtClock(ts){
+  try { return new Date(ts).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Africa/Lagos" }); } catch (e) { return ""; }
+}
+function daysLeft(ts){ return Math.max(0, Math.ceil((new Date(ts).getTime() - Date.now()) / 86400000)); }
+function lagosToday(){
+  try { return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lagos", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()); }
+  catch (e) { return new Date().toISOString().slice(0, 10); }
+}
+function money(n){ return "$" + (Number(n) || 0).toFixed(2); }
+
+/* ---------------- screens ---------------- */
+function showScreen(which){
+  $("authScreen").classList.toggle("hidden", which !== "auth");
+  $("paywallScreen").classList.toggle("hidden", which !== "paywall");
+  $("appScreen").classList.toggle("hidden", which !== "app");
+}
+function showTab(tab){
+  $("tabChats").classList.toggle("hidden", tab !== "chats");
+  $("tabEarn").classList.toggle("hidden", tab !== "earn");
+  $("tabProfile").classList.toggle("hidden", tab !== "profile");
+  $("dockChats").classList.toggle("active", tab === "chats");
+  $("dockEarn").classList.toggle("active", tab === "earn");
+  $("dockProfile").classList.toggle("active", tab === "profile");
+  if (tab === "earn") loadEarn();
+  if (tab === "profile") renderProfile();
+}
+function showChatsSub(which){
+  $("chatsListWrap").classList.toggle("hidden", which !== "list");
+  $("threadWrap").classList.toggle("hidden", which !== "thread");
+  $("friendsWrap").classList.toggle("hidden", which !== "friends");
+  if (which !== "thread") S.currentChat = null;
+}
+
+/* ---------------- auth ---------------- */
+$("loginForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  if (!sb){ $("liErr").textContent = "Couldn't reach the server — check your connection and try again."; return; }
+  var idv = $("liId").value.trim(), pass = $("liPass").value;
+  if (!idv || !pass){ $("liErr").textContent = "Enter your username or email and your password."; return; }
+  var btn = $("liBtn"); btn.disabled = true; btn.textContent = "Signing in…"; $("liErr").textContent = "";
+  function fail(msg){ btn.disabled = false; btn.textContent = "Sign in"; $("liErr").textContent = msg; }
+  function doSignIn(email){
+    sb.auth.signInWithPassword({ email: email, password: pass }).then(function(res){
+      if (res.error || !res.data.user){ fail("Wrong username/email or password — check your details and try again."); return; }
+      btn.disabled = false; btn.textContent = "Sign in";
+      enterApp();
+    }).catch(function(){ fail("Couldn't reach the server — check your connection and try again."); });
+  }
+  if (idv.indexOf("@") > -1){ doSignIn(idv); return; }
+  sb.from("tn_profiles").select("email").eq("username", idv.replace(/^@+/, "")).maybeSingle().then(function(res){
+    if (!res.data || !res.data.email){ fail("Wrong username/email or password — check your details and try again."); return; }
+    doSignIn(res.data.email);
+  }).catch(function(){ fail("Couldn't reach the server — check your connection and try again."); });
+});
+function signOut(){
+  if (sb) sb.auth.signOut().catch(function(){});
+  S.user = null; S.profile = null; S.access = null; S.chats = []; S.currentChat = null;
+  showScreen("auth");
+}
+$("pwOutBtn").addEventListener("click", signOut);
+$("signOutBtn").addEventListener("click", signOut);
+
+/* ---------------- data ---------------- */
+function refreshWallet(){
+  if (!sb || !S.user) return Promise.resolve();
+  return sb.from("tn_wallets").select("main_balance, trybcoin").eq("user_id", S.user.id).maybeSingle().then(function(res){
+    if (res.data) S.wallet = res.data;
+    paintWallet();
+  }).catch(function(){});
+}
+function paintWallet(){
+  var coins = S.wallet ? (S.wallet.trybcoin || 0) : 0;
+  $("tnPillBal").textContent = coins;
+  $("profCoins").textContent = coins + " TN";
+  $("pwCoins").textContent = coins + " TN";
+  $("pwMain").textContent = money(S.wallet ? S.wallet.main_balance : 0);
+}
+function refreshAccess(){
+  return sb.rpc("tc_ensure_profile").then(function(res){
+    if (res.data && res.data.ok){
+      S.access = res.data;
+      S.listed = !!res.data.directory_listed;
+    }
+    return S.access;
+  });
+}
+function enterApp(){
+  if (!sb) return;
+  sb.auth.getUser().then(function(u){
+    if (!u.data.user){ showScreen("auth"); return; }
+    S.user = u.data.user;
+    sb.from("tn_profiles").select("*").eq("id", S.user.id).maybeSingle().then(function(res){
+      if (!res.data){
+        toast("No TrybNetwork profile found", "Sign in to the TrybNetwork app once, then come back.");
+        showScreen("auth"); return;
+      }
+      S.profile = res.data;
+      S.profileCache[S.user.id] = res.data;
+      refreshWallet().then(function(){
+        refreshAccess().then(function(){
+          gate();
+        });
+      });
+    }).catch(function(){ toast("Connection problem", "Couldn't load your profile — pull to retry."); });
+  });
+}
+function gate(){
+  if (!S.access) return;
+  if (!S.access.has_access){ renderPaywall(); showScreen("paywall"); return; }
+  showScreen("app");
+  showTab("chats"); showChatsSub("list");
+  paintHeader(); renderBanner(); loadChats(); loadRequests(); loadFriends(null); loadEarn();
+  startRealtime();
+}
+function renderPaywall(){
+  paintAvatar($("pwAvatar"), S.profile.full_name, S.profile.avatar_url);
+  var trialEnded = !S.access.member_active;
+  $("pwTitle").textContent = S.access.trial_ends_at && new Date(S.access.trial_ends_at) > new Date(0) && !S.access.member_ends_at
+    ? "Your free month has ended" : "Your membership has ended";
+  $("pwSub").textContent = "Your TrybCoin is yours — it stays in your TrybNetwork wallet. " +
+    (trialEnded && !S.access.member_ends_at
+      ? "Get the premium membership to keep using TrybChat — $12 every 6 months."
+      : "Renew your membership to keep using TrybChat — $12 every 6 months.");
+  $("pwErr").textContent = "";
+  paintWallet();
+}
+function paintHeader(){
+  paintAvatar($("myAvatar"), S.profile.full_name, S.profile.avatar_url);
+  paintWallet();
+}
+
+/* ---------------- banner (Chats list) ---------------- */
+function renderBanner(){
+  var host = $("bannerSlot"); if (!host || !S.access) return;
+  if (S.access.member_active){
+    var dl = daysLeft(S.access.member_ends_at);
+    if (dl <= 7){
+      host.innerHTML = '<div class="banner renew"><h4>Membership renews soon</h4>' +
+        '<p><b>' + dl + ' day' + (dl === 1 ? "" : "s") + ' left</b> — your plan ends ' + fmtDate(S.access.member_ends_at) + '. Renew to keep full access and your 5 TN per message rate.</p>' +
+        '<button class="btn navy" id="bannerRenewBtn" type="button">Renew — $12 / 6 months</button></div>';
+      $("bannerRenewBtn").addEventListener("click", openSub);
+    } else host.innerHTML = "";
+    return;
+  }
+  if (S.access.trial_active){
+    var tdl = daysLeft(S.access.trial_ends_at);
+    var dayNum = Math.min(30, Math.max(1, 31 - tdl));
+    host.innerHTML = '<div class="banner trial"><h4>Free month — Day ' + dayNum + ' of 30</h4>' +
+      '<p>First month free with full access — premium membership required after to keep using TrybChat.</p>' +
+      '<p class="rate-line">You\'re earning 1 TN per message</p>' +
+      '<button class="btn gold" id="bannerSubBtn" type="button">Get membership — $12 / 6 months</button></div>';
+    $("bannerSubBtn").addEventListener("click", openSub);
+    return;
+  }
+  host.innerHTML = "";
+}
+</script>
+
+<script>
+/* ---------------- chats ---------------- */
+function senderProfile(id){
+  if (S.profileCache[id]) return Promise.resolve(S.profileCache[id]);
+  return sb.from("tn_profiles").select("id, full_name, username, avatar_url").eq("id", id).maybeSingle().then(function(res){
+    if (res.data) S.profileCache[id] = res.data;
+    return res.data;
+  }).catch(function(){ return null; });
+}
+function loadChats(){
+  return sb.rpc("tc_my_chats").then(function(res){
+    S.chats = res.data || [];
+    renderChatList();
+  }).catch(function(){});
+}
+function chatDisplay(c){
+  if (c.kind === "group") return { name: c.title || "TrybNetwork Community", sub: "Community group", avatarName: "TN", avatarUrl: null };
+  return { name: c.peer_name || "TrybChat user", sub: c.peer_username ? "@" + c.peer_username : "", avatarName: c.peer_name || "?", avatarUrl: c.peer_avatar };
+}
+function renderChatList(){
+  var host = $("chatList"); if (!host) return;
+  if (!S.chats.length){
+    host.innerHTML = '<div class="empty-note">No conversations yet.<br>Add friends to start chatting — every message you send earns TrybCoin.</div>';
+    return;
+  }
+  var html = "";
+  S.chats.forEach(function(c){
+    var d = chatDisplay(c);
+    var av = d.avatarUrl ? '<img src="' + esc(d.avatarUrl) + '" alt="">' : esc(initials(d.avatarName));
+    var last = c.last_body ? ((c.last_sender === S.user.id ? "You: " : "") + c.last_body) : "Say hello 👋";
+    html += '<button class="chat-row" type="button" data-chat="' + c.chat_id + '">' +
+      '<span class="avatar">' + av + '</span>' +
+      '<span class="chat-main"><span class="chat-top"><span class="chat-name">' + esc(d.name) + '</span><span class="chat-time">' + esc(c.last_at ? fmtTime(c.last_at) : "") + '</span></span>' +
+      '<span class="chat-last"><span style="overflow:hidden;text-overflow:ellipsis;">' + esc(last) + '</span>' +
+      (c.unread > 0 ? '<span class="unread-dot">' + c.unread + '</span>' : '') + '</span></span></button>';
+  });
+  host.innerHTML = html;
+}
+$("chatList").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest("[data-chat]") : null;
+  if (!b) return;
+  var c = S.chats.find(function(x){ return x.chat_id === b.getAttribute("data-chat"); });
+  if (c) openChat(c);
+});
+function openChat(c){
+  S.currentChat = c;
+  var d = chatDisplay(c);
+  paintAvatar($("threadAvatar"), d.avatarName, d.avatarUrl);
+  $("threadName").textContent = d.name;
+  $("threadSub").textContent = d.sub;
+  showChatsSub("thread");
+  loadMessages(c.chat_id);
+  sb.rpc("tc_mark_read", { p_chat: c.chat_id }).then(function(){ loadChats(); }).catch(function(){});
+}
+$("threadBack").addEventListener("click", function(){ showChatsSub("list"); loadChats(); });
+function loadMessages(chatId){
+  sb.from("tc_messages").select("id, chat_id, sender_id, body, created_at").eq("chat_id", chatId).order("created_at", { ascending: true }).limit(300).then(function(res){
+    S.messages = res.data || [];
+    renderMessages();
+  }).catch(function(){});
+}
+function msgHTML(m){
+  var mine = m.sender_id === S.user.id;
+  var senderLine = "";
+  if (!mine && S.currentChat && S.currentChat.kind === "group"){
+    var p = S.profileCache[m.sender_id];
+    senderLine = '<span class="msender">' + esc(p ? (p.full_name || ("@" + (p.username || ""))) : "Member") + '</span>';
+    if (!p) senderProfile(m.sender_id).then(function(){ renderMessages(); });
+  }
+  return '<div class="msg ' + (mine ? "me" : "them") + '">' + senderLine + esc(m.body) + '<span class="mtime">' + esc(fmtClock(m.created_at)) + '</span></div>';
+}
+function renderMessages(){
+  var host = $("msgList"); if (!host) return;
+  host.innerHTML = S.messages.map(msgHTML).join("");
+  host.scrollTop = host.scrollHeight;
+}
+function sendCurrent(){
+  var inp = $("msgInput");
+  var body = inp.value.trim();
+  if (!body || !S.currentChat) return;
+  var chatId = S.currentChat.chat_id;
+  inp.value = "";
+  sb.rpc("tc_send_message", { p_chat: chatId, p_body: body }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){
+      if (d && d.error === "no_access"){ refreshAccess().then(gate); toast("Membership needed", "Your access has ended — renew to keep chatting."); }
+      else if (d && d.error === "message_too_long"){ toast("Too long", "Messages are limited to 2,000 characters."); }
+      else toast("Couldn't send", "Check your connection and try again.");
+      return;
+    }
+    S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, body: body, created_at: new Date().toISOString() });
+    renderMessages();
+    if (typeof d.earned_today === "number") S.earnedToday = d.earned_today;
+    if (d.earned > 0) refreshWallet();
+    loadChats();
+  }).catch(function(){ toast("Couldn't send", "Check your connection and try again."); });
+}
+$("sendBtn").addEventListener("click", sendCurrent);
+$("msgInput").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); sendCurrent(); } });
+
+/* ---------------- realtime ---------------- */
+function startRealtime(){
+  if (S.rtStarted || !sb) return;
+  S.rtStarted = true;
+  sb.channel("tc-rt")
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "tc_messages" }, function(payload){
+      var m = payload.new;
+      if (!m || m.sender_id === S.user.id) return;
+      if (S.currentChat && m.chat_id === S.currentChat.chat_id){
+        S.messages.push(m);
+        renderMessages();
+        sb.rpc("tc_mark_read", { p_chat: m.chat_id }).catch(function(){});
+      } else {
+        loadChats();
+      }
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "tc_friendships" }, function(){
+      loadRequests(); loadFriends($("dirSearch") ? $("dirSearch").value.trim() : "");
+    })
+    .subscribe();
+}
+
+/* ---------------- friends ---------------- */
+$("addFriendsBtn").addEventListener("click", function(){
+  showChatsSub("friends");
+  loadRequests(); loadFriends($("dirSearch").value.trim());
+});
+$("friendsBack").addEventListener("click", function(){ showChatsSub("list"); });
+var dirTimer = null;
+$("dirSearch").addEventListener("input", function(){
+  clearTimeout(dirTimer);
+  var q = $("dirSearch").value.trim();
+  dirTimer = setTimeout(function(){ loadFriends(q); }, 250);
+});
+function loadRequests(){
+  return sb.from("tc_friendships").select("id, requester_id, created_at").eq("addressee_id", S.user.id).eq("status", "pending").order("created_at", { ascending: false }).then(function(res){
+    var rows = res.data || [];
+    return Promise.all(rows.map(function(r){ return senderProfile(r.requester_id); })).then(function(){
+      S.requests = rows;
+      var bdg = $("reqBadge");
+      if (rows.length){ bdg.textContent = rows.length; bdg.classList.remove("hidden"); }
+      else bdg.classList.add("hidden");
+      renderRequests();
+    });
+  }).catch(function(){});
+}
+function userRowHTML(p, actionHTML){
+  var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name));
+  return '<div class="user-row"><span class="avatar sm">' + av + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + actionHTML + '</div>';
+}
+function renderRequests(){
+  var host = $("reqSection"); if (!host) return;
+  if (!S.requests.length){ host.innerHTML = ""; return; }
+  var html = '<div class="sect-title">Requests <span class="cnt">' + S.requests.length + '</span></div>';
+  S.requests.forEach(function(r){
+    var p = S.profileCache[r.requester_id]; if (!p) return;
+    html += userRowHTML(p, '<button class="mini-btn gold" type="button" data-accept="' + r.id + '">Accept</button><button class="mini-btn ghost" type="button" data-decline="' + r.id + '">Decline</button>');
+  });
+  host.innerHTML = html;
+}
+function loadFriends(q){
+  return Promise.all([
+    sb.from("tc_friendships").select("id, requester_id, addressee_id, status").or("requester_id.eq." + S.user.id + ",addressee_id.eq." + S.user.id).eq("status", "accepted"),
+    sb.rpc("tc_directory", { p_q: q || null })
+  ]).then(function(results){
+    var frows = results[0].data || [];
+    var ids = {};
+    frows.forEach(function(f){ ids[f.requester_id === S.user.id ? f.addressee_id : f.requester_id] = true; });
+    return Promise.all(Object.keys(ids).map(senderProfile)).then(function(){
+      S.friends = frows;
+      renderFriends(frows);
+      renderDirectory(results[1].data || []);
+      renderDirNote();
+    });
+  }).catch(function(){});
+}
+function renderFriends(frows){
+  var host = $("friendSection"); if (!host) return;
+  if (!frows.length){ host.innerHTML = ""; return; }
+  var html = '<div class="sect-title">Friends <span class="cnt">' + frows.length + '</span></div>';
+  frows.forEach(function(f){
+    var pid = f.requester_id === S.user.id ? f.addressee_id : f.requester_id;
+    var p = S.profileCache[pid]; if (!p) return;
+    html += userRowHTML(p, '<button class="mini-btn navy" type="button" data-chatfriend="' + pid + '">Chat</button>');
+  });
+  host.innerHTML = html;
+}
+function renderDirectory(rows){
+  var host = $("dirList"); if (!host) return;
+  if (!rows.length){
+    host.innerHTML = '<div class="empty-note" style="padding:20px;">No users found.</div>';
+    return;
+  }
+  var html = "";
+  rows.forEach(function(r){
+    var p = { full_name: r.full_name, username: r.username, avatar_url: r.avatar_url };
+    var act;
+    if (r.relation === "friends") act = '<span style="font-size:12.5px;color:var(--mut);font-weight:700;">Friends</span>';
+    else if (r.relation === "pending_out") act = '<button class="mini-btn ghost" type="button" disabled>Requested</button>';
+    else if (r.relation === "pending_in") act = '<span style="font-size:12.5px;color:var(--gold-dark);font-weight:700;">Sent you a request</span>';
+    else act = '<button class="mini-btn navy" type="button" data-add="' + r.user_id + '">Add</button>';
+    html += userRowHTML(p, act);
+  });
+  host.innerHTML = html;
+}
+function renderDirNote(){
+  var host = $("dirPrivateNote"); if (!host) return;
+  host.innerHTML = S.listed ? "" : '<div class="banner renew" style="margin-top:12px;"><p style="margin:0;"><b>You\'re private</b> — other users can\'t find you in the directory or search.</p></div>';
+}
+$("friendsWrap").addEventListener("click", function(e){
+  var t = e.target;
+  var add = t.closest ? t.closest("[data-add]") : null;
+  var acc = t.closest ? t.closest("[data-accept]") : null;
+  var dec = t.closest ? t.closest("[data-decline]") : null;
+  var cf = t.closest ? t.closest("[data-chatfriend]") : null;
+  if (add){
+    add.disabled = true; add.textContent = "Requested";
+    sb.rpc("tc_send_friend_request", { p_target: add.getAttribute("data-add") }).then(function(res){
+      if (!res.data || !res.data.ok){ toast("Couldn't send request", (res.data && res.data.error) ? res.data.error.replace(/_/g, " ") : "Try again."); loadFriends($("dirSearch").value.trim()); }
+    }).catch(function(){ toast("Couldn't send request", "Check your connection."); });
+  }
+  if (acc) respondRequest(acc.getAttribute("data-accept"), true);
+  if (dec) respondRequest(dec.getAttribute("data-decline"), false);
+  if (cf){
+    var pid = cf.getAttribute("data-chatfriend");
+    loadChats().then(function(){
+      var c = S.chats.find(function(x){ return x.peer_id === pid; });
+      if (c){ showChatsSub("thread"); openChat(c); }
+      else toast("No chat yet", "Your conversation will appear in Chats.");
+    });
+  }
+});
+function respondRequest(id, accept){
+  sb.rpc("tc_respond_friend_request", { p_id: id, p_accept: accept }).then(function(res){
+    loadRequests(); loadFriends($("dirSearch").value.trim()); loadChats();
+    if (accept && res.data && res.data.ok) toast("Friend added", "You can now chat — find them in your Chats list.");
+  }).catch(function(){});
+}
+</script>
+
+<script>
+/* ---------------- earn ---------------- */
+function loadEarn(){
+  if (!sb || !S.user) return Promise.resolve();
+  var day = lagosToday();
+  var startISO = day + "T00:00:00+01:00";
+  return Promise.all([
+    sb.from("tc_earn_daily").select("earned").eq("user_id", S.user.id).eq("day", day).maybeSingle(),
+    sb.from("tc_messages").select("id", { count: "exact", head: true }).eq("sender_id", S.user.id).gte("created_at", startISO)
+  ]).then(function(results){
+    S.earnedToday = results[0].data ? (results[0].data.earned || 0) : 0;
+    S.sentToday = results[1].count || 0;
+    $("earnTodayTn").textContent = S.earnedToday + " TN";
+    $("earnTodaySent").textContent = S.sentToday;
+    $("earnCapBar").style.width = Math.min(100, (S.earnedToday / DAILY_CAP) * 100) + "%";
+    $("earnCapText").textContent = S.earnedToday + " / " + DAILY_CAP + " TN daily cap";
+    renderMemberLines();
+  }).catch(function(){ renderMemberLines(); });
+}
+function memberStateLines(){
+  if (!S.access) return { prof: "—", rate: "—", earn: "—" };
+  if (S.access.member_active){
+    var dl = daysLeft(S.access.member_ends_at);
+    return {
+      prof: "Member · 6-month plan · ends " + fmtDate(S.access.member_ends_at) + " · " + dl + " days left",
+      rate: "You're earning 5 TN per message",
+      earn: "Member · 6-month plan"
+    };
+  }
+  if (S.access.trial_active){
+    var tdl = daysLeft(S.access.trial_ends_at);
+    return {
+      prof: "Free month — ends " + fmtDate(S.access.trial_ends_at) + " · " + tdl + " days left",
+      rate: "You're earning 1 TN per message — members earn 5 TN",
+      earn: "Free month"
+    };
+  }
+  return { prof: "No active plan", rate: "Get membership to keep using TrybChat", earn: "No active plan" };
+}
+function renderMemberLines(){
+  var L = memberStateLines();
+  $("earnMemberLine").textContent = L.earn;
+  $("earnRateLine").textContent = L.rate;
+}
+
+/* ---------------- profile ---------------- */
+function renderProfile(){
+  if (!S.profile) return;
+  paintAvatar($("profAvatar"), S.profile.full_name, S.profile.avatar_url);
+  $("profName").textContent = S.profile.full_name || "";
+  $("profUser").textContent = "@" + (S.profile.username || "");
+  var L = memberStateLines();
+  $("profMemberLine").textContent = L.prof;
+  $("profRateLine").textContent = L.rate;
+  $("profMemberBtn").textContent = S.access && S.access.member_active ? "Renew membership — $12 / 6 months" : "Get membership — $12 / 6 months";
+  paintWallet();
+  renderDirToggle();
+}
+function renderDirToggle(){
+  $("listedBtn").classList.toggle("on", S.listed);
+  $("privateBtn").classList.toggle("on", !S.listed);
+  $("dirStateNote").textContent = S.listed
+    ? "You're listed — other users can find you in the directory and search."
+    : "You're private — other users can't find you in the directory or search.";
+}
+function setListed(v){
+  sb.rpc("tc_set_directory_listed", { p_listed: v }).then(function(res){
+    if (res.data && res.data.ok){ S.listed = v; renderDirToggle(); renderDirNote(); }
+  }).catch(function(){ toast("Couldn't update", "Check your connection."); });
+}
+$("listedBtn").addEventListener("click", function(){ setListed(true); });
+$("privateBtn").addEventListener("click", function(){ setListed(false); });
+$("profMemberBtn").addEventListener("click", openSub);
+
+/* ---------------- subscribe ---------------- */
+function openSub(){
+  $("subMainBal").textContent = money(S.wallet ? S.wallet.main_balance : 0);
+  $("subErr").textContent = "";
+  var btn = $("subPayBtn"); btn.disabled = false; btn.textContent = "Pay $12 — Join for 6 months";
+  $("subOverlay").classList.add("show");
+}
+function closeSub(){ $("subOverlay").classList.remove("show"); }
+$("subCloseBtn").addEventListener("click", closeSub);
+$("subOverlay").addEventListener("click", function(e){ if (e.target === $("subOverlay")) closeSub(); });
+$("pwPayBtn").addEventListener("click", function(){ openSub(); });
+$("subPayBtn").addEventListener("click", function(){
+  var btn = $("subPayBtn"); btn.disabled = true; btn.textContent = "Processing…";
+  sb.rpc("tc_buy_membership").then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){
+      btn.disabled = false; btn.textContent = "Pay $12 — Join for 6 months";
+      if (d && d.error === "insufficient_main_balance"){
+        $("subErr").textContent = "Your Main Balance is below $12 — deposit in the TrybNetwork app, then try again.";
+      } else {
+        $("subErr").textContent = "Payment didn't go through — check your connection and try again.";
+      }
+      return;
+    }
+    closeSub();
+    toast("Membership active", "Your 6-month membership runs until " + fmtDate(d.ends_at) + ".");
+    refreshWallet().then(function(){ refreshAccess().then(gate); });
+  }).catch(function(){
+    btn.disabled = false; btn.textContent = "Pay $12 — Join for 6 months";
+    $("subErr").textContent = "Payment didn't go through — check your connection and try again.";
+  });
+});
+
+/* ---------------- dock + boot ---------------- */
+$("dockChats").addEventListener("click", function(){ showTab("chats"); });
+$("dockEarn").addEventListener("click", function(){ showTab("earn"); });
+$("dockProfile").addEventListener("click", function(){ showTab("profile"); });
+window.addEventListener("focus", function(){
+  if (!S.user) return;
+  refreshWallet();
+  refreshAccess().then(function(a){
+    if (!a) return;
+    if (!a.has_access && !$("appScreen").classList.contains("hidden")) gate();
+    else if (a.has_access && !$("paywallScreen").classList.contains("hidden")) gate();
+    else if (a.has_access){ renderBanner(); }
+  });
+  if (S.currentChat) loadMessages(S.currentChat.chat_id); else if (!$("appScreen").classList.contains("hidden")) loadChats();
+});
+if (!sb){
+  $("liErr").textContent = "Couldn't load the sign-in service — check your connection and reload.";
+  showScreen("auth");
+} else {
+  sb.auth.getSession().then(function(res){
+    if (res.data.session) enterApp();
+    else showScreen("auth");
+  }).catch(function(){ showScreen("auth"); });
+  sb.auth.onAuthStateChange(function(event){
+    if (event === "SIGNED_OUT") showScreen("auth");
+  });
+}
+</script>
+</body>
+</html>
