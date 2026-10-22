@@ -407,6 +407,31 @@ $("loginForm").addEventListener("submit", function(e){
     doSignIn(res.data);
   }).catch(function(){ fail("Couldn't reach the server — check your connection and try again."); });
 });
+/* Device fingerprint for the trust layer — a privacy-light hash of stable
+   device traits (no raw values leave the phone). Fail-soft: if the
+   tc_set_device_hash RPC doesn't exist yet, nothing happens. */
+function deviceHash(){
+  try {
+    var parts = [navigator.userAgent || "", (screen.width || "") + "x" + (screen.height || ""),
+      (Intl.DateTimeFormat().resolvedOptions().timeZone || ""), navigator.language || "",
+      String(navigator.hardwareConcurrency || ""), String(navigator.maxTouchPoints || "")];
+    var s = parts.join("|"), h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0; i < s.length; i++){ var ch = s.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (h2 >>> 0).toString(16) + (h1 >>> 0).toString(16);
+  } catch(e){ return ""; }
+}
+function reportDeviceHash(){
+  try {
+    var h = deviceHash(); if (!h || !sb) return;
+    if (localStorage.getItem("tc_dev_sent") === h) return;
+    sb.rpc("tc_set_device_hash", { p_hash: h }).then(function(res){
+      if (res && res.data && res.data.ok) localStorage.setItem("tc_dev_sent", h);
+    }).catch(function(){});
+  } catch(e){}
+}
 function signOut(){
   if (sb) sb.auth.signOut().catch(function(){});
   S.user = null; S.profile = null; S.access = null; S.chats = []; S.currentChat = null;
@@ -435,6 +460,7 @@ function refreshAccess(){
     if (res.data && res.data.ok){
       S.access = res.data;
       S.listed = !!res.data.directory_listed;
+      reportDeviceHash();
     }
     return S.access;
   });
