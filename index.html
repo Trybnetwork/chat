@@ -108,6 +108,12 @@
   .voice-play{ width:34px; height:34px; flex:none; border-radius:50%; border:none; background:var(--gold); color:var(--navy); font-size:13px; display:grid; place-items:center; cursor:pointer; }
   .msg.them .voice-play{ background:var(--navy); color:var(--gold); }
   .voice-dur{ font-size:12.5px; font-weight:700; opacity:.85; }
+  .typing-row{ display:flex; align-items:center; gap:9px; padding:6px 16px 2px; background:#fff; }
+  .t-bubble{ background:#EFF0F5; border-radius:20px; border-bottom-left-radius:5px; padding:11px 13px; display:inline-flex; gap:4px; }
+  .t-bubble i{ width:7px; height:7px; border-radius:50%; background:#8A8FA3; display:block; animation:tb 1.2s infinite; }
+  .t-bubble i:nth-child(2){ animation-delay:.15s; } .t-bubble i:nth-child(3){ animation-delay:.3s; }
+  @keyframes tb{ 0%,60%,100%{ transform:translateY(0); opacity:.5; } 30%{ transform:translateY(-4px); opacity:1; } }
+  .typing-row .t-text{ font-size:12.5px; color:var(--mut); font-weight:600; }
   .lightbox{ position:fixed; inset:0; background:rgba(5,8,20,.93); display:none; place-items:center; z-index:200; padding:18px; }
   .lightbox.on{ display:grid; }
   .lightbox img{ max-width:100%; max-height:92vh; border-radius:12px; }
@@ -248,6 +254,7 @@
           <div class="chat-main"><div class="chat-name" id="threadName">Chat</div><div class="uname" id="threadSub" style="font-size:12.5px;color:var(--mut);"></div></div>
         </div>
         <div class="msgs" id="msgList"></div>
+        <div class="typing-row hidden" id="typingRow"><span class="t-bubble"><i></i><i></i><i></i></span><span class="t-text" id="typingText"></span></div>
         <div class="photo-strip" id="photoStrip">
           <img id="photoThumb" alt="">
           <span style="font-size:13px;color:var(--mut);">Photo ready — add a caption or just send</span>
@@ -531,6 +538,7 @@ function showChatsSub(which){
   $("groupNewWrap").classList.toggle("hidden", which !== "groupNew");
   $("groupInfoWrap").classList.toggle("hidden", which !== "groupInfo");
   if (which !== "thread" && which !== "groupInfo") S.currentChat = null;
+  if (which !== "thread") leaveTyping();
   paintDock();
 }
 
@@ -781,6 +789,7 @@ function openChat(c){
   $("threadSub").textContent = d.sub;
   showChatsSub("thread");
   loadMessages(c.chat_id);
+  joinTyping(c.chat_id);
   sb.rpc("tc_mark_read", { p_chat: c.chat_id }).then(function(){ loadChats(); }).catch(function(){});
 }
 $("threadBack").addEventListener("click", function(){ showChatsSub("list"); loadChats(); });
@@ -1061,6 +1070,49 @@ $("sendBtn").addEventListener("click", sendCurrent);
 $("msgInput").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); sendCurrent(); } });
 
 /* ---------------- realtime ---------------- */
+/* ---------------- typing indicator ---------------- */
+function joinTyping(chatId){
+  leaveTyping();
+  S.typers = {};
+  try {
+    S.typingChan = sb.channel("typing-" + chatId, { config: { broadcast: { self: false } } });
+    S.typingChan.on("broadcast", { event: "typing" }, function(msg){
+      var p = msg.payload || {};
+      if (!p.uid || p.uid === S.user.id) return;
+      S.typers[p.uid] = { name: p.name || "Someone", until: Date.now() + 4000 };
+      renderTypers();
+    }).subscribe();
+  } catch (e) { S.typingChan = null; }
+}
+function leaveTyping(){
+  if (S.typingChan){ try { sb.removeChannel(S.typingChan); } catch (e) {} S.typingChan = null; }
+  S.typers = {};
+  renderTypers();
+}
+function renderTypers(){
+  var row = $("typingRow"); if (!row) return;
+  var now = Date.now(), names = [];
+  Object.keys(S.typers || {}).forEach(function(uid){
+    if (S.typers[uid].until > now) names.push(S.typers[uid].name);
+    else delete S.typers[uid];
+  });
+  if (!names.length){ row.classList.add("hidden"); return; }
+  row.classList.remove("hidden");
+  $("typingText").textContent = names.length === 1 ? names[0] + " is typing…" :
+    names.length === 2 ? names[0] + " and " + names[1] + " are typing…" : "Several people are typing…";
+  if (S.typingPrune) clearTimeout(S.typingPrune);
+  S.typingPrune = setTimeout(renderTypers, 1300);
+}
+function pingTyping(){
+  if (!S.typingChan || !S.currentChat) return;
+  var now = Date.now();
+  if (S.lastTypingPing && now - S.lastTypingPing < 2500) return;
+  S.lastTypingPing = now;
+  var nm = S.profile && S.profile.full_name ? S.profile.full_name : "Someone";
+  try { S.typingChan.send({ type: "broadcast", event: "typing", payload: { uid: S.user.id, name: nm } }); } catch (e) {}
+}
+$("msgInput").addEventListener("input", function(){ if ($("msgInput").value.trim()) pingTyping(); });
+
 function startRealtime(){
   if (S.rtStarted || !sb) return;
   S.rtStarted = true;
