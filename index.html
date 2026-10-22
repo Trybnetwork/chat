@@ -22,7 +22,7 @@
   html,body{ margin:0; padding:0; }
   body{ font-family:"Inter",system-ui,sans-serif; background:#EEF0F6; color:var(--ink); }
   .phone{ max-width:480px; margin:0 auto; min-height:100dvh; background:#fff; display:flex; flex-direction:column; position:relative; box-shadow:0 0 40px rgba(11,17,50,.08); }
-  button{ font-family:inherit; cursor:pointer; }
+  button{ font-family:inherit; cursor:pointer; color:inherit; }
   input{ font-family:inherit; }
   .hidden{ display:none !important; }
 
@@ -55,11 +55,12 @@
   .banner .btn{ margin-top:10px; }
 
   /* ---------- chat list ---------- */
-  .chat-row{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:#fff; border:none; border-bottom:1px solid #EFF0F5; padding:13px 16px; }
+  .chat-row{ display:flex; align-items:center; gap:13px; width:100%; text-align:left; background:#fff; border:none; padding:13px 16px; }
   .chat-row:active{ background:var(--soft2); }
   .chat-main{ flex:1; min-width:0; }
   .chat-top{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
-  .chat-name{ font-family:"Manrope",sans-serif; font-weight:800; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chat-name{ font-family:"Manrope",sans-serif; font-weight:800; font-size:16px; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .time-sep{ text-align:center; font-size:11.5px; color:#9AA0BD; font-weight:600; margin:10px 0 2px; }
   .chat-row .avatar{ width:54px; height:54px; font-size:19px; }
   .chat-row.unread .chat-last{ color:var(--ink); font-weight:600; }
   .chat-search{ margin:4px 16px 6px; background:#EFF0F5; border-radius:999px; display:flex; align-items:center; gap:9px; padding:11px 16px; color:var(--mut); }
@@ -112,10 +113,17 @@
   .lightbox img{ max-width:100%; max-height:92vh; border-radius:12px; }
 
   /* ---------- dock ---------- */
-  .dock{ display:flex; border-top:1px solid #EFF0F5; background:#fff; position:sticky; bottom:0; z-index:30; padding-bottom:env(safe-area-inset-bottom); }
-  .dock button{ flex:1; background:none; border:none; padding:10px 0 9px; display:flex; flex-direction:column; align-items:center; gap:3px; color:#9AA0BD; font-size:11.5px; font-weight:700; font-family:"Manrope",sans-serif; }
+  .dock{ display:flex; border-top:1px solid #EFF0F5; background:#fff; position:sticky; bottom:0; z-index:30; padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -3px 14px rgba(11,17,50,.04); }
+  .dock button{ flex:1; background:none; border:none; padding:8px 0 7px; display:flex; flex-direction:column; align-items:center; gap:3px; color:#8A8FA3; font-size:11px; font-weight:700; font-family:"Manrope",sans-serif; }
   .dock button.active{ color:var(--navy); }
-  .dock button.active svg{ color:var(--navy); }
+  .dock .d-ic{ position:relative; display:grid; place-items:center; }
+  .dock .dbdg{ position:absolute; top:-7px; right:-13px; min-width:18px; height:18px; padding:0 4px; border-radius:999px; background:#F02849; color:#fff; font-size:10.5px; font-weight:800; display:grid; place-items:center; border:2px solid #fff; }
+  .menu-row{ display:flex; align-items:center; gap:13px; width:100%; background:#fff; border:1.5px solid var(--line); border-radius:18px; padding:15px 16px; margin-top:12px; text-align:left; }
+  .menu-row .mr-ic{ width:42px; height:42px; border-radius:50%; display:grid; place-items:center; flex:none; background:var(--gold); color:var(--navy); font-family:"Manrope",sans-serif; font-weight:800; font-size:13px; }
+  .menu-row .mr-main{ flex:1; min-width:0; }
+  .menu-row .mr-name{ font-family:"Manrope",sans-serif; font-weight:800; font-size:15.5px; color:var(--navy); }
+  .menu-row .mr-sub{ font-size:12.5px; color:var(--mut); margin-top:1px; }
+  .menu-row .mr-chev{ color:#9AA0BD; flex:none; }
 
   /* ---------- generic panels ---------- */
   .view-title{ font-family:"Manrope",sans-serif; font-size:24px; font-weight:800; margin:16px 0 4px; }
@@ -224,7 +232,6 @@
           </button>
           <button class="icon-btn" id="addFriendsBtn" type="button" aria-label="Add friends">
             <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-            <span class="bdg hidden" id="reqBadge">0</span>
           </button>
         </div>
         <div class="chat-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chatSearch" type="text" placeholder="Search chats"></div>
@@ -266,12 +273,11 @@
       <div id="friendsWrap" class="hidden" style="overflow-y:auto;flex:1;">
         <div class="thread-head">
           <button class="back-btn" id="friendsBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-          <div class="chat-main"><div class="chat-name" style="font-size:18px;">Add friends</div></div>
+          <div class="chat-main"><div class="chat-name" style="font-size:18px;">Friends</div></div>
         </div>
         <div class="pad">
           <input class="search-input" id="dirSearch" type="text" placeholder="Search name or @username…" autocomplete="off">
           <div id="dirPrivateNote"></div>
-          <div id="reqSection"></div>
           <div id="friendSection"></div>
           <div class="sect-title">All TrybChat users</div>
           <div id="dirList"></div>
@@ -324,10 +330,22 @@
       </div>
     </div>
 
+    <!-- Notifications tab -->
+    <div id="tabNotif" class="hidden" style="overflow-y:auto;flex:1;">
+      <div class="pad">
+        <div class="view-title">Notifications</div>
+        <div id="reqSection"></div>
+        <div id="notifEmpty" class="empty-note">Nothing new right now.<br>Friend requests will appear here.</div>
+      </div>
+    </div>
+
     <!-- Earn tab -->
     <div id="tabEarn" class="hidden" style="overflow-y:auto;flex:1;">
       <div class="pad">
-        <div class="view-title">Earn</div>
+        <div style="display:flex;align-items:center;gap:11px;margin:16px 0 4px;">
+          <button class="back-btn" id="earnBack" type="button" aria-label="Back to menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div class="view-title" style="margin:0;">Earn</div>
+        </div>
         <div class="card">
           <h4>Today</h4>
           <div style="display:flex;gap:22px;margin-top:8px;">
@@ -359,11 +377,16 @@
     <!-- Profile tab -->
     <div id="tabProfile" class="hidden" style="overflow-y:auto;flex:1;">
       <div class="pad">
-        <div class="view-title">Profile</div>
+        <div class="view-title">Menu</div>
         <div class="card" style="display:flex;align-items:center;gap:14px;">
           <span class="avatar lg" id="profAvatar">?</span>
           <div><div style="font-family:Manrope,sans-serif;font-weight:800;font-size:18px;" id="profName">—</div><div style="color:var(--mut);font-size:13.5px;" id="profUser">@—</div></div>
         </div>
+        <button class="menu-row" id="menuEarnRow" type="button">
+          <span class="mr-ic">TN</span>
+          <span class="mr-main"><span class="mr-name">Earn TrybCoin</span><div class="mr-sub">Today's earnings and how earning works</div></span>
+          <span class="mr-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
         <div class="card">
           <h4>Membership</h4>
           <p id="profMemberLine">—</p>
@@ -397,9 +420,10 @@
 
     <!-- Dock -->
     <nav class="dock" id="dock">
-      <button id="dockChats" class="active" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5z"/></svg>Chats</button>
-      <button id="dockEarn" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c-.6-1-1.7-1.5-3-1.5-1.7 0-3 .9-3 2.2 0 2.9 6 1.5 6 4.1 0 1.3-1.3 2.2-3 2.2-1.3 0-2.4-.5-3-1.5"/></svg>Earn</button>
-      <button id="dockProfile" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button>
+      <button id="dockChats" class="active" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6c-5.7 0-10.3 3.9-10.3 8.8 0 2.8 1.5 5.2 3.8 6.8-.2 1.1-.8 2.4-1.6 3.4 0 0 3-.2 4.9-1.3 1 .3 2.1.4 3.2.4 5.7 0 10.3-3.9 10.3-8.8S17.7 2.6 12 2.6z"/></svg><span class="dbdg hidden" id="dockChatBadge">0</span></span>Chats</button>
+      <button id="dockFriends" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8.2" r="3.7"/><path d="M2.3 20.2c.7-3.4 3.4-5.3 6.7-5.3s6 1.9 6.7 5.3H2.3z"/><circle cx="17.6" cy="9.2" r="2.9"/><path d="M16.3 14.4c2.4.3 4.3 2 5 4.7l.3 1.1h-3.6c-.3-2.1-1-4-2.2-5.5.2-.1.3-.2.5-.3z"/></svg></span>Friends</button>
+      <button id="dockNotif" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8a6.1 6.1 0 0 0-6.1 6.1c0 3.9-1.2 5.3-2.3 6.5-.4.5 0 1.4.8 1.4h15.2c.8 0 1.2-.9.8-1.4C19.2 14.2 18 12.8 18 8.9A6.1 6.1 0 0 0 12 2.8z"/><path d="M9.7 18.7a2.4 2.4 0 0 0 4.6 0H9.7z"/></svg><span class="dbdg hidden" id="reqBadge">0</span></span>Notifications</button>
+      <button id="dockMenu" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><rect x="3.4" y="5.4" width="17.2" height="2.7" rx="1.35"/><rect x="3.4" y="10.65" width="17.2" height="2.7" rx="1.35"/><rect x="3.4" y="15.9" width="17.2" height="2.7" rx="1.35"/></svg></span>Menu</button>
     </nav>
   </div>
 </div>
@@ -482,23 +506,32 @@ function showScreen(which){
   $("paywallScreen").classList.toggle("hidden", which !== "paywall");
   $("appScreen").classList.toggle("hidden", which !== "app");
 }
+function paintDock(){
+  var onFriends = S.tab === "chats" && S.chatsSub === "friends";
+  $("dockChats").classList.toggle("active", S.tab === "chats" && !onFriends);
+  $("dockFriends").classList.toggle("active", onFriends);
+  $("dockNotif").classList.toggle("active", S.tab === "notifications");
+  $("dockMenu").classList.toggle("active", S.tab === "profile" || S.tab === "earn");
+}
 function showTab(tab){
+  S.tab = tab;
   $("tabChats").classList.toggle("hidden", tab !== "chats");
+  $("tabNotif").classList.toggle("hidden", tab !== "notifications");
   $("tabEarn").classList.toggle("hidden", tab !== "earn");
   $("tabProfile").classList.toggle("hidden", tab !== "profile");
-  $("dockChats").classList.toggle("active", tab === "chats");
-  $("dockEarn").classList.toggle("active", tab === "earn");
-  $("dockProfile").classList.toggle("active", tab === "profile");
+  paintDock();
   if (tab === "earn") loadEarn();
   if (tab === "profile") renderProfile();
 }
 function showChatsSub(which){
+  S.chatsSub = which;
   $("chatsListWrap").classList.toggle("hidden", which !== "list");
   $("threadWrap").classList.toggle("hidden", which !== "thread");
   $("friendsWrap").classList.toggle("hidden", which !== "friends");
   $("groupNewWrap").classList.toggle("hidden", which !== "groupNew");
   $("groupInfoWrap").classList.toggle("hidden", which !== "groupInfo");
   if (which !== "thread" && which !== "groupInfo") S.currentChat = null;
+  paintDock();
 }
 
 /* ---------------- auth ---------------- */
@@ -700,6 +733,10 @@ function renderChatList(){
       (c.unread > 0 ? '<span class="unread-dot">' + c.unread + '</span>' : '') + '</span></span></button>';
   });
   host.innerHTML = shown ? html : '<div class="empty-note">No chats match your search.</div>';
+  var totalUnread = 0;
+  S.chats.forEach(function(c){ totalUnread += c.unread || 0; });
+  var cb = $("dockChatBadge");
+  if (cb){ if (totalUnread > 0){ cb.textContent = totalUnread; cb.classList.remove("hidden"); } else cb.classList.add("hidden"); }
 }
 $("chatSearch").addEventListener("input", function(){ S.chatQuery = $("chatSearch").value.trim(); renderChatList(); });
 function renderStrip(){
@@ -712,6 +749,7 @@ function renderStrip(){
     html += '<button class="s-item" type="button" data-stripdm="' + pid + '"><span class="avatar">' + av + '</span><span>' + esc((p.full_name || "").split(" ")[0] || "Friend") + '</span></button>';
   });
   host.innerHTML = html;
+  host.style.display = html ? "" : "none";
 }
 $("friendsStrip").addEventListener("click", function(e){
   var b = e.target.closest ? e.target.closest("[data-stripdm]") : null;
@@ -777,7 +815,7 @@ function msgHTML(m){
     content += '<span class="voice-msg"><button class="voice-play" type="button" data-voice="' + esc(m.media_path) + '" aria-label="Play voice message">' + (playing ? "❚❚" : "▶") + '</button><span class="voice-dur">' + esc(fmtDur(m.media_duration)) + '</span></span>';
   }
   if (m.body) content += esc(m.body);
-  return '<div class="msg ' + (mine ? "me" : "them") + '">' + senderLine + content + '<span class="mtime">' + esc(fmtClock(m.created_at)) + '</span></div>';
+  return '<div class="msg ' + (mine ? "me" : "them") + '">' + senderLine + content + '</div>';
 }
 $("msgList").addEventListener("click", function(e){
   var vb = e.target.closest ? e.target.closest("[data-voice]") : null;
@@ -816,7 +854,18 @@ function threadCardHTML(){
 }
 function renderMessages(){
   var host = $("msgList"); if (!host) return;
-  host.innerHTML = threadCardHTML() + S.messages.map(msgHTML).join("");
+  var html = threadCardHTML();
+  var prev = 0, prevDay = "";
+  S.messages.forEach(function(m){
+    var dt = new Date(m.created_at);
+    var day = dt.toDateString();
+    if (!prev || dt.getTime() - prev > 20 * 60 * 1000 || day !== prevDay){
+      html += '<div class="time-sep">' + esc(day === new Date().toDateString() ? fmtClock(m.created_at) : fmtTime(m.created_at) + " · " + fmtClock(m.created_at)) + '</div>';
+    }
+    prev = dt.getTime(); prevDay = day;
+    html += msgHTML(m);
+  });
+  host.innerHTML = html;
   host.scrollTop = host.scrollHeight;
 }
 function sendCurrent(){
@@ -1213,6 +1262,7 @@ function loadRequests(){
       var bdg = $("reqBadge");
       if (rows.length){ bdg.textContent = rows.length; bdg.classList.remove("hidden"); }
       else bdg.classList.add("hidden");
+      var ne = $("notifEmpty"); if (ne) ne.classList.toggle("hidden", rows.length > 0);
       renderRequests();
     });
   }).catch(function(){});
@@ -1281,7 +1331,7 @@ function renderDirNote(){
   var host = $("dirPrivateNote"); if (!host) return;
   host.innerHTML = S.listed ? "" : '<div class="banner renew" style="margin-top:12px;"><p style="margin:0;"><b>You\'re private</b> — other users can\'t find you in the directory or search.</p></div>';
 }
-$("friendsWrap").addEventListener("click", function(e){
+$("appScreen").addEventListener("click", function(e){
   var t = e.target;
   var add = t.closest ? t.closest("[data-add]") : null;
   var acc = t.closest ? t.closest("[data-accept]") : null;
@@ -1485,9 +1535,12 @@ $("subPayBtn").addEventListener("click", function(){
 });
 
 /* ---------------- dock + boot ---------------- */
-$("dockChats").addEventListener("click", function(){ showTab("chats"); });
-$("dockEarn").addEventListener("click", function(){ showTab("earn"); });
-$("dockProfile").addEventListener("click", function(){ showTab("profile"); });
+$("dockChats").addEventListener("click", function(){ showTab("chats"); showChatsSub("list"); });
+$("dockFriends").addEventListener("click", function(){ showTab("chats"); showChatsSub("friends"); });
+$("dockNotif").addEventListener("click", function(){ showTab("notifications"); loadRequests(); });
+$("dockMenu").addEventListener("click", function(){ showTab("profile"); });
+$("menuEarnRow").addEventListener("click", function(){ showTab("earn"); });
+$("earnBack").addEventListener("click", function(){ showTab("profile"); });
 window.addEventListener("focus", function(){
   if (!S.user) return;
   refreshWallet();
