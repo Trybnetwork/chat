@@ -109,6 +109,9 @@
   .voice-play{ width:34px; height:34px; flex:none; border-radius:50%; border:none; background:var(--gold); color:var(--navy); font-size:13px; display:grid; place-items:center; cursor:pointer; }
   .msg.them .voice-play{ background:var(--navy); color:var(--gold); }
   .voice-dur{ font-size:12.5px; font-weight:700; opacity:.85; }
+  #threadWrap{ position:relative; }
+  .scroll-down{ position:absolute; right:14px; bottom:84px; width:40px; height:40px; border-radius:50%; border:1px solid #E6E7EE; background:#fff; color:var(--navy); box-shadow:0 6px 18px rgba(11,17,50,.18); display:grid; place-items:center; cursor:pointer; z-index:5; }
+  .scroll-down .sd-badge{ position:absolute; top:-6px; right:-6px; min-width:19px; height:19px; padding:0 5px; border-radius:999px; background:#F02849; color:#fff; font-size:10.5px; font-weight:800; display:grid; place-items:center; border:2px solid #fff; }
   .typing-row{ display:flex; align-items:center; gap:9px; padding:6px 16px 2px; background:#fff; }
   .t-bubble{ background:#EFF0F5; border-radius:20px; border-bottom-left-radius:5px; padding:11px 13px; display:inline-flex; gap:4px; }
   .t-bubble i{ width:7px; height:7px; border-radius:50%; background:#8A8FA3; display:block; animation:tb 1.2s infinite; }
@@ -256,6 +259,7 @@
         </div>
         <div class="msgs" id="msgList"></div>
         <div class="typing-row hidden" id="typingRow"><span class="t-bubble"><i></i><i></i><i></i></span><span class="t-text" id="typingText"></span></div>
+        <button class="scroll-down hidden" id="scrollDownBtn" type="button" aria-label="Jump to latest message"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><span class="sd-badge hidden" id="scrollDownBadge"></span></button>
         <div class="photo-strip" id="photoStrip">
           <img id="photoThumb" alt="">
           <span style="font-size:13px;color:var(--mut);">Photo ready — add a caption or just send</span>
@@ -898,9 +902,40 @@ function renderMessages(){
     prev = dt.getTime(); prevDay = day;
     html += msgHTML(m);
   });
+  var stick = host.scrollHeight - host.scrollTop - host.clientHeight < 260 ||
+    (S.messages.length && S.messages[S.messages.length - 1].sender_id === S.user.id);
   host.innerHTML = html;
-  host.scrollTop = host.scrollHeight;
+  if (stick){ host.scrollTop = host.scrollHeight; S.seenTailId = S.messages.length ? S.messages[S.messages.length - 1].id : null; }
+  paintScrollDown();
 }
+function paintScrollDown(){
+  var host = $("msgList"), btn = $("scrollDownBtn");
+  if (!host || !btn) return;
+  var gap = host.scrollHeight - host.scrollTop - host.clientHeight;
+  if (gap < 260 || !S.currentChat){ btn.classList.add("hidden"); return; }
+  btn.classList.remove("hidden");
+  var unseen = 0;
+  if (S.seenTailId){
+    var idx = S.messages.findIndex(function(m){ return m.id === S.seenTailId; });
+    unseen = idx >= 0 ? S.messages.length - idx - 1 : 0;
+  }
+  var b = $("scrollDownBadge");
+  if (unseen > 0){ b.textContent = unseen; b.classList.remove("hidden"); } else b.classList.add("hidden");
+}
+$("msgList").addEventListener("scroll", function(){
+  var host = $("msgList");
+  if (host.scrollHeight - host.scrollTop - host.clientHeight < 260 && S.messages.length)
+    S.seenTailId = S.messages[S.messages.length - 1].id;
+  paintScrollDown();
+});
+$("scrollDownBtn").addEventListener("click", function(){
+  var host = $("msgList");
+  host.scrollTo({ top: host.scrollHeight, behavior: "smooth" });
+  setTimeout(function(){
+    S.seenTailId = S.messages.length ? S.messages[S.messages.length - 1].id : null;
+    paintScrollDown();
+  }, 380);
+});
 function sendCurrent(){
   if (S.pendingPhoto){ sendPhoto(); return; }
   var inp = $("msgInput");
