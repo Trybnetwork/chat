@@ -117,6 +117,10 @@
   .mini-btn.gold{ background:var(--gold); color:var(--navy); }
   .mini-btn.ghost{ background:var(--soft); color:var(--navy); border:1.5px solid var(--line); }
   .mini-btn:disabled{ opacity:.55; }
+  .pick-row{ cursor:pointer; }
+  .pick-dot{ width:30px; height:30px; flex:none; border-radius:50%; border:1.5px solid var(--line); background:var(--soft); color:var(--navy); display:grid; place-items:center; font-weight:800; font-size:15px; }
+  .pick-row.picked .pick-dot{ background:var(--gold); border-color:var(--gold); }
+  .tag-chip{ font-size:10.5px; font-weight:800; letter-spacing:.4px; background:var(--soft); border:1px solid var(--line); color:var(--navy); border-radius:999px; padding:3px 8px; flex:none; }
   .search-input{ width:100%; background:var(--soft2); border:1.5px solid var(--line); border-radius:13px; padding:12px 15px; font-size:14.5px; outline:none; margin-top:12px; }
   .search-input:focus{ border-color:var(--gold); }
   .toggle-row{ display:flex; gap:8px; margin-top:10px; }
@@ -192,6 +196,9 @@
           <span class="avatar" id="myAvatar">?</span>
           <div class="wordmark"><span class="wm-a">TRYB</span><span class="wm-b">CHAT</span></div>
           <span class="tn-pill"><img src="https://app.trybnetwork.com/trybcoin.png" alt=""> <span id="tnPillBal">0</span> TN</span>
+          <button class="icon-btn" id="newGroupBtn" type="button" aria-label="New group">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
           <button class="icon-btn" id="addFriendsBtn" type="button" aria-label="Add friends">
             <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
             <span class="bdg hidden" id="reqBadge">0</span>
@@ -236,6 +243,50 @@
           <div class="sect-title">All TrybChat users</div>
           <div id="dirList"></div>
           <p style="font-size:12.5px;color:#9AA0BD;line-height:1.6;margin:14px 0 26px;">Some TrybChat users choose to stay private and don't appear here.</p>
+        </div>
+      </div>
+
+      <!-- New group -->
+      <div id="groupNewWrap" class="hidden" style="overflow-y:auto;flex:1;">
+        <div class="thread-head">
+          <button class="back-btn" id="groupNewBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div class="chat-main"><div class="chat-name" style="font-size:18px;">New group</div></div>
+        </div>
+        <div class="pad">
+          <div class="sect-title">Group name</div>
+          <input class="search-input" id="grpName" type="text" placeholder="e.g. Weekend Traders" maxlength="60" autocomplete="off">
+          <div class="sect-title" style="margin-top:18px;">Add friends</div>
+          <div id="grpPickList"></div>
+          <button class="btn navy" id="grpCreateBtn" type="button" style="margin-top:18px;">Create group</button>
+          <p id="grpErr" style="color:#C0392B;font-size:13px;margin-top:10px;"></p>
+        </div>
+      </div>
+
+      <!-- Group info -->
+      <div id="groupInfoWrap" class="hidden" style="overflow-y:auto;flex:1;">
+        <div class="thread-head">
+          <button class="back-btn" id="groupInfoBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div class="chat-main"><div class="chat-name" style="font-size:18px;">Group info</div></div>
+        </div>
+        <div class="pad">
+          <div class="card">
+            <h4 id="giTitle">Group</h4>
+            <p id="giMeta">—</p>
+            <div id="giRenameRow" style="margin-top:12px;">
+              <input class="search-input" id="giName" type="text" maxlength="60" autocomplete="off">
+              <button class="btn navy" id="giRenameBtn" type="button" style="margin-top:10px;">Save name</button>
+            </div>
+          </div>
+          <div class="card">
+            <h4>Members</h4>
+            <div id="giMembers"></div>
+          </div>
+          <div class="card" id="giAddCard">
+            <h4>Add friends</h4>
+            <div id="giAddList"></div>
+            <button class="btn gold" id="giAddBtn" type="button" style="margin-top:12px;">Add selected</button>
+          </div>
+          <button class="btn ghost" id="giLeaveBtn" type="button" style="margin:4px 0 30px;color:#C0392B;">Leave group</button>
         </div>
       </div>
     </div>
@@ -408,7 +459,9 @@ function showChatsSub(which){
   $("chatsListWrap").classList.toggle("hidden", which !== "list");
   $("threadWrap").classList.toggle("hidden", which !== "thread");
   $("friendsWrap").classList.toggle("hidden", which !== "friends");
-  if (which !== "thread") S.currentChat = null;
+  $("groupNewWrap").classList.toggle("hidden", which !== "groupNew");
+  $("groupInfoWrap").classList.toggle("hidden", which !== "groupInfo");
+  if (which !== "thread" && which !== "groupInfo") S.currentChat = null;
 }
 
 /* ---------------- auth ---------------- */
@@ -577,8 +630,13 @@ function loadChats(){
     renderChatList();
   }).catch(function(){});
 }
+var COMMUNITY_ID = "00000000-0000-0000-0000-00000000c001";
 function chatDisplay(c){
-  if (c.kind === "group") return { name: c.title || "TrybNetwork Community", sub: "Community group", avatarName: "TN", avatarUrl: null };
+  if (c.kind === "group"){
+    if (c.chat_id === COMMUNITY_ID) return { name: c.title || "TrybNetwork Community", sub: "Community group", avatarName: "TN", avatarUrl: null };
+    var n = c.member_count ? c.member_count + (c.member_count === 1 ? " member" : " members") : "Group";
+    return { name: c.title || "Group", sub: n, avatarName: c.title || "G", avatarUrl: null };
+  }
   return { name: c.peer_name || "TrybChat user", sub: c.peer_username ? "@" + c.peer_username : "", avatarName: c.peer_name || "?", avatarUrl: c.peer_avatar };
 }
 function renderChatList(){
@@ -785,6 +843,170 @@ function startRealtime(){
     })
     .subscribe();
 }
+
+/* ---------------- groups ---------------- */
+function loadMyFriends(){
+  return sb.rpc("tc_my_friends").then(function(res){ return res.data || []; }).catch(function(){ return []; });
+}
+function pickRowHTML(p, picked){
+  var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
+  return '<div class="user-row pick-row' + (picked ? " picked" : "") + '" data-pick="' + p.user_id + '"><span class="avatar sm">' + av + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span><span class="pick-dot">' + (picked ? "✓" : "+") + '</span></div>';
+}
+function renderPickList(hostId, friends, picks){
+  var host = $(hostId); if (!host) return;
+  if (!friends.length){ host.innerHTML = '<p style="font-size:13.5px;color:var(--mut);padding:8px 0;">No friends yet — add friends first, then start a group with them.</p>'; return; }
+  host.innerHTML = friends.map(function(p){ return pickRowHTML(p, !!picks[p.user_id]); }).join("");
+}
+$("newGroupBtn").addEventListener("click", function(){
+  S.grpPick = {};
+  $("grpName").value = "";
+  $("grpErr").textContent = "";
+  showChatsSub("groupNew");
+  loadMyFriends().then(function(f){ S.grpFriends = f; renderPickList("grpPickList", f, S.grpPick); });
+});
+$("groupNewBack").addEventListener("click", function(){ showChatsSub("list"); });
+$("grpPickList").addEventListener("click", function(e){
+  var row = e.target.closest ? e.target.closest("[data-pick]") : null;
+  if (!row) return;
+  var id = row.getAttribute("data-pick");
+  if (S.grpPick[id]) delete S.grpPick[id]; else S.grpPick[id] = true;
+  renderPickList("grpPickList", S.grpFriends || [], S.grpPick);
+});
+$("grpCreateBtn").addEventListener("click", function(){
+  var title = $("grpName").value.trim();
+  var err = $("grpErr");
+  if (!title){ err.textContent = "Give your group a name first."; return; }
+  var members = Object.keys(S.grpPick || {});
+  var btn = $("grpCreateBtn"); btn.disabled = true;
+  sb.rpc("tc_create_group", { p_title: title, p_members: members }).then(function(res){
+    btn.disabled = false;
+    var d = res.data;
+    if (!d || !d.ok){
+      err.textContent = d && d.error === "not_friend" ? "Groups can only include your accepted friends."
+        : d && d.error === "group_limit" ? "You've reached the limit of 25 groups created."
+        : d && d.error === "no_access" ? "Your access has ended — renew to create groups."
+        : "Couldn't create the group — try again.";
+      return;
+    }
+    loadChats().then(function(){
+      var c = S.chats.find(function(x){ return x.chat_id === d.chat_id; });
+      if (c) openChat(c);
+      else { showChatsSub("list"); toast("Group created", title); }
+    });
+  }).catch(function(){ btn.disabled = false; err.textContent = "Couldn't create the group — check your connection."; });
+});
+function openGroupInfo(){
+  if (!S.currentChat || S.currentChat.kind !== "group") return;
+  var chatId = S.currentChat.chat_id;
+  S.leaveArm = false;
+  $("giLeaveBtn").textContent = "Leave group";
+  sb.rpc("tc_group_info", { p_chat: chatId }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){ toast("Couldn't load group", "Try again in a moment."); return; }
+    S.grpInfo = d;
+    showChatsSub("groupInfo");
+    renderGroupInfo();
+    loadMyFriends().then(function(f){
+      S.grpFriends = f;
+      renderGroupAddList();
+    });
+  }).catch(function(){ toast("Couldn't load group", "Check your connection."); });
+}
+function renderGroupInfo(){
+  var d = S.grpInfo; if (!d) return;
+  var mine = d.created_by === S.user.id;
+  $("giTitle").textContent = d.title || "Group";
+  $("giMeta").textContent = d.members.length + (d.members.length === 1 ? " member" : " members") + (d.is_community ? " · Everyone on TrybChat is a member" : "");
+  $("giRenameRow").style.display = (mine && !d.is_community) ? "" : "none";
+  $("giName").value = d.title || "";
+  $("giAddCard").style.display = d.is_community ? "none" : "";
+  $("giLeaveBtn").style.display = d.is_community ? "none" : "";
+  $("giMembers").innerHTML = d.members.map(function(p){
+    var tags = "";
+    if (p.user_id === S.user.id) tags += ' <span class="tag-chip">YOU</span>';
+    if (p.user_id === d.created_by) tags += ' <span class="tag-chip">CREATOR</span>';
+    var rm = (mine && !d.is_community && p.user_id !== S.user.id)
+      ? '<button class="mini-btn ghost" type="button" data-remove="' + p.user_id + '">Remove</button>' : "";
+    var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
+    return '<div class="user-row"><span class="avatar sm">' + av + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + tags + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + rm + '</div>';
+  }).join("");
+}
+function renderGroupAddList(){
+  var d = S.grpInfo; if (!d || d.is_community) return;
+  var memberIds = {};
+  d.members.forEach(function(p){ memberIds[p.user_id] = true; });
+  var avail = (S.grpFriends || []).filter(function(p){ return !memberIds[p.user_id]; });
+  S.grpAddPick = S.grpAddPick || {};
+  renderPickList("giAddList", avail, S.grpAddPick);
+}
+$("giAddList").addEventListener("click", function(e){
+  var row = e.target.closest ? e.target.closest("[data-pick]") : null;
+  if (!row) return;
+  var id = row.getAttribute("data-pick");
+  S.grpAddPick = S.grpAddPick || {};
+  if (S.grpAddPick[id]) delete S.grpAddPick[id]; else S.grpAddPick[id] = true;
+  renderGroupAddList();
+});
+$("giAddBtn").addEventListener("click", function(){
+  var ids = Object.keys(S.grpAddPick || {});
+  if (!ids.length || !S.grpInfo) return;
+  sb.rpc("tc_add_group_members", { p_chat: S.grpInfo.chat_id, p_members: ids }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){ toast("Couldn't add", d && d.error === "not_friend" ? "You can only add your own friends." : "Try again in a moment."); return; }
+    S.grpAddPick = {};
+    toast("Added", d.added + (d.added === 1 ? " friend" : " friends") + " joined the group.");
+    openGroupInfo();
+    loadChats();
+  }).catch(function(){ toast("Couldn't add", "Check your connection."); });
+});
+$("giRenameBtn").addEventListener("click", function(){
+  var title = $("giName").value.trim();
+  if (!title || !S.grpInfo) return;
+  sb.rpc("tc_rename_group", { p_chat: S.grpInfo.chat_id, p_title: title }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){ toast("Couldn't rename", "Only the group creator can rename it."); return; }
+    S.grpInfo.title = title;
+    if (S.currentChat) S.currentChat.title = title;
+    renderGroupInfo();
+    loadChats();
+    toast("Renamed", title);
+  }).catch(function(){ toast("Couldn't rename", "Check your connection."); });
+});
+$("giMembers").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest("[data-remove]") : null;
+  if (!b || !S.grpInfo) return;
+  sb.rpc("tc_remove_group_member", { p_chat: S.grpInfo.chat_id, p_user: b.getAttribute("data-remove") }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){ toast("Couldn't remove", "Only the group creator can remove members."); return; }
+    openGroupInfo();
+    loadChats();
+  }).catch(function(){ toast("Couldn't remove", "Check your connection."); });
+});
+$("giLeaveBtn").addEventListener("click", function(){
+  if (!S.grpInfo) return;
+  if (!S.leaveArm){
+    S.leaveArm = true;
+    $("giLeaveBtn").textContent = "Tap again to confirm leaving";
+    return;
+  }
+  sb.rpc("tc_leave_group", { p_chat: S.grpInfo.chat_id }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){ toast("Couldn't leave", "Try again in a moment."); return; }
+    S.grpInfo = null;
+    showChatsSub("list");
+    loadChats();
+    toast("Left group", "You've left the group.");
+  }).catch(function(){ toast("Couldn't leave", "Check your connection."); });
+});
+$("groupInfoBack").addEventListener("click", function(){
+  if (S.currentChat) showChatsSub("thread");
+  else showChatsSub("list");
+});
+["threadName", "threadSub", "threadAvatar"].forEach(function(id){
+  $(id).addEventListener("click", function(){
+    if (S.currentChat && S.currentChat.kind === "group") openGroupInfo();
+  });
+});
 
 /* ---------------- friends ---------------- */
 $("addFriendsBtn").addEventListener("click", function(){
