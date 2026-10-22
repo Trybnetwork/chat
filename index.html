@@ -42,8 +42,8 @@
   /* ---------- banner cards ---------- */
   .pad{ padding:0 16px; }
   .banner{ border-radius:18px; padding:16px; margin:6px 0 4px; }
-  .banner.trial{ background:var(--navy); color:#fff; }
-  .banner.renew{ background:#FFF8E7; border:1.5px solid var(--gold); color:var(--ink); }
+  .banner.trial{ background:linear-gradient(155deg,#FFFFFF 0%,#F1F3FA 100%); color:var(--ink); border:1px solid rgba(11,17,50,.07); box-shadow:0 22px 40px rgba(11,17,50,.16), 0 5px 14px rgba(11,17,50,.09), inset 0 1px 0 #FFFFFF; }
+  .banner.renew{ background:linear-gradient(155deg,#FFFFFF 0%,#F1F3FA 100%); border:1.5px solid var(--gold); color:var(--ink); box-shadow:0 22px 40px rgba(11,17,50,.16), 0 5px 14px rgba(11,17,50,.09), inset 0 1px 0 #FFFFFF; }
   .banner h4{ margin:0 0 4px; font-family:"Manrope",sans-serif; font-size:16.5px; display:flex; align-items:center; gap:8px; }
   .banner p{ margin:0 0 6px; font-size:13.5px; line-height:1.55; opacity:.85; }
   .banner .rate-line{ font-weight:700; opacity:1; }
@@ -503,7 +503,7 @@ function renderBanner(){
     host.innerHTML = '<div class="banner trial"><h4>Free month — Day ' + dayNum + ' of 30</h4>' +
       '<p>First month free with full access — premium membership required after to keep using TrybChat.</p>' +
       '<p class="rate-line">You\'re earning 1 TN per message</p>' +
-      '<button class="btn gold" id="bannerSubBtn" type="button">Get membership — $12 / 6 months</button></div>';
+      '<button class="btn navy" id="bannerSubBtn" type="button">Get membership — $12 / 6 months</button></div>';
     $("bannerSubBtn").addEventListener("click", openSub);
     return;
   }
