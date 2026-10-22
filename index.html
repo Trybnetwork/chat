@@ -85,6 +85,19 @@
   .msgs{ flex:1; padding:16px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
   .msg{ max-width:78%; padding:10px 14px; border-radius:20px; font-size:14.5px; line-height:1.45; word-wrap:break-word; white-space:pre-wrap; }
   .msg a{ color:inherit; text-decoration:underline; text-underline-offset:2px; font-weight:600; overflow-wrap:anywhere; }
+  .msg{ -webkit-touch-callout:none; }
+  .msg .quote{ display:block; background:rgba(11,17,50,.07); border-left:3px solid var(--gold); border-radius:8px; padding:7px 9px; margin-bottom:7px; cursor:pointer; }
+  .msg.me .quote{ background:rgba(255,255,255,.15); }
+  .msg .quote .qname{ display:block; font-size:11px; font-weight:800; color:var(--gold-dark); }
+  .msg.me .quote .qname{ color:var(--gold); }
+  .msg .quote .qbody{ display:block; font-size:12.5px; opacity:.78; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:230px; }
+  .reply-bar{ display:flex; align-items:center; gap:10px; padding:10px 14px 4px; background:#fff; }
+  .reply-bar .rb-main{ flex:1; min-width:0; border-left:3px solid var(--gold); padding-left:10px; }
+  .reply-bar .rb-name{ font-size:12px; font-weight:800; color:var(--navy); font-family:Manrope,sans-serif; }
+  .reply-bar .rb-body{ font-size:12.5px; color:var(--mut); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .reply-bar .rb-x{ width:30px; height:30px; flex:none; border-radius:50%; border:none; background:#EFF0F5; color:var(--navy); display:grid; place-items:center; cursor:pointer; }
+  .msg.flash{ animation:msgflash 1.5s ease; }
+  @keyframes msgflash{ 0%,55%{ box-shadow:0 0 0 3px var(--gold); } 100%{ box-shadow:none; } }
   .msg.them{ background:#EFF0F5; align-self:flex-start; border-bottom-left-radius:5px; }
   .msg.me{ background:var(--navy); color:#fff; align-self:flex-end; border-bottom-right-radius:5px; }
   .msg .mtime{ display:block; font-size:10px; opacity:.55; margin-top:4px; text-align:right; }
@@ -260,6 +273,10 @@
         <div class="msgs" id="msgList"></div>
         <div class="typing-row hidden" id="typingRow"><span class="t-bubble"><i></i><i></i><i></i></span><span class="t-text" id="typingText"></span></div>
         <button class="scroll-down hidden" id="scrollDownBtn" type="button" aria-label="Jump to latest message"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><span class="sd-badge hidden" id="scrollDownBadge"></span></button>
+        <div class="reply-bar hidden" id="replyBar">
+          <div class="rb-main"><div class="rb-name" id="replyName"></div><div class="rb-body" id="replyBody"></div></div>
+          <button class="rb-x" id="replyCancel" type="button" aria-label="Cancel reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
         <div class="photo-strip" id="photoStrip">
           <img id="photoThumb" alt="">
           <span style="font-size:13px;color:var(--mut);">Photo ready — add a caption or just send</span>
@@ -805,6 +822,7 @@ $("chatList").addEventListener("click", function(e){
 });
 function openChat(c){
   clearPendingPhoto();
+  clearReplyTarget();
   if (S.recorder) stopRecording(true);
   S.currentChat = c;
   var d = chatDisplay(c);
@@ -818,7 +836,7 @@ function openChat(c){
 }
 $("threadBack").addEventListener("click", function(){ showChatsSub("list"); loadChats(); });
 function loadMessages(chatId){
-  sb.from("tc_messages").select("id, chat_id, sender_id, body, kind, media_path, media_duration, created_at").eq("chat_id", chatId).order("created_at", { ascending: true }).limit(300).then(function(res){
+  sb.from("tc_messages").select("id, chat_id, sender_id, body, kind, media_path, media_duration, created_at, reply_to").eq("chat_id", chatId).order("created_at", { ascending: true }).limit(300).then(function(res){
     S.messages = res.data || [];
     renderMessages();
   }).catch(function(){});
@@ -852,9 +870,11 @@ function msgHTML(m){
     content += '<span class="voice-msg"><button class="voice-play" type="button" data-voice="' + esc(m.media_path) + '" aria-label="Play voice message">' + (playing ? "❚❚" : "▶") + '</button><span class="voice-dur">' + esc(fmtDur(m.media_duration)) + '</span></span>';
   }
   if (m.body) content += richText(m.body);
-  return '<div class="msg ' + (mine ? "me" : "them") + '">' + senderLine + content + '</div>';
+  return '<div class="msg ' + (mine ? "me" : "them") + '" data-mid="' + m.id + '">' + senderLine + quoteHTML(m) + content + '</div>';
 }
 $("msgList").addEventListener("click", function(e){
+  var q = e.target.closest ? e.target.closest("[data-quote]") : null;
+  if (q){ jumpToMsg(q.getAttribute("data-quote")); return; }
   var vb = e.target.closest ? e.target.closest("[data-voice]") : null;
   if (vb){ toggleVoice(vb.getAttribute("data-voice")); return; }
   var img = e.target.closest ? e.target.closest("img.photo") : null;
@@ -951,7 +971,8 @@ function sendCurrent(){
       else toast("Couldn't send", "Check your connection and try again.");
       return;
     }
-    S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, body: body, created_at: new Date().toISOString() });
+    S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, body: body, created_at: new Date().toISOString(), reply_to: S.replyTo ? S.replyTo.id : null });
+    applyReply(d.message_id);
     renderMessages();
     if (typeof d.earned_today === "number") S.earnedToday = d.earned_today;
     if (d.earned > 0) refreshWallet();
@@ -1021,7 +1042,8 @@ function sendPhoto(){
       S.mediaUrls[path] = pf.url;
       S.pendingPhoto = null; /* preview URL ownership moved to mediaUrls — do not revoke */
       $("photoStrip").classList.remove("on");
-      S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, body: caption, kind: "photo", media_path: path, created_at: new Date().toISOString() });
+      S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, body: caption, kind: "photo", media_path: path, created_at: new Date().toISOString(), reply_to: S.replyTo ? S.replyTo.id : null });
+      applyReply(d.message_id);
       $("msgInput").value = "";
       renderMessages();
       if (typeof d.earned_today === "number") S.earnedToday = d.earned_today;
@@ -1113,7 +1135,8 @@ function sendVoice(blob, seconds, mime){
         return;
       }
       S.mediaUrls[path] = URL.createObjectURL(blob);
-      S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, body: "", kind: "voice", media_path: path, media_duration: seconds, created_at: new Date().toISOString() });
+      S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, body: "", kind: "voice", media_path: path, media_duration: seconds, created_at: new Date().toISOString(), reply_to: S.replyTo ? S.replyTo.id : null });
+      applyReply(d.message_id);
       renderMessages();
       if (typeof d.earned_today === "number") S.earnedToday = d.earned_today;
       if (d.earned > 0) refreshWallet();
@@ -1125,6 +1148,95 @@ $("sendBtn").addEventListener("click", sendCurrent);
 $("msgInput").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); sendCurrent(); } });
 
 /* ---------------- realtime ---------------- */
+/* ---------------- quote replies ---------------- */
+function replySnippet(m){
+  if (!m) return "Original message";
+  if (m.kind === "photo") return m.body ? "📷 " + m.body : "📷 Photo";
+  if (m.kind === "voice") return "🎤 Voice message";
+  return m.body || "";
+}
+function replyName(m){
+  if (!m) return "";
+  if (m.sender_id === S.user.id) return "You";
+  var p = S.profileCache[m.sender_id];
+  return p ? (p.full_name || "Member") : "Member";
+}
+function findMsg(id){
+  var m = S.messages.find(function(x){ return x.id === id; });
+  if (m) return m;
+  return (S.replyCache && S.replyCache[id]) || null;
+}
+function fetchReplyTarget(id){
+  S.replyCache = S.replyCache || {}; S.replyFetching = S.replyFetching || {};
+  if (S.replyFetching[id]) return;
+  S.replyFetching[id] = true;
+  sb.from("tc_messages").select("id, chat_id, sender_id, body, kind, media_path, media_duration, created_at, reply_to").eq("id", id).maybeSingle().then(function(r){
+    delete S.replyFetching[id];
+    if (r.data){ S.replyCache[id] = r.data; renderMessages(); }
+  }).catch(function(){ delete S.replyFetching[id]; });
+}
+function quoteHTML(m){
+  if (!m.reply_to) return "";
+  var t = findMsg(m.reply_to);
+  if (!t){ fetchReplyTarget(m.reply_to); return '<span class="quote" data-quote="' + esc(m.reply_to) + '"><span class="qbody">Original message</span></span>'; }
+  if (t.sender_id !== S.user.id && !S.profileCache[t.sender_id]) senderProfile(t.sender_id).then(function(){ renderMessages(); });
+  return '<span class="quote" data-quote="' + esc(m.reply_to) + '"><span class="qname">' + esc(replyName(t)) + '</span><span class="qbody">' + esc(replySnippet(t)) + "</span></span>";
+}
+function setReplyTarget(m){
+  if (!m) return;
+  S.replyTo = m;
+  $("replyName").textContent = replyName(m);
+  $("replyBody").textContent = replySnippet(m);
+  $("replyBar").classList.remove("hidden");
+  $("msgInput").focus();
+}
+function clearReplyTarget(){
+  S.replyTo = null;
+  var b = $("replyBar"); if (b) b.classList.add("hidden");
+}
+function triggerReply(mid){
+  var m = findMsg(mid);
+  if (m) setReplyTarget(m);
+}
+function jumpToMsg(id){
+  var el = $("msgList").querySelector('[data-mid="' + id + '"]');
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+}
+function applyReply(messageId){
+  var rt = S.replyTo;
+  clearReplyTarget();
+  if (rt && messageId) sb.rpc("tc_set_reply", { p_msg: messageId, p_reply_to: rt.id }).catch(function(){});
+  return rt ? rt.id : null;
+}
+$("replyCancel").addEventListener("click", clearReplyTarget);
+(function(){
+  var t = null;
+  var host = $("msgList");
+  host.addEventListener("touchstart", function(e){
+    var el = e.target.closest ? e.target.closest(".msg") : null;
+    if (!el) return;
+    var touch = e.touches[0];
+    t = { mid: el.getAttribute("data-mid"), x: touch.clientX, y: touch.clientY, done: false };
+    t.lp = setTimeout(function(){ if (t && !t.done){ t.done = true; triggerReply(t.mid); } }, 600);
+  }, { passive: true });
+  host.addEventListener("touchmove", function(e){
+    if (!t) return;
+    var touch = e.touches[0];
+    var dx = touch.clientX - t.x, dy = Math.abs(touch.clientY - t.y);
+    if (Math.abs(dx) > 12 || dy > 12) clearTimeout(t.lp);
+    if (!t.done && dx > 55 && dy < 40){ t.done = true; clearTimeout(t.lp); triggerReply(t.mid); }
+  }, { passive: true });
+  function endT(){ if (t) clearTimeout(t.lp); t = null; }
+  host.addEventListener("touchend", endT);
+  host.addEventListener("touchcancel", endT);
+  host.addEventListener("contextmenu", function(e){
+    var el = e.target.closest ? e.target.closest(".msg") : null;
+    if (el){ e.preventDefault(); triggerReply(el.getAttribute("data-mid")); }
+  });
+})();
+
 /* ---------------- typing indicator ---------------- */
 function joinTyping(chatId){
   leaveTyping();
