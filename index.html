@@ -439,7 +439,7 @@
 <div class="overlay" id="subOverlay">
   <div class="sheet" role="dialog" aria-modal="true">
     <h3 id="subTitle">TrybChat Membership</h3>
-    <p class="sheet-sub" id="subDesc">Full access to TrybChat for 6 months — and earn 5 TN per message, 5× faster than the free month.</p>
+    <p class="sheet-sub" id="subDesc">Earn 5 TN per message for 6 months — 5× the free-month rate. Chatting itself is always free.</p>
     <div class="rowline"><span>Membership — 6 months</span><b>$12.00</b></div>
     <div class="rowline"><span>Your Main Balance</span><b id="subMainBal">$0.00</b></div>
     <div class="err" id="subErr" style="margin-top:10px;"></div>
@@ -643,7 +643,8 @@ function enterApp(){
 }
 function gate(){
   if (!S.access) return;
-  if (!S.access.has_access){ renderPaywall(); showScreen("paywall"); return; }
+  /* Chatting is always free (Erudite's rule, 2026-10-22) — access state
+     only drives earning banners/cards now, never a paywall. */
   showScreen("app");
   showTab("chats"); showChatsSub("list");
   paintHeader(); renderBanner(); loadChats(); loadRequests(); loadFriends(null); loadEarn();
@@ -673,7 +674,7 @@ function renderBanner(){
     var dl = daysLeft(S.access.member_ends_at);
     if (dl <= 7){
       host.innerHTML = '<div class="banner renew"><h4>Membership renews soon</h4>' +
-        '<p><b>' + dl + ' day' + (dl === 1 ? "" : "s") + ' left</b> — your plan ends ' + fmtDate(S.access.member_ends_at) + '. Renew to keep full access and your 5 TN per message rate.</p>' +
+        '<p><b>' + dl + ' day' + (dl === 1 ? "" : "s") + ' left</b> — your plan ends ' + fmtDate(S.access.member_ends_at) + '. Renew to keep your 5 TN per message earning rate.</p>' +
         '<button class="btn navy" id="bannerRenewBtn" type="button">Renew — $12 / 6 months</button></div>';
       $("bannerRenewBtn").addEventListener("click", openSub);
     } else host.innerHTML = "";
@@ -683,13 +684,16 @@ function renderBanner(){
     var tdl = daysLeft(S.access.trial_ends_at);
     var dayNum = Math.min(30, Math.max(1, 31 - tdl));
     host.innerHTML = '<div class="banner trial"><h4>Free month — Day ' + dayNum + ' of 30</h4>' +
-      '<p>First month free with full access — premium membership required after to keep using TrybChat.</p>' +
+      '<p>First month free — chatting is always free on TrybChat. After your free month, membership keeps you earning, at an even better rate.</p>' +
       '<p class="rate-line">You\'re earning 1 TN per message</p>' +
       '<button class="btn navy" id="bannerSubBtn" type="button">Get membership — $12 / 6 months</button></div>';
     $("bannerSubBtn").addEventListener("click", openSub);
     return;
   }
-  host.innerHTML = "";
+  host.innerHTML = '<div class="banner renew"><h4>Earning is paused</h4>' +
+    '<p>Your free month has ended — <b>chatting stays free forever</b>. Membership turns earning back on at <b>5 TN per message</b>.</p>' +
+    '<button class="btn navy" id="bannerSubBtn2" type="button">Get membership — $12 / 6 months</button></div>';
+  $("bannerSubBtn2").addEventListener("click", openSub);
 }
 </script>
 
@@ -1455,7 +1459,7 @@ function memberStateLines(){
       earn: "Free month"
     };
   }
-  return { prof: "No active plan", rate: "Get membership to keep using TrybChat", earn: "No active plan" };
+  return { prof: "No active plan", rate: "You're not earning right now — membership pays 5 TN per message", earn: "No active plan" };
 }
 function renderMemberLines(){
   var L = memberStateLines();
@@ -1602,9 +1606,8 @@ window.addEventListener("focus", function(){
   refreshWallet();
   refreshAccess().then(function(a){
     if (!a) return;
-    if (!a.has_access && !$("appScreen").classList.contains("hidden")) gate();
-    else if (a.has_access && !$("paywallScreen").classList.contains("hidden")) gate();
-    else if (a.has_access){ renderBanner(); }
+    renderBanner();
+    if (typeof renderMemberLines === "function") renderMemberLines();
   });
   if (S.currentChat) loadMessages(S.currentChat.chat_id); else if (!$("appScreen").classList.contains("hidden")) loadChats();
 });
