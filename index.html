@@ -84,6 +84,7 @@
   .back-btn{ width:42px; height:42px; flex:none; display:grid; place-items:center; background:var(--soft); border:1.5px solid var(--line); border-radius:12px; color:var(--navy); }
   .msgs{ flex:1; padding:16px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
   .msg{ max-width:78%; padding:10px 14px; border-radius:20px; font-size:14.5px; line-height:1.45; word-wrap:break-word; white-space:pre-wrap; }
+  .msg a{ color:inherit; text-decoration:underline; text-underline-offset:2px; font-weight:600; overflow-wrap:anywhere; }
   .msg.them{ background:#EFF0F5; align-self:flex-start; border-bottom-left-radius:5px; }
   .msg.me{ background:var(--navy); color:#fff; align-self:flex-end; border-bottom-right-radius:5px; }
   .msg .mtime{ display:block; font-size:10px; opacity:.55; margin-top:4px; text-align:right; }
@@ -467,6 +468,21 @@ var S = {
 };
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function richText(s){
+  var str = String(s == null ? "" : s);
+  var re = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi;
+  var out = "", last = 0, mt;
+  while ((mt = re.exec(str)) !== null){
+    out += esc(str.slice(last, mt.index));
+    var raw = mt[0], trail = "";
+    while (raw.length > 1 && /[.,!?;:)]$/.test(raw)){ trail = raw.slice(-1) + trail; raw = raw.slice(0, -1); }
+    var href = raw.toLowerCase().indexOf("www.") === 0 ? "https://" + raw : raw;
+    out += '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(raw) + "</a>" + esc(trail);
+    last = mt.index + mt[0].length;
+  }
+  out += esc(str.slice(last));
+  return out;
+}
 function initials(name){ var p = String(name || "?").trim().split(/\s+/); return ((p[0] || "?")[0] + (p.length > 1 ? p[p.length-1][0] : "")).toUpperCase(); }
 function toast(title, body){
   var t = document.createElement("div"); t.className = "toast";
@@ -831,7 +847,7 @@ function msgHTML(m){
     var playing = S.voicePath === m.media_path && S.voiceAudio && !S.voiceAudio.paused;
     content += '<span class="voice-msg"><button class="voice-play" type="button" data-voice="' + esc(m.media_path) + '" aria-label="Play voice message">' + (playing ? "❚❚" : "▶") + '</button><span class="voice-dur">' + esc(fmtDur(m.media_duration)) + '</span></span>';
   }
-  if (m.body) content += esc(m.body);
+  if (m.body) content += richText(m.body);
   return '<div class="msg ' + (mine ? "me" : "them") + '">' + senderLine + content + '</div>';
 }
 $("msgList").addEventListener("click", function(e){
