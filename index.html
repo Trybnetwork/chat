@@ -78,6 +78,15 @@
   .input-row input{ flex:1; background:var(--soft2); border:1.5px solid var(--line); border-radius:999px; padding:12px 17px; font-size:14.5px; outline:none; color:var(--ink); }
   .input-row input:focus{ border-color:var(--gold); }
   .send-btn{ width:47px; height:47px; flex:none; border-radius:50%; background:var(--navy); border:1px solid var(--gold); color:var(--gold); display:grid; place-items:center; }
+  .photo-btn{ width:47px; height:47px; flex:none; border-radius:50%; background:var(--soft); border:1.5px solid var(--line); color:var(--navy); display:grid; place-items:center; }
+  .photo-strip{ display:none; align-items:center; gap:10px; padding:10px 16px 0; background:#fff; }
+  .photo-strip.on{ display:flex; }
+  .photo-strip img{ width:52px; height:52px; object-fit:cover; border-radius:10px; border:1.5px solid var(--line); }
+  .photo-strip .rm{ margin-left:auto; background:var(--soft); border:1.5px solid var(--line); border-radius:999px; padding:7px 12px; font-size:12.5px; font-weight:700; color:var(--navy); font-family:inherit; }
+  .msg img.photo{ display:block; max-width:210px; width:100%; border-radius:10px; margin:2px 0 4px; cursor:pointer; background:#E9ECF5; min-height:40px; }
+  .lightbox{ position:fixed; inset:0; background:rgba(5,8,20,.93); display:none; place-items:center; z-index:200; padding:18px; }
+  .lightbox.on{ display:grid; }
+  .lightbox img{ max-width:100%; max-height:92vh; border-radius:12px; }
 
   /* ---------- dock ---------- */
   .dock{ display:flex; border-top:1px solid #EFF0F5; background:#fff; position:sticky; bottom:0; z-index:30; padding-bottom:env(safe-area-inset-bottom); }
@@ -200,7 +209,14 @@
           <div class="chat-main"><div class="chat-name" id="threadName">Chat</div><div class="uname" id="threadSub" style="font-size:12.5px;color:var(--mut);"></div></div>
         </div>
         <div class="msgs" id="msgList"></div>
+        <div class="photo-strip" id="photoStrip">
+          <img id="photoThumb" alt="">
+          <span style="font-size:13px;color:var(--mut);">Photo ready — add a caption or just send</span>
+          <button class="rm" id="photoRemove" type="button">Remove</button>
+        </div>
         <div class="input-row">
+          <button class="photo-btn" id="photoBtn" type="button" aria-label="Send a photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg></button>
+          <input id="photoFile" type="file" accept="image/*" class="hidden">
           <input id="msgInput" type="text" placeholder="Message…" autocomplete="off" maxlength="2000">
           <button class="send-btn" id="sendBtn" type="button" aria-label="Send"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>
         </div>
@@ -293,6 +309,8 @@
       </div>
     </div>
 
+    <div class="lightbox" id="lightbox"><img id="lightboxImg" alt="Photo"></div>
+
     <!-- Dock -->
     <nav class="dock" id="dock">
       <button id="dockChats" class="active" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5z"/></svg>Chats</button>
@@ -329,7 +347,8 @@ var DAILY_CAP = 150;
 var S = {
   user: null, profile: null, wallet: null, access: null, listed: true,
   chats: [], currentChat: null, messages: [], requests: [], friends: [],
-  earnedToday: 0, sentToday: 0, profileCache: {}, rtStarted: false
+  earnedToday: 0, sentToday: 0, profileCache: {}, rtStarted: false,
+  mediaUrls: {}, mediaPending: {}, pendingPhoto: null, sendingPhoto: false
 };
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -572,7 +591,9 @@ function renderChatList(){
   S.chats.forEach(function(c){
     var d = chatDisplay(c);
     var av = d.avatarUrl ? '<img src="' + esc(d.avatarUrl) + '" alt="">' : esc(initials(d.avatarName));
-    var last = c.last_body ? ((c.last_sender === S.user.id ? "You: " : "") + c.last_body) : "Say hello 👋";
+    var last;
+    if (c.last_kind === "photo") last = (c.last_sender === S.user.id ? "You: " : "") + "📷 " + (c.last_body || "Photo");
+    else last = c.last_body ? ((c.last_sender === S.user.id ? "You: " : "") + c.last_body) : "Say hello 👋";
     html += '<button class="chat-row" type="button" data-chat="' + c.chat_id + '">' +
       '<span class="avatar">' + av + '</span>' +
       '<span class="chat-main"><span class="chat-top"><span class="chat-name">' + esc(d.name) + '</span><span class="chat-time">' + esc(c.last_at ? fmtTime(c.last_at) : "") + '</span></span>' +
@@ -588,6 +609,7 @@ $("chatList").addEventListener("click", function(e){
   if (c) openChat(c);
 });
 function openChat(c){
+  clearPendingPhoto();
   S.currentChat = c;
   var d = chatDisplay(c);
   paintAvatar($("threadAvatar"), d.avatarName, d.avatarUrl);
@@ -599,10 +621,19 @@ function openChat(c){
 }
 $("threadBack").addEventListener("click", function(){ showChatsSub("list"); loadChats(); });
 function loadMessages(chatId){
-  sb.from("tc_messages").select("id, chat_id, sender_id, body, created_at").eq("chat_id", chatId).order("created_at", { ascending: true }).limit(300).then(function(res){
+  sb.from("tc_messages").select("id, chat_id, sender_id, body, kind, media_path, created_at").eq("chat_id", chatId).order("created_at", { ascending: true }).limit(300).then(function(res){
     S.messages = res.data || [];
     renderMessages();
   }).catch(function(){});
+}
+function ensureMedia(path){
+  if (!path || S.mediaUrls[path] || S.mediaPending[path] || !sb) return;
+  S.mediaPending[path] = true;
+  sb.storage.from("tc-media").createSignedUrls([path], 3600).then(function(res){
+    delete S.mediaPending[path];
+    var row = (res.data || [])[0];
+    if (row && row.signedUrl){ S.mediaUrls[path] = row.signedUrl; renderMessages(); }
+  }).catch(function(){ delete S.mediaPending[path]; });
 }
 function msgHTML(m){
   var mine = m.sender_id === S.user.id;
@@ -612,14 +643,32 @@ function msgHTML(m){
     senderLine = '<span class="msender">' + esc(p ? (p.full_name || ("@" + (p.username || ""))) : "Member") + '</span>';
     if (!p) senderProfile(m.sender_id).then(function(){ renderMessages(); });
   }
-  return '<div class="msg ' + (mine ? "me" : "them") + '">' + senderLine + esc(m.body) + '<span class="mtime">' + esc(fmtClock(m.created_at)) + '</span></div>';
+  var content = "";
+  if (m.kind === "photo" && m.media_path){
+    ensureMedia(m.media_path);
+    var url = S.mediaUrls[m.media_path];
+    content += '<img class="photo" data-media="' + esc(m.media_path) + '" src="' + (url ? esc(url) : "data:image/gif;base64,R0lGODlhAQABAAAAACw=") + '" alt="Photo">';
+  }
+  if (m.body) content += esc(m.body);
+  return '<div class="msg ' + (mine ? "me" : "them") + '">' + senderLine + content + '<span class="mtime">' + esc(fmtClock(m.created_at)) + '</span></div>';
 }
+$("msgList").addEventListener("click", function(e){
+  var img = e.target.closest ? e.target.closest("img.photo") : null;
+  if (!img) return;
+  var path = img.getAttribute("data-media");
+  var url = S.mediaUrls[path];
+  if (!url){ ensureMedia(path); return; }
+  $("lightboxImg").src = url;
+  $("lightbox").classList.add("on");
+});
+$("lightbox").addEventListener("click", function(){ $("lightbox").classList.remove("on"); });
 function renderMessages(){
   var host = $("msgList"); if (!host) return;
   host.innerHTML = S.messages.map(msgHTML).join("");
   host.scrollTop = host.scrollHeight;
 }
 function sendCurrent(){
+  if (S.pendingPhoto){ sendPhoto(); return; }
   var inp = $("msgInput");
   var body = inp.value.trim();
   if (!body || !S.currentChat) return;
@@ -639,6 +688,78 @@ function sendCurrent(){
     if (d.earned > 0) refreshWallet();
     loadChats();
   }).catch(function(){ toast("Couldn't send", "Check your connection and try again."); });
+}
+/* ---------------- photo messages ---------------- */
+function clearPendingPhoto(){
+  if (S.pendingPhoto && S.pendingPhoto.url) URL.revokeObjectURL(S.pendingPhoto.url);
+  S.pendingPhoto = null;
+  var strip = $("photoStrip"); if (strip) strip.classList.remove("on");
+}
+$("photoRemove").addEventListener("click", clearPendingPhoto);
+$("photoBtn").addEventListener("click", function(){ $("photoFile").click(); });
+$("photoFile").addEventListener("change", function(){
+  var f = this.files && this.files[0];
+  this.value = "";
+  if (f) preparePhoto(f);
+});
+function preparePhoto(file){
+  var url = URL.createObjectURL(file);
+  var img = new Image();
+  img.onload = function(){
+    var max = 1600, w = img.naturalWidth || 0, h = img.naturalHeight || 0;
+    if (!w || !h){ toast("Couldn't read that photo", "Try another image."); return; }
+    var scale = Math.min(1, max / Math.max(w, h));
+    var cv = document.createElement("canvas");
+    cv.width = Math.round(w * scale); cv.height = Math.round(h * scale);
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+    cv.toBlob(function(blob){
+      if (!blob){ toast("Couldn't read that photo", "Try another image."); return; }
+      blob.arrayBuffer().then(function(buf){ return crypto.subtle.digest("SHA-256", buf); })
+        .then(function(digest){
+          var hex = Array.from(new Uint8Array(digest)).map(function(b){ return b.toString(16).padStart(2, "0"); }).join("");
+          clearPendingPhoto();
+          S.pendingPhoto = { blob: blob, hash: hex, url: URL.createObjectURL(blob) };
+          $("photoThumb").src = S.pendingPhoto.url;
+          $("photoStrip").classList.add("on");
+          $("msgInput").focus();
+        })
+        .catch(function(){ toast("Couldn't prepare that photo", "Try another image."); });
+    }, "image/jpeg", 0.85);
+  };
+  img.onerror = function(){ toast("Couldn't read that photo", "Try another image."); };
+  img.src = url;
+}
+function sendPhoto(){
+  var pf = S.pendingPhoto;
+  if (!pf || !S.currentChat || S.sendingPhoto) return;
+  S.sendingPhoto = true;
+  var chatId = S.currentChat.chat_id;
+  var caption = $("msgInput").value.trim();
+  var path = chatId + "/" + S.user.id + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + ".jpg";
+  sb.storage.from("tc-media").upload(path, pf.blob, { contentType: "image/jpeg", upsert: false })
+    .then(function(up){
+      if (up.error) throw new Error("upload_failed");
+      return sb.rpc("tc_send_photo", { p_chat: chatId, p_path: path, p_caption: caption, p_hash: pf.hash });
+    })
+    .then(function(res){
+      S.sendingPhoto = false;
+      var d = res.data;
+      if (!d || !d.ok){
+        if (d && d.error === "no_access"){ refreshAccess().then(gate); toast("Membership needed", "Your access has ended — renew to keep chatting."); }
+        else toast("Couldn't send photo", "Check your connection and try again.");
+        return;
+      }
+      S.mediaUrls[path] = pf.url;
+      S.pendingPhoto = null; /* preview URL ownership moved to mediaUrls — do not revoke */
+      $("photoStrip").classList.remove("on");
+      S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, body: caption, kind: "photo", media_path: path, created_at: new Date().toISOString() });
+      $("msgInput").value = "";
+      renderMessages();
+      if (typeof d.earned_today === "number") S.earnedToday = d.earned_today;
+      if (d.earned > 0) refreshWallet();
+      loadChats();
+    })
+    .catch(function(){ S.sendingPhoto = false; toast("Couldn't send photo", "Check your connection and try again."); });
 }
 $("sendBtn").addEventListener("click", sendCurrent);
 $("msgInput").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); sendCurrent(); } });
