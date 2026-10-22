@@ -701,9 +701,13 @@ function loadChats(){
   }).catch(function(){});
 }
 var COMMUNITY_ID = "00000000-0000-0000-0000-00000000c001";
+function tcLogoUrl(){
+  var l = document.querySelector('link[rel="icon"]');
+  return l ? l.href : null;
+}
 function chatDisplay(c){
   if (c.kind === "group"){
-    if (c.chat_id === COMMUNITY_ID) return { name: c.title || "TrybNetwork Community", sub: "Community group", avatarName: "TN", avatarUrl: null };
+    if (c.chat_id === COMMUNITY_ID) return { name: c.title || "TrybNetwork Community", sub: "Community group", avatarName: "TN", avatarUrl: tcLogoUrl() };
     var n = c.member_count ? c.member_count + (c.member_count === 1 ? " member" : " members") : "Group";
     return { name: c.title || "Group", sub: n, avatarName: c.title || "G", avatarUrl: null };
   }
