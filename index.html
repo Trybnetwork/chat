@@ -401,6 +401,12 @@
   .board-me > div { flex:1; }
   .board-me b { font-family:Manrope,sans-serif; font-size:20px; display:block; }
   .board-me span { font-size:11px; color:#B9BED6; letter-spacing:.6px; text-transform:uppercase; }
+
+  /* ===== Chats / Discover / Channels toggle ===== */
+  .w2-toggle { display:flex; background:#E9EBF3; border-radius:14px; padding:4px; margin:12px 16px 2px; }
+  .w2-toggle button { flex:1; border:none; background:none; padding:9px 0; font-family:Manrope,sans-serif; font-weight:800; font-size:13.5px; color:#5A6076; border-radius:10px; cursor:pointer; }
+  .w2-toggle button.active { background:#0B1132; color:#fff; box-shadow:0 4px 12px rgba(11,17,50,.25); }
+  #w2Sections { display:none; }
 </style>
 </head>
 <body>
@@ -497,6 +503,21 @@
           </button>
         </div>
         <div class="chat-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chatSearch" type="text" placeholder="Search chats"></div>
+        
+        <div class="w2-toggle" id="chatsToggle">
+          <button type="button" data-seg="chats" class="active">Chats</button>
+          <button type="button" data-seg="discover">Discover</button>
+          <button type="button" data-seg="channels">Channels</button>
+        </div>
+        <div id="segDiscover" class="hidden" style="padding:12px 16px 0;">
+          <div class="chat-search" style="margin:0 0 12px;"><input id="segGrpSearch" type="text" placeholder="Search public groups"></div>
+          <div id="segGroupsList"></div>
+        </div>
+        <div id="segChannels" class="hidden" style="padding:12px 16px 0;">
+          <div class="chat-search" style="margin:0 0 12px;"><input id="segChSearch" type="text" placeholder="Search channels"></div>
+          <div id="segChannelsList"></div>
+          <button class="btn gold" id="segChCreate" type="button" style="margin:6px 0 18px;">＋ Create a channel</button>
+        </div>
         <div class="strip" id="friendsStrip"></div>
         <div class="pad" id="bannerSlot"></div>
         <div id="chatList"></div>
@@ -3959,6 +3980,99 @@ $("epSave").addEventListener("click", function(){
     toast("Profile updated", "Your new look is live everywhere.");
   }).catch(function(){ btn.disabled = false; });
 });
+</script>
+
+<script>
+/* ============ Chats / Discover / Channels toggle (Wave 2.1) ============ */
+S.seg = "chats";
+function setSeg(name){
+  S.seg = name;
+  document.querySelectorAll("#chatsToggle button").forEach(function(b){
+    b.classList.toggle("active", b.getAttribute("data-seg") === name);
+  });
+  var chats = name === "chats";
+  $("friendsStrip").classList.toggle("hidden", !chats);
+  $("bannerSlot").classList.toggle("hidden", !chats);
+  $("chatList").classList.toggle("hidden", !chats);
+  document.querySelector("#tabChats .chat-search").style.display = chats ? "" : "none";
+  $("segDiscover").classList.toggle("hidden", name !== "discover");
+  $("segChannels").classList.toggle("hidden", name !== "channels");
+  if (name === "discover") renderSegGroups($("segGrpSearch").value || null);
+  if (name === "channels") renderSegChannels($("segChSearch").value || null);
+}
+document.querySelectorAll("#chatsToggle button").forEach(function(b){
+  b.addEventListener("click", function(){ setSeg(b.getAttribute("data-seg")); });
+});
+function segBindRows(host){
+  host.querySelectorAll("[data-gjoin]").forEach(function(b){
+    b.addEventListener("click", function(){
+      sb.rpc("tc_join_group", { p_chat: b.getAttribute("data-gjoin") }).then(function(res){
+        var d2 = res.data;
+        if (d2 && d2.ok){ renderSegGroups($("segGrpSearch").value || null); loadChats(); toast("Joined", "The group is now in your chats."); }
+        else if (d2 && d2.error === "group_full") toast("Group full", "This group already has 100 members.");
+        else if (d2 && d2.error === "banned") toast("Can't join", "You're banned from this group.");
+      }).catch(function(){});
+    });
+  });
+  host.querySelectorAll("[data-gopen]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var id = b.getAttribute("data-gopen");
+      setSeg("chats");
+      var c = (S.chats || []).filter(function(x){ return x.id === id; })[0];
+      if (c) openChat(c);
+      else loadChats();
+    });
+  });
+  host.querySelectorAll("[data-sub]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var on = b.getAttribute("data-on") !== "1";
+      sb.rpc("tc_channel_sub", { p_channel: b.getAttribute("data-sub"), p_on: on }).then(function(res){
+        if (res.data && res.data.ok) renderSegChannels($("segChSearch").value || null);
+        else if (res.data && res.data.error === "owner_cannot_leave") toast("You're the owner", "Channel owners can't leave their own channel.");
+      }).catch(function(){});
+    });
+  });
+  host.querySelectorAll("[data-chan]").forEach(function(row){
+    row.addEventListener("click", function(e){
+      if (e.target.closest("[data-sub]")) return;
+      openChannel(row.getAttribute("data-chan"));
+    });
+  });
+}
+function renderSegGroups(q){
+  sb.rpc("tc_public_groups", { p_q: q || null }).then(function(res){
+    var d = res.data; if (!d || !d.ok) return;
+    var host = $("segGroupsList");
+    if (!(d.groups || []).length){ host.innerHTML = '<div class="empty-note">No public groups yet. Make yours public from its Group info page.</div>'; return; }
+    host.innerHTML = d.groups.map(function(g){
+      return '<div class="w2-row">' + w2Avatar({ full_name: g.title, avatar_url: null }, "") +
+        '<span class="chat-main"><div class="chat-name">' + esc(g.title || "Group") + '</div><div class="uname">' + (g.members || 0) + " members · by " + esc(g.creator_name || "") + "</div>" +
+        (g.about ? '<div style="font-size:13px;color:var(--mut);">' + esc(g.about) + "</div>" : "") + "</span>" +
+        (g.joined ? '<button class="w2-sub-btn on" data-gopen="' + g.id + '" type="button">Open</button>' : '<button class="w2-sub-btn" data-gjoin="' + g.id + '" type="button">Join</button>') + "</div>";
+    }).join("");
+    segBindRows(host);
+  }).catch(function(){});
+}
+function renderSegChannels(q){
+  sb.rpc("tc_channels_discover", { p_q: q || null }).then(function(res){
+    var d = res.data; if (!d || !d.ok) return;
+    var host = $("segChannelsList");
+    if (!(d.channels || []).length){ host.innerHTML = '<div class="empty-note">No channels yet — create the first one below.</div>'; return; }
+    host.innerHTML = d.channels.map(function(c){
+      return '<div class="w2-row" data-chan="' + c.id + '">' + w2Avatar({ full_name: c.name, avatar_url: null }, "") +
+        '<span class="chat-main"><div class="chat-name">' + esc(c.name) + '</div><div class="uname">by @' + esc(c.owner_username || "") + " · " + (c.subs || 0) + " subscribers</div>" +
+        (c.about ? '<div style="font-size:13px;color:var(--mut);">' + esc(c.about) + "</div>" : "") + "</span>" +
+        (c.mine ? '<span class="tag-chip">YOURS</span>' : '<button class="w2-sub-btn' + (c.subscribed ? " on" : "") + '" data-sub="' + c.id + '" data-on="' + (c.subscribed ? "1" : "0") + '" type="button">' + (c.subscribed ? "Joined" : "Join") + "</button>") + "</div>";
+    }).join("");
+    segBindRows(host);
+  }).catch(function(){});
+}
+var segGrpT = null, segChT = null;
+$("segGrpSearch").addEventListener("input", function(){ clearTimeout(segGrpT); var v = this.value; segGrpT = setTimeout(function(){ renderSegGroups(v || null); }, 300); });
+$("segChSearch").addEventListener("input", function(){ clearTimeout(segChT); var v = this.value; segChT = setTimeout(function(){ renderSegChannels(v || null); }, 300); });
+$("segChCreate").addEventListener("click", function(){ openChannels(); });
+/* The stacked sections are replaced by the toggle — keep the old loader harmless. */
+loadChannelSection = function(){ if (S.seg === "channels") renderSegChannels($("segChSearch").value || null); };
 </script>
 
 </body>
