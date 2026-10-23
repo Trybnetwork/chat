@@ -367,6 +367,40 @@
   .auth-card .apk-badge { margin:0 0 20px; flex-direction:row; align-items:center; justify-content:center; gap:12px; padding:12px 18px; }
   .apk-badge .ab-t1 { display:block; }
   .apk-badge .ab-t2 { display:block; }
+
+  /* ===== WAVE 2: stories / channels / groups / callit board / profile ===== */
+  .stories-row { display:flex; gap:14px; overflow-x:auto; padding:14px 16px 4px; scrollbar-width:none; }
+  .stories-row::-webkit-scrollbar { display:none; }
+  .story-it { display:flex; flex-direction:column; align-items:center; gap:5px; width:66px; flex:0 0 auto; background:none; border:none; padding:0; cursor:pointer; }
+  .story-ring { width:62px; height:62px; border-radius:50%; padding:3px; background:conic-gradient(#C9A24B, #8a6d1f, #C9A24B); position:relative; }
+  .story-ring.seen { background:#D8DAE6; }
+  .story-ring .avatar { width:100%; height:100%; border:2.5px solid #fff; font-size:19px; }
+  .story-plus { position:absolute; right:-1px; bottom:-1px; width:21px; height:21px; border-radius:50%; background:#0B1132; color:#fff; border:2px solid #fff; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; line-height:1; }
+  .story-nm { font-size:11px; color:var(--ink); max-width:66px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cm-board-btn { margin-top:8px; background:#FFF7E0; border:1px solid #EAD9A0; color:#8a6d1f; font-weight:800; font-size:12.5px; border-radius:9px; padding:7px 12px; cursor:pointer; }
+  .w2-ov { position:fixed; inset:0; z-index:320; background:#F6F7FB; overflow-y:auto; }
+  .w2-ov-head { position:sticky; top:0; background:#F6F7FB; display:flex; align-items:center; gap:10px; padding:14px 16px 8px; z-index:2; }
+  .w2-row { display:flex; align-items:center; gap:12px; width:100%; background:#fff; border:1px solid #E7E9F2; border-radius:14px; padding:11px 13px; margin-bottom:9px; text-align:left; cursor:pointer; }
+  .w2-row .chat-main { flex:1; min-width:0; }
+  .w2-sub-btn { background:#0B1132; color:#fff; border:1px solid #C9A24B; font-weight:800; font-size:12.5px; border-radius:9px; padding:7px 13px; cursor:pointer; flex:0 0 auto; }
+  .w2-sub-btn.on { background:#EDEEF5; color:#0B1132; border-color:#D8DAE6; }
+  .w2-sect { display:flex; align-items:center; gap:8px; padding:16px 16px 8px; }
+  .w2-sect h3 { font-family:Manrope,sans-serif; font-size:15px; margin:0; flex:1; }
+  .w2-sect button { background:none; border:none; color:var(--gold-dark); font-weight:800; font-size:13px; cursor:pointer; }
+  .story-viewer { position:fixed; inset:0; z-index:420; background:#000; display:flex; flex-direction:column; }
+  .story-viewer .sv-top { position:absolute; top:0; left:0; right:0; padding:12px 14px; background:linear-gradient(rgba(0,0,0,.55), transparent); color:#fff; z-index:3; }
+  .sv-segs { display:flex; gap:5px; margin-bottom:10px; }
+  .sv-seg { flex:1; height:3px; border-radius:2px; background:rgba(255,255,255,.35); overflow:hidden; }
+  .sv-seg i { display:block; height:100%; background:#fff; width:0; }
+  .sv-seg.done i { width:100%; }
+  .story-viewer img.sv-img { flex:1; width:100%; object-fit:contain; min-height:0; }
+  .sv-cap { position:absolute; left:0; right:0; bottom:0; padding:14px 16px 22px; background:linear-gradient(transparent, rgba(0,0,0,.65)); color:#fff; font-size:14.5px; z-index:3; }
+  .sv-tap { position:absolute; top:0; bottom:0; width:38%; z-index:2; }
+  .ep-av { width:84px; height:84px; border-radius:50%; }
+  .board-me { background:#0B1132; color:#fff; border-radius:16px; padding:16px; margin:0 16px 12px; display:flex; gap:10px; text-align:center; }
+  .board-me > div { flex:1; }
+  .board-me b { font-family:Manrope,sans-serif; font-size:20px; display:block; }
+  .board-me span { font-size:11px; color:#B9BED6; letter-spacing:.6px; text-transform:uppercase; }
 </style>
 </head>
 <body>
@@ -425,6 +459,8 @@
         <button id="wallSearchClear" type="button" aria-label="Close search">✕</button>
       </div>
       <div class="wall-sub" style="padding:10px 16px 0;">Share something worth reading — good posts earn TrybCoin.</div>
+      <div class="stories-row" id="storiesRow"></div>
+      <input id="storyFile" type="file" accept="image/*" class="hidden">
       <div class="composer-card">
         <div class="composer-top">
           <span class="avatar" id="wallMeAvatar"></span>
@@ -464,6 +500,7 @@
         <div class="strip" id="friendsStrip"></div>
         <div class="pad" id="bannerSlot"></div>
         <div id="chatList"></div>
+        <div id="w2Sections"></div>
       </div>
 
       <!-- Thread -->
@@ -564,6 +601,13 @@
             <div style="font-size:13px;color:var(--mut);margin-top:10px;">Disappearing messages</div>
             <div class="opt-row" id="giDisRow"></div>
           </div>
+          <div class="card" id="giVisCard" style="display:none;">
+            <h4>Group visibility</h4>
+            <p>Public groups appear in Discover and anyone can join (up to 100 members).</p>
+            <div class="toggle-row"><button id="giPubBtn" type="button">Public</button><button id="giPrivBtn" type="button">Private</button></div>
+            <input class="search-input" id="giAbout" type="text" maxlength="200" placeholder="About this group (optional)" style="margin-top:10px;" autocomplete="off">
+            <button class="btn navy" id="giVisSave" type="button" style="margin-top:10px;">Save visibility</button>
+          </div>
           <div class="card" id="giBansCard" style="display:none;">
             <h4>Banned</h4>
             <div id="giBans"></div>
@@ -632,6 +676,16 @@
           <span class="avatar lg" id="profAvatar">?</span>
           <div><div style="font-family:Manrope,sans-serif;font-weight:800;font-size:18px;" id="profName">—</div><div style="color:var(--mut);font-size:13.5px;" id="profUser">@—</div></div>
         </div>
+        <button class="menu-row" id="menuEditProfile" type="button">
+          <span class="mr-ic">✏️</span>
+          <span class="mr-main"><span class="mr-name">Edit profile</span><div class="mr-sub">Photo, name and bio</div></span>
+          <span class="mr-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
+        <button class="menu-row" id="menuCallit" type="button">
+          <span class="mr-ic">🎯</span>
+          <span class="mr-main"><span class="mr-name">Call It leaderboard</span><div class="mr-sub">Top callers, wins and streaks</div></span>
+          <span class="mr-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
         <button class="menu-row" id="menuEarnRow" type="button">
           <span class="mr-ic">TN</span>
           <span class="mr-main"><span class="mr-name">Earn TrybCoin</span><div class="mr-sub">Today's earnings and how earning works</div></span>
@@ -682,7 +736,99 @@
       <div style="height:34px;"></div>
     </div>
 
-    <nav class="dock" id="dock">
+    
+    <!-- ===== WAVE 2 overlays ===== -->
+    <div id="storyViewer" class="story-viewer hidden">
+      <img class="sv-img" id="svImg" alt="">
+      <div class="sv-top">
+        <div class="sv-segs" id="svSegs"></div>
+        <div style="display:flex;align-items:center;gap:9px;">
+          <span class="avatar sm" id="svAvatar"></span>
+          <div style="flex:1;min-width:0;"><div id="svName" style="font-weight:800;font-size:14.5px;"></div><div id="svTime" style="font-size:12px;color:#C9CCDD;"></div></div>
+          <button id="svDelete" type="button" class="hidden" style="background:none;border:none;color:#FF9D97;font-weight:800;font-size:13px;cursor:pointer;">Delete</button>
+          <button id="svClose" type="button" style="background:none;border:none;color:#fff;font-size:21px;cursor:pointer;line-height:1;">✕</button>
+        </div>
+      </div>
+      <div class="sv-tap" id="svPrev" style="left:0;"></div>
+      <div class="sv-tap" id="svNext" style="right:0;"></div>
+      <div class="sv-cap"><div id="svCapText"></div><button id="svViews" type="button" class="hidden" style="background:none;border:none;color:#C9A24B;font-weight:800;font-size:13px;padding:6px 0 0;cursor:pointer;"></button><div id="svViewers" style="font-size:12.5px;color:#D8DAE6;"></div></div>
+    </div>
+
+    <div id="storyCompose" class="w2-ov hidden">
+      <div class="w2-ov-head"><button class="back-btn" id="scBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div class="view-title" style="margin:0;">New story</div></div>
+      <div class="pad">
+        <img id="scPreview" alt="" style="width:100%;border-radius:16px;max-height:52vh;object-fit:cover;background:#EDEEF5;">
+        <p style="color:var(--mut);font-size:13px;margin:10px 0;">Visible to your friends for 24 hours.</p>
+        <input class="search-input" id="scCaption" type="text" maxlength="200" placeholder="Add a caption (optional)" autocomplete="off">
+        <button class="btn navy" id="scPost" type="button" style="margin-top:14px;">Post story</button>
+      </div>
+    </div>
+
+    <div id="channelsOverlay" class="w2-ov hidden">
+      <div class="w2-ov-head"><button class="back-btn" id="chOvBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div class="view-title" style="margin:0;">Channels</div></div>
+      <div class="pad">
+        <div class="chat-search" style="margin:0 0 12px;"><input id="chSearch" type="text" placeholder="Search channels"></div>
+        <div id="chList"></div>
+        <div class="card" style="margin-top:16px;">
+          <h4>Create a channel</h4>
+          <p>Broadcast to subscribers — only you post. Max 3 channels.</p>
+          <input class="search-input" id="chNewName" type="text" maxlength="60" placeholder="Channel name" autocomplete="off">
+          <input class="search-input" id="chNewAbout" type="text" maxlength="200" placeholder="About (optional)" autocomplete="off" style="margin-top:9px;">
+          <button class="btn gold" id="chCreate" type="button" style="margin-top:12px;">Create channel</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="channelViewOverlay" class="w2-ov hidden" style="z-index:330;">
+      <div class="w2-ov-head"><button class="back-btn" id="cvBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div style="flex:1;min-width:0;"><div class="view-title" style="margin:0;" id="cvName">Channel</div><div style="font-size:12.5px;color:var(--mut);" id="cvMeta"></div></div><button class="w2-sub-btn" id="cvSubBtn" type="button">Subscribe</button></div>
+      <div class="pad">
+        <div id="cvAbout" style="color:var(--mut);font-size:13.5px;margin-bottom:10px;"></div>
+        <div id="cvPosts"></div>
+        <button class="load-more hidden" id="cvMore" type="button">Load more</button>
+        <div id="cvComposer" class="hidden" style="margin:14px 0 26px;">
+          <textarea id="cvInput" rows="3" maxlength="2000" placeholder="Post to your channel…" style="width:100%;background:#fff;border:1.5px solid var(--line);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;"></textarea>
+          <div style="display:flex;gap:9px;margin-top:9px;align-items:center;">
+            <button class="photo-btn" id="cvPhotoBtn" type="button" aria-label="Add a photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg></button>
+            <input id="cvPhotoFile" type="file" accept="image/*" class="hidden">
+            <span id="cvPhotoNote" style="font-size:12.5px;color:var(--mut);"></span>
+            <span class="sp"></span>
+            <button class="btn navy" id="cvPostBtn" type="button" style="width:auto;padding:9px 22px;">Post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="groupsOverlay" class="w2-ov hidden">
+      <div class="w2-ov-head"><button class="back-btn" id="grpBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div class="view-title" style="margin:0;">Discover groups</div></div>
+      <div class="pad">
+        <div class="chat-search" style="margin:0 0 12px;"><input id="grpSearch" type="text" placeholder="Search public groups"></div>
+        <div id="grpList"></div>
+      </div>
+    </div>
+
+    <div id="callitOverlay" class="w2-ov hidden">
+      <div class="w2-ov-head"><button class="back-btn" id="ciBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div class="view-title" style="margin:0;">🎯 Call It — Leaderboard</div></div>
+      <div id="ciMine"></div>
+      <div class="pad" id="ciTop" style="padding-top:2px;"></div>
+    </div>
+
+    <div id="editProfileOverlay" class="w2-ov hidden">
+      <div class="w2-ov-head"><button class="back-btn" id="epBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div class="view-title" style="margin:0;">Edit profile</div></div>
+      <div class="pad">
+        <div style="text-align:center;margin:8px 0 16px;">
+          <span class="avatar ep-av" id="epAvatar"></span>
+          <div><button class="mini-btn" id="epPhotoBtn" type="button" style="margin-top:9px;">Change photo</button></div>
+          <input id="epPhotoFile" type="file" accept="image/*" class="hidden">
+        </div>
+        <div class="field"><label for="epName">Name</label><input id="epName" type="text" maxlength="40" autocomplete="off"></div>
+        <div class="field"><label>Username</label><input id="epUser" type="text" disabled style="opacity:.55;"></div>
+        <div class="field"><label for="epBio">Bio</label><input id="epBio" type="text" maxlength="160" placeholder="A line about you (optional)" autocomplete="off"></div>
+        <button class="btn navy" id="epSave" type="button">Save changes</button>
+        <p style="color:var(--mut);font-size:12.5px;margin-top:12px;">Your name and photo update everywhere — chats, threads and the directory.</p>
+      </div>
+    </div>
+
+<nav class="dock" id="dock">
       <button id="dockWall" class="active" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5v-15zM7 7v2.2h10V7H7zm0 4.4v2.2h10v-2.2H7zM7 15.8V18h6.5v-2.2H7z"/></svg></span>Threads</button>
       <button id="dockFriends" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8.2" r="3.7"/><path d="M2.3 20.2c.7-3.4 3.4-5.3 6.7-5.3s6 1.9 6.7 5.3H2.3z"/><circle cx="17.6" cy="9.2" r="2.9"/><path d="M16.3 14.4c2.4.3 4.3 2 5 4.7l.3 1.1h-3.6c-.3-2.1-1-4-2.2-5.5.2-.1.3-.2.5-.3z"/></svg></span>Friends</button>
       <button id="dockNotif" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8a6.1 6.1 0 0 0-6.1 6.1c0 3.9-1.2 5.3-2.3 6.5-.4.5 0 1.4.8 1.4h15.2c.8 0 1.2-.9.8-1.4C19.2 14.2 18 12.8 18 8.9A6.1 6.1 0 0 0 12 2.8z"/><path d="M9.7 18.7a2.4 2.4 0 0 0 4.6 0H9.7z"/></svg><span class="dbdg hidden" id="reqBadge">0</span></span>Notifications</button>
@@ -926,7 +1072,7 @@ function gate(){
   showTab("wall"); showChatsSub("list");
   paintHeader();
   var profParam = new URLSearchParams(location.search).get("profile");
-  if (profParam && S.user && profParam !== S.user.id && !window._profLinked){ window._profLinked = true; setTimeout(function(){ openUserProfile(profParam); }, 700); } renderBanner(); loadChats(); loadRequests(); loadNotifications(false); loadFriends(null); loadEarn();
+  if (profParam && S.user && profParam !== S.user.id && !window._profLinked){ window._profLinked = true; setTimeout(function(){ openUserProfile(profParam); }, 700); } renderBanner(); loadChats(); loadRequests(); loadNotifications(false); loadFriends(null); loadEarn(); loadStories(); loadChannelSection();
   startRealtime();
   tcHeartbeat();
   if (!S._presTimer){
@@ -2773,7 +2919,7 @@ function postHTML(p, pfx){
     "</div>" +
     (p.body ? '<div class="post-body">' + esc(p.body) + "</div>" : "") +
     photo +
-    (isCallIt ? '<div class="callit-meta" data-callit="' + lagosDate(p.created_at) + '">\u23F0 Loading countdown\u2026</div>' : "") +
+    (isCallIt ? '<div class="callit-meta" data-callit="' + lagosDate(p.created_at) + '">\u23F0 Loading countdown\u2026</div>' : "") + (isCallIt ? '<button class="cm-board-btn" data-act="board" type="button">\uD83C\uDFC6 Leaderboard &amp; streaks</button>' : "") +
     '<div class="post-actions">' +
       '<button class="act-btn' + (p.liked ? " liked" : "") + '" type="button" data-like="' + p.id + '">\u2764\uFE0F <span class="like-n">' + (p.like_count || 0) + "</span></button>" +
       '<button class="act-btn" type="button" data-ctoggle="' + p.id + '">\uD83D\uDCAC <span class="c-n">' + (p.comment_count || 0) + "</span></button>" +
@@ -2884,6 +3030,8 @@ $("wallPostBtn").addEventListener("click", function(){
 function findPost(id){ return (S.wallPosts || []).concat(S.profilePosts || []).find(function(p){ return p.id === id; }) || null; }
 function feedClick(e){
   var t = e.target;
+  var boardBtn = t.closest ? t.closest('[data-act="board"]') : null;
+  if (boardBtn){ openCallitBoard(); return; }
   var prof = t.closest ? t.closest("[data-profile]") : null;
   if (prof){ openUserProfile(prof.getAttribute("data-profile")); return; }
   var likeBtn = t.closest ? t.closest("[data-like]") : null;
@@ -3051,7 +3199,7 @@ function openUserProfile(uid){
       '<div style="font-size:19px;font-weight:800;margin-top:10px;">' + esc(d.full_name || "") + "</div>" +
       '<div class="uname">@' + esc(d.username || "") + "</div>" +
       '<div style="margin-top:11px;"><span class="tn-pill">\uD83E\uDE99 ' + (d.trybcoin || 0).toLocaleString() + " TN</span></div>" +
-      '<div style="font-size:13px;color:var(--mut);margin-top:11px;">Joined ' + esc(joined) + " \u00B7 " + (d.post_count || 0) + ((d.post_count === 1) ? " thread" : " threads") + "</div>" +
+      (d.bio ? '<div style="font-size:14px;margin-top:11px;line-height:1.55;">' + esc(d.bio) + '</div>' : '') + '<div style="font-size:13px;color:var(--mut);margin-top:11px;">Joined ' + esc(joined) + " \u00B7 " + (d.post_count || 0) + ((d.post_count === 1) ? " thread" : " threads") + "</div>" +
       "</div>";
   }).catch(function(){});
   loadUserPosts(true);
@@ -3296,5 +3444,522 @@ $("liEye").addEventListener("click", function(){
 });
 
 </script>
+<style>.w2-ov .sp{flex:1;} .mini-btn{cursor:pointer;}</style>
+<script>
+/* ================= WAVE 2 — stories, channels, groups, callit, profile ================ */
+function w2EnsureMedia(path, after){
+  if (!path || !sb) return;
+  if (S.mediaUrls[path]){ if (after) after(); return; }
+  if (S.mediaPending[path]) return;
+  S.mediaPending[path] = true;
+  sb.storage.from("tc-media").createSignedUrls([path], 3600).then(function(res){
+    delete S.mediaPending[path];
+    var row = (res.data || [])[0];
+    if (row && row.signedUrl){ S.mediaUrls[path] = row.signedUrl; if (after) after(); }
+  }).catch(function(){ delete S.mediaPending[path]; });
+}
+function w2ProcessPhoto(file, cb){
+  var url = URL.createObjectURL(file);
+  var img = new Image();
+  img.onload = function(){
+    var max = 1600, w = img.naturalWidth || 0, h = img.naturalHeight || 0;
+    if (!w || !h){ toast("Couldn't read that photo", "Try another image."); return; }
+    var scale = Math.min(1, max / Math.max(w, h));
+    var cv = document.createElement("canvas");
+    cv.width = Math.round(w * scale); cv.height = Math.round(h * scale);
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+    cv.toBlob(function(blob){
+      if (!blob){ toast("Couldn't read that photo", "Try another image."); return; }
+      cb(blob, URL.createObjectURL(blob));
+    }, "image/jpeg", 0.85);
+  };
+  img.onerror = function(){ toast("Couldn't read that photo", "Try another image."); };
+  img.src = url;
+}
+function w2Upload(path, blob){
+  return sb.storage.from("tc-media").upload(path, blob, { contentType: "image/jpeg", upsert: true })
+    .then(function(res){ if (res.error) throw res.error; return path; });
+}
+function w2Avatar(p, cls){
+  var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
+  return '<span class="avatar ' + (cls || "") + '">' + av + "</span>";
+}
+
+/* ------------------------------- STORIES ---------------------------------- */
+S.storyGroups = []; S.sv = null; S.storyDraft = null;
+function loadStories(){
+  if (!sb || !S.user) return;
+  sb.rpc("tc_stories_feed").then(function(res){
+    var d = res.data;
+    if (!d || !d.ok) return;
+    S.storyGroups = d.groups || [];
+    renderStoriesRow();
+    S.storyGroups.forEach(function(g){ g.stories.forEach(function(st){ w2EnsureMedia(st.media_path, function(){ renderStoriesRow(); }); }); });
+  }).catch(function(){});
+}
+function renderStoriesRow(){
+  var host = $("storiesRow"); if (!host || !S.user) return;
+  var mine = null;
+  S.storyGroups.forEach(function(g){ if (g.mine) mine = g; });
+  var myAv = S.profile ? { full_name: S.profile.full_name, avatar_url: S.profile.avatar_url } : { full_name: "?", avatar_url: null };
+  var html = '<button class="story-it" id="storyMineBtn" type="button"><span class="story-ring' + (mine ? "" : " seen") + '">' +
+    (S.profile && S.profile.avatar_url ? '<span class="avatar"><img src="' + esc(S.profile.avatar_url) + '" alt=""></span>' : '<span class="avatar">' + esc(initials(myAv.full_name)) + "</span>") +
+    '<span class="story-plus">+</span></span><span class="story-nm">' + (mine ? "Your story" : "Add story") + "</span></button>";
+  S.storyGroups.forEach(function(g, gi){
+    if (g.mine) return;
+    var unseen = g.stories.some(function(st){ return !st.viewed_by_me; });
+    html += '<button class="story-it" data-story-group="' + gi + '" type="button"><span class="story-ring' + (unseen ? "" : " seen") + '"><span class="avatar">' +
+      (g.avatar_url ? '<img src="' + esc(g.avatar_url) + '" alt="">' : esc(initials(g.full_name || "?"))) +
+      '</span></span><span class="story-nm">' + esc((g.full_name || "").split(" ")[0]) + "</span></button>";
+  });
+  host.innerHTML = html;
+  $("storyMineBtn").addEventListener("click", function(){
+    var gi = S.storyGroups.findIndex(function(g){ return g.mine; });
+    if (gi >= 0) openStoryViewer(gi, 0);
+    else $("storyFile").click();
+  });
+  host.querySelectorAll("[data-story-group]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var gi = +b.getAttribute("data-story-group");
+      var g = S.storyGroups[gi];
+      var start = g.stories.findIndex(function(st){ return !st.viewed_by_me; });
+      openStoryViewer(gi, start < 0 ? 0 : start);
+    });
+  });
+}
+$("storyFile").addEventListener("change", function(){
+  var f = this.files && this.files[0]; this.value = "";
+  if (!f) return;
+  w2ProcessPhoto(f, function(blob, url){
+    S.storyDraft = { blob: blob, url: url };
+    $("scPreview").src = url;
+    $("scCaption").value = "";
+    $("storyCompose").classList.remove("hidden");
+  });
+});
+$("scBack").addEventListener("click", function(){ $("storyCompose").classList.add("hidden"); S.storyDraft = null; });
+$("scPost").addEventListener("click", function(){
+  if (!S.storyDraft) return;
+  var btn = this; btn.disabled = true;
+  var path = "stories/" + S.user.id + "/" + Date.now() + ".jpg";
+  var cap = $("scCaption").value.trim();
+  w2Upload(path, S.storyDraft.blob).then(function(){
+    return sb.rpc("tc_post_story", { p_media_path: path, p_caption: cap || null });
+  }).then(function(res){
+    btn.disabled = false;
+    var d = res.data;
+    if (!d || !d.ok){
+      if (d && d.error === "links_not_allowed") toast("Links aren't allowed", "Story captions can't contain links.");
+      else toast("Couldn't post story", "Check your connection and try again.");
+      return;
+    }
+    S.mediaUrls[path] = S.storyDraft.url;
+    S.storyDraft = null;
+    $("storyCompose").classList.add("hidden");
+    loadStories();
+    toast("Story posted", "Your friends can see it for 24 hours.");
+  }).catch(function(){ btn.disabled = false; toast("Couldn't post story", "Check your connection and try again."); });
+});
+function openStoryViewer(gi, si){
+  var g = S.storyGroups[gi]; if (!g) return;
+  S.sv = { g: gi, i: si, timer: null };
+  paintStory();
+}
+function paintStory(){
+  var sv = S.sv; if (!sv) return;
+  var g = S.storyGroups[sv.g]; if (!g){ closeStoryViewer(); return; }
+  var st = g.stories[sv.i]; if (!st){ closeStoryViewer(); return; }
+  $("storyViewer").classList.remove("hidden");
+  $("svSegs").innerHTML = g.stories.map(function(x, xi){
+    return '<span class="sv-seg' + (xi < sv.i ? " done" : "") + '"><i id="svSegFill' + xi + '"></i></span>';
+  }).join("");
+  paintAvatar($("svAvatar"), g.full_name, g.avatar_url);
+  $("svName").textContent = g.full_name || "";
+  $("svTime").textContent = timeAgo(st.created_at) + " ago · expires in " + Math.max(1, Math.round((new Date(st.expires_at) - new Date()) / 3600000)) + "h";
+  $("svCapText").textContent = st.caption || "";
+  $("svDelete").classList.toggle("hidden", !g.mine);
+  var vb = $("svViews");
+  if (g.mine){ vb.classList.remove("hidden"); vb.textContent = "👁 " + (st.views || 0) + (st.views === 1 ? " view" : " views") + " — tap to see who"; }
+  else vb.classList.add("hidden");
+  $("svViewers").innerHTML = "";
+  var img = $("svImg");
+  if (S.mediaUrls[st.media_path]) img.src = S.mediaUrls[st.media_path];
+  else { img.removeAttribute("src"); w2EnsureMedia(st.media_path, function(){ if (S.sv) paintStoryMedia(); }); }
+  if (!g.mine){
+    sb.rpc("tc_view_story", { p_story: st.id }).then(function(){
+      st.viewed_by_me = true; renderStoriesRow();
+    }).catch(function(){});
+  }
+  clearTimeout(sv.timer);
+  var fill = $("svSegFill" + sv.i);
+  if (fill){ fill.style.transition = "none"; fill.style.width = "0"; requestAnimationFrame(function(){ requestAnimationFrame(function(){ if (fill){ fill.style.transition = "width 5s linear"; fill.style.width = "100%"; } }); }); }
+  sv.timer = setTimeout(function(){ stepStory(1); }, 5000);
+}
+function paintStoryMedia(){
+  var sv = S.sv; if (!sv) return;
+  var g = S.storyGroups[sv.g]; var st = g && g.stories[sv.i];
+  if (st && S.mediaUrls[st.media_path]) $("svImg").src = S.mediaUrls[st.media_path];
+}
+function stepStory(dir){
+  var sv = S.sv; if (!sv) return;
+  clearTimeout(sv.timer);
+  var g = S.storyGroups[sv.g];
+  var ni = sv.i + dir;
+  if (ni < 0){ if (sv.g > 0){ var pg = S.storyGroups[sv.g - 1]; S.sv = { g: sv.g - 1, i: pg.stories.length - 1, timer: null }; paintStory(); } return; }
+  if (ni >= g.stories.length){
+    if (sv.g + 1 < S.storyGroups.length){ S.sv = { g: sv.g + 1, i: 0, timer: null }; paintStory(); }
+    else closeStoryViewer();
+    return;
+  }
+  sv.i = ni; paintStory();
+}
+function closeStoryViewer(){
+  if (S.sv) clearTimeout(S.sv.timer);
+  S.sv = null;
+  $("storyViewer").classList.add("hidden");
+}
+$("svClose").addEventListener("click", closeStoryViewer);
+$("svNext").addEventListener("click", function(){ stepStory(1); });
+$("svPrev").addEventListener("click", function(){ stepStory(-1); });
+$("svDelete").addEventListener("click", function(){
+  var sv = S.sv; if (!sv) return;
+  var g = S.storyGroups[sv.g]; var st = g.stories[sv.i];
+  sb.rpc("tc_delete_story", { p_story: st.id }).then(function(res){
+    if (res.data && res.data.ok){ closeStoryViewer(); loadStories(); toast("Story deleted", ""); }
+  }).catch(function(){});
+});
+$("svViews").addEventListener("click", function(){
+  var sv = S.sv; if (!sv) return;
+  var g = S.storyGroups[sv.g]; var st = g.stories[sv.i];
+  sb.rpc("tc_story_viewers", { p_story: st.id }).then(function(res){
+    var d = res.data; if (!d || !d.ok) return;
+    $("svViewers").innerHTML = (d.viewers || []).length
+      ? d.viewers.map(function(v){ return "<div>" + esc(v.full_name || "") + " · " + timeAgo(v.viewed_at) + " ago</div>"; }).join("")
+      : "<div>No views yet.</div>";
+    clearTimeout(sv.timer);
+  }).catch(function(){});
+});
+
+/* ------------------------------- CHANNELS --------------------------------- */
+S.chan = null; S.chanBefore = null; S.chanPhoto = null;
+function loadChannelSection(){
+  if (!sb || !S.user) return;
+  sb.rpc("tc_channels_discover", { p_q: null }).then(function(res){
+    var d = res.data; if (!d || !d.ok) return;
+    var subs = (d.channels || []).filter(function(c){ return c.subscribed; });
+    var host = $("w2Sections"); if (!host) return;
+    var html = '<div class="w2-sect"><h3>Channels</h3><button id="w2ChDiscover" type="button">Discover</button></div>';
+    html += subs.map(function(c){
+      return '<div style="padding:0 16px;"><button class="w2-row" data-chan="' + c.id + '" type="button">' + w2Avatar({ full_name: c.name, avatar_url: null }, "") +
+        '<span class="chat-main"><div class="chat-name">' + esc(c.name) + '</div><div class="uname">' + (c.subs || 0) + " subscribers</div></span></button></div>";
+    }).join("");
+    html += '<div class="w2-sect"><h3>Groups</h3><button id="w2GrpDiscover" type="button">Discover</button></div>';
+    host.innerHTML = html;
+    $("w2ChDiscover").addEventListener("click", openChannels);
+    $("w2GrpDiscover").addEventListener("click", openGroups);
+    host.querySelectorAll("[data-chan]").forEach(function(b){
+      b.addEventListener("click", function(){ openChannel(b.getAttribute("data-chan")); });
+    });
+  }).catch(function(){});
+}
+function openChannels(){
+  $("channelsOverlay").classList.remove("hidden");
+  renderChannelDiscover($("chSearch").value || null);
+}
+function renderChannelDiscover(q){
+  sb.rpc("tc_channels_discover", { p_q: q || null }).then(function(res){
+    var d = res.data; if (!d || !d.ok) return;
+    var host = $("chList");
+    if (!(d.channels || []).length){ host.innerHTML = '<div class="empty-note">No channels yet — create the first one below.</div>'; return; }
+    host.innerHTML = d.channels.map(function(c){
+      return '<div class="w2-row" data-chrow="' + c.id + '">' + w2Avatar({ full_name: c.name, avatar_url: null }, "") +
+        '<span class="chat-main"><div class="chat-name">' + esc(c.name) + '</div><div class="uname">by @' + esc(c.owner_username || "") + " · " + (c.subs || 0) + " subscribers</div>" +
+        (c.about ? '<div style="font-size:13px;color:var(--mut);">' + esc(c.about) + "</div>" : "") + "</span>" +
+        (c.mine ? '<span class="tag-chip">YOURS</span>' : '<button class="w2-sub-btn' + (c.subscribed ? " on" : "") + '" data-sub="' + c.id + '" data-on="' + (c.subscribed ? "1" : "0") + '" type="button">' + (c.subscribed ? "Joined" : "Join") + "</button>") + "</div>";
+    }).join("");
+    host.querySelectorAll("[data-chrow]").forEach(function(row){
+      row.addEventListener("click", function(e){
+        if (e.target.closest("[data-sub]")) return;
+        openChannel(row.getAttribute("data-chrow"));
+      });
+    });
+    host.querySelectorAll("[data-sub]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var on = b.getAttribute("data-on") !== "1";
+        sb.rpc("tc_channel_sub", { p_channel: b.getAttribute("data-sub"), p_on: on }).then(function(res){
+          if (res.data && res.data.ok){ renderChannelDiscover($("chSearch").value || null); loadChannelSection(); }
+          else if (res.data && res.data.error === "owner_cannot_leave") toast("You're the owner", "Channel owners can't leave their own channel.");
+        }).catch(function(){});
+      });
+    });
+  }).catch(function(){});
+}
+var chSearchTimer = null;
+$("chSearch").addEventListener("input", function(){ clearTimeout(chSearchTimer); var v = this.value; chSearchTimer = setTimeout(function(){ renderChannelDiscover(v || null); }, 300); });
+$("chOvBack").addEventListener("click", function(){ $("channelsOverlay").classList.add("hidden"); });
+$("chCreate").addEventListener("click", function(){
+  var name = $("chNewName").value.trim();
+  if (name.length < 3){ toast("Name too short", "Channel names need at least 3 characters."); return; }
+  var btn = this; btn.disabled = true;
+  sb.rpc("tc_create_channel", { p_name: name, p_about: $("chNewAbout").value.trim() || null }).then(function(res){
+    btn.disabled = false;
+    var d = res.data;
+    if (!d || !d.ok){
+      if (d && d.error === "channel_limit") toast("Channel limit", "You can run up to 3 channels.");
+      else toast("Couldn't create channel", "Try again in a moment.");
+      return;
+    }
+    $("chNewName").value = ""; $("chNewAbout").value = "";
+    renderChannelDiscover(null); loadChannelSection();
+    toast("Channel created", "Open it to make your first post.");
+  }).catch(function(){ btn.disabled = false; });
+});
+function openChannel(id){
+  S.chan = id; S.chanBefore = null; S.chanPhoto = null;
+  $("cvPhotoNote").textContent = "";
+  $("channelViewOverlay").classList.remove("hidden");
+  $("cvPosts").innerHTML = '<div class="empty-note">Loading…</div>';
+  loadChannelFeed(true);
+}
+function loadChannelFeed(reset){
+  sb.rpc("tc_channel_feed", { p_channel: S.chan, p_before: reset ? null : S.chanBefore, p_limit: 30 }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){
+      if (d && d.error === "not_subscribed"){ $("cvPosts").innerHTML = '<div class="empty-note">Join this channel to read its posts.</div>'; }
+      else $("cvPosts").innerHTML = '<div class="empty-note">Couldn\'t load this channel.</div>';
+      return;
+    }
+    var c = d.channel;
+    $("cvName").textContent = c.name;
+    $("cvMeta").textContent = (c.subs || 0) + " subscribers";
+    $("cvAbout").textContent = c.about || "";
+    var sbBtn = $("cvSubBtn");
+    if (c.mine){ sbBtn.textContent = "Your channel"; sbBtn.classList.add("on"); }
+    else {
+      /* subscription state lives in discover data; re-check quickly */
+      sb.rpc("tc_channels_discover", { p_q: c.name }).then(function(r2){
+        var row = ((r2.data && r2.data.channels) || []).filter(function(x){ return x.id === c.id; })[0];
+        var on = row ? !!row.subscribed : false;
+        sbBtn.textContent = on ? "Joined" : "Subscribe";
+        sbBtn.classList.toggle("on", on);
+        sbBtn.setAttribute("data-on", on ? "1" : "0");
+      }).catch(function(){});
+    }
+    $("cvComposer").classList.toggle("hidden", !c.mine);
+    var posts = d.posts || [];
+    if (posts.length) S.chanBefore = posts[posts.length - 1].created_at;
+    $("cvMore").classList.toggle("hidden", posts.length < 30);
+    var html = posts.map(function(p){ return channelPostHTML(p, c.mine); }).join("");
+    if (reset) $("cvPosts").innerHTML = html || '<div class="empty-note">No posts yet.</div>';
+    else $("cvPosts").insertAdjacentHTML("beforeend", html);
+    posts.forEach(function(p){ if (p.media_path) w2EnsureMedia(p.media_path, function(){ paintChannelMedia(); }); });
+  }).catch(function(){});
+}
+function channelPostHTML(p, mine){
+  var url = p.media_path ? S.mediaUrls[p.media_path] : null;
+  return '<div class="post-card" data-cpost="' + p.id + '">' +
+    (p.media_path ? (url ? '<img src="' + esc(url) + '" alt="" style="width:100%;border-radius:12px;margin-bottom:8px;">' : '<div class="empty-note" data-cmedia="' + esc(p.media_path) + '">Loading photo…</div>') : "") +
+    (p.body ? '<div style="font-size:14.5px;line-height:1.6;white-space:pre-wrap;">' + esc(p.body) + "</div>" : "") +
+    '<div style="display:flex;align-items:center;margin-top:8px;"><span style="font-size:12px;color:var(--mut);">' + fmtTime(p.created_at) + " · " + timeAgo(p.created_at) + " ago</span>" +
+    (mine ? '<span class="sp"></span><button class="mini-btn ghost" data-cdel="' + p.id + '" type="button" style="color:#C0392B;">Delete</button>' : "") + "</div></div>";
+}
+function paintChannelMedia(){
+  document.querySelectorAll("[data-cmedia]").forEach(function(el){
+    var url = S.mediaUrls[el.getAttribute("data-cmedia")];
+    if (url){ var img = document.createElement("img"); img.src = url; img.alt = ""; img.style.cssText = "width:100%;border-radius:12px;margin-bottom:8px;"; el.replaceWith(img); }
+  });
+}
+$("cvPosts").addEventListener("click", function(e){
+  var del = e.target.closest ? e.target.closest("[data-cdel]") : null;
+  if (!del) return;
+  sb.rpc("tc_delete_channel_post", { p_post: del.getAttribute("data-cdel") }).then(function(res){
+    if (res.data && res.data.ok) loadChannelFeed(true);
+  }).catch(function(){});
+});
+$("cvMore").addEventListener("click", function(){ loadChannelFeed(false); });
+$("cvBack").addEventListener("click", function(){ $("channelViewOverlay").classList.add("hidden"); loadChannelSection(); });
+$("cvSubBtn").addEventListener("click", function(){
+  if (!S.chan) return;
+  var on = this.getAttribute("data-on") !== "1";
+  var btn = this;
+  sb.rpc("tc_channel_sub", { p_channel: S.chan, p_on: on }).then(function(res){
+    if (res.data && res.data.ok){ btn.textContent = on ? "Joined" : "Subscribe"; btn.classList.toggle("on", on); btn.setAttribute("data-on", on ? "1" : "0"); if (on) loadChannelFeed(true); }
+    else if (res.data && res.data.error === "owner_cannot_leave") toast("You're the owner", "Channel owners can't leave their own channel.");
+  }).catch(function(){});
+});
+$("cvPhotoBtn").addEventListener("click", function(){ $("cvPhotoFile").click(); });
+$("cvPhotoFile").addEventListener("change", function(){
+  var f = this.files && this.files[0]; this.value = "";
+  if (!f) return;
+  w2ProcessPhoto(f, function(blob, url){ S.chanPhoto = { blob: blob, url: url }; $("cvPhotoNote").textContent = "Photo attached"; });
+});
+$("cvPostBtn").addEventListener("click", function(){
+  var body = $("cvInput").value.trim();
+  var ph = S.chanPhoto;
+  if (!body && !ph){ toast("Write something", "A channel post needs text or a photo."); return; }
+  var btn = this; btn.disabled = true;
+  function post(path){
+    sb.rpc("tc_channel_post", { p_channel: S.chan, p_body: body || null, p_media_path: path || null }).then(function(res){
+      btn.disabled = false;
+      var d = res.data;
+      if (!d || !d.ok){
+        if (d && d.error === "links_not_allowed") toast("Links aren't allowed", "Channel posts can only contain text and photos.");
+        else toast("Couldn't post", "Try again in a moment.");
+        return;
+      }
+      if (path && ph) S.mediaUrls[path] = ph.url;
+      $("cvInput").value = ""; S.chanPhoto = null; $("cvPhotoNote").textContent = "";
+      loadChannelFeed(true);
+    }).catch(function(){ btn.disabled = false; });
+  }
+  if (ph) w2Upload("channels/" + S.user.id + "/" + Date.now() + ".jpg", ph.blob).then(post).catch(function(){ btn.disabled = false; toast("Upload failed", "Check your connection."); });
+  else post(null);
+});
+
+/* --------------------------- PUBLIC GROUPS -------------------------------- */
+function openGroups(){
+  $("groupsOverlay").classList.remove("hidden");
+  renderGroups($("grpSearch").value || null);
+}
+function renderGroups(q){
+  sb.rpc("tc_public_groups", { p_q: q || null }).then(function(res){
+    var d = res.data; if (!d || !d.ok) return;
+    var host = $("grpList");
+    if (!(d.groups || []).length){ host.innerHTML = '<div class="empty-note">No public groups yet. Make yours public from its Group info page.</div>'; return; }
+    host.innerHTML = d.groups.map(function(g){
+      return '<div class="w2-row">' + w2Avatar({ full_name: g.title, avatar_url: null }, "") +
+        '<span class="chat-main"><div class="chat-name">' + esc(g.title || "Group") + '</div><div class="uname">' + (g.members || 0) + " members · by " + esc(g.creator_name || "") + "</div>" +
+        (g.about ? '<div style="font-size:13px;color:var(--mut);">' + esc(g.about) + "</div>" : "") + "</span>" +
+        (g.joined ? '<button class="w2-sub-btn on" data-gopen="' + g.id + '" type="button">Open</button>' : '<button class="w2-sub-btn" data-gjoin="' + g.id + '" type="button">Join</button>') + "</div>";
+    }).join("");
+    host.querySelectorAll("[data-gjoin]").forEach(function(b){
+      b.addEventListener("click", function(){
+        sb.rpc("tc_join_group", { p_chat: b.getAttribute("data-gjoin") }).then(function(res){
+          var d2 = res.data;
+          if (d2 && d2.ok){ renderGroups($("grpSearch").value || null); loadChats(); toast("Joined", "The group is now in your chats."); }
+          else if (d2 && d2.error === "group_full") toast("Group full", "This group already has 100 members.");
+          else if (d2 && d2.error === "banned") toast("Can't join", "You're banned from this group.");
+        }).catch(function(){});
+      });
+    });
+    host.querySelectorAll("[data-gopen]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var id = b.getAttribute("data-gopen");
+        $("groupsOverlay").classList.add("hidden");
+        showTab("chats");
+        var c = (S.chats || []).filter(function(x){ return x.id === id; })[0];
+        if (c) openChat(c);
+        else { loadChats(); toast("Joined", "Find the group in your chats."); }
+      });
+    });
+  }).catch(function(){});
+}
+var grpSearchTimer = null;
+$("grpSearch").addEventListener("input", function(){ clearTimeout(grpSearchTimer); var v = this.value; grpSearchTimer = setTimeout(function(){ renderGroups(v || null); }, 300); });
+$("grpBack").addEventListener("click", function(){ $("groupsOverlay").classList.add("hidden"); });
+
+/* group visibility (creator) — painted after the built-in render */
+var _rgiW2 = renderGroupInfo;
+renderGroupInfo = function(){
+  _rgiW2();
+  var d = S.grpInfo; var card = $("giVisCard"); if (!card) return;
+  var canEdit = d && (d.created_by === S.user.id || (d.is_community && S.profile && S.profile.is_admin));
+  card.style.display = canEdit ? "" : "none";
+  if (!canEdit) return;
+  card.setAttribute("data-pub", d.is_public ? "1" : "0");
+  $("giPubBtn").classList.toggle("active", !!d.is_public);
+  $("giPrivBtn").classList.toggle("active", !d.is_public);
+  $("giAbout").value = d.about || "";
+};
+$("giPubBtn").addEventListener("click", function(){ $("giVisCard").setAttribute("data-pub", "1"); this.classList.add("active"); $("giPrivBtn").classList.remove("active"); });
+$("giPrivBtn").addEventListener("click", function(){ $("giVisCard").setAttribute("data-pub", "0"); this.classList.add("active"); $("giPubBtn").classList.remove("active"); });
+$("giVisSave").addEventListener("click", function(){
+  var d = S.grpInfo; if (!d) return;
+  var pub = $("giVisCard").getAttribute("data-pub") === "1";
+  sb.rpc("tc_set_group_visibility", { p_chat: d.chat_id, p_public: pub, p_about: $("giAbout").value.trim() || null }).then(function(res){
+    var r = res.data;
+    if (r && r.ok){ S.grpInfo.is_public = pub; S.grpInfo.about = $("giAbout").value.trim() || null; toast("Saved", pub ? "This group is now public and discoverable." : "This group is private again."); }
+    else if (r && r.error === "community_stays_public") toast("Community stays public", "The Community group is always public.");
+    else toast("Couldn't save", "Only the group creator can change this.");
+  }).catch(function(){});
+});
+
+/* --------------------------- CALL IT BOARD -------------------------------- */
+function openCallitBoard(){
+  $("callitOverlay").classList.remove("hidden");
+  $("ciMine").innerHTML = ""; $("ciTop").innerHTML = '<div class="empty-note">Loading…</div>';
+  sb.rpc("tc_callit_leaderboard").then(function(res){
+    var d = res.data; if (!d || !d.ok) return;
+    if (d.me){
+      $("ciMine").innerHTML = '<div class="board-me"><div><b>#' + (d.me.rank || "—") + '</b><span>Your rank</span></div><div><b>' + d.me.wins + '</b><span>Wins</span></div><div><b>🔥 ' + d.me.streak + '</b><span>Streak</span></div><div><b>' + d.me.calls + '</b><span>Calls</span></div></div>';
+    } else {
+      $("ciMine").innerHTML = '<div class="board-me"><div style="text-align:left;"><b style="font-size:16px;">No calls yet</b><span style="text-transform:none;letter-spacing:0;">Call HIGHER or LOWER on the daily 🎯 thread to enter the board.</span></div></div>';
+    }
+    var medals = ["🥇", "🥈", "🥉"];
+    $("ciTop").innerHTML = (d.top || []).length ? d.top.map(function(r, i){
+      return '<div class="w2-row" data-board-user="' + r.user_id + '">' + w2Avatar(r, "") +
+        '<span class="chat-main"><div class="chat-name">' + (medals[i] || "") + " " + esc(r.full_name || "") + (r.mine ? ' <span class="tag-chip">YOU</span>' : "") + '</div><div class="uname">@' + esc(r.username || "") + '</div></span>' +
+        '<span style="text-align:right;"><b style="font-family:Manrope,sans-serif;">' + r.wins + ' wins</b><div style="font-size:12px;color:var(--mut);">🔥 ' + r.streak + " streak · " + r.calls + " calls</div></span></div>";
+    }).join("") : '<div class="empty-note">No calls yet — be the first on the board.</div>';
+    $("ciTop").querySelectorAll("[data-board-user]").forEach(function(row){
+      row.addEventListener("click", function(){ openUserProfile(row.getAttribute("data-board-user")); });
+    });
+  }).catch(function(){});
+}
+$("ciBack").addEventListener("click", function(){ $("callitOverlay").classList.add("hidden"); });
+$("menuCallit").addEventListener("click", openCallitBoard);
+
+/* --------------------------- EDIT PROFILE --------------------------------- */
+S.epPhoto = null; S.epAvatarUrl = null;
+function openEditProfile(){
+  $("editProfileOverlay").classList.remove("hidden");
+  S.epPhoto = null; S.epAvatarUrl = null;
+  paintAvatar($("epAvatar"), S.profile.full_name, S.profile.avatar_url);
+  $("epName").value = S.profile.full_name || "";
+  $("epUser").value = "@" + (S.profile.username || "");
+  $("epBio").value = "";
+  sb.rpc("tc_user_profile", { p_user: S.user.id }).then(function(res){
+    var d = res.data;
+    if (d && d.ok && d.bio) $("epBio").value = d.bio;
+  }).catch(function(){});
+}
+$("menuEditProfile").addEventListener("click", openEditProfile);
+$("epBack").addEventListener("click", function(){ $("editProfileOverlay").classList.add("hidden"); });
+$("epPhotoBtn").addEventListener("click", function(){ $("epPhotoFile").click(); });
+$("epPhotoFile").addEventListener("change", function(){
+  var f = this.files && this.files[0]; this.value = "";
+  if (!f) return;
+  w2ProcessPhoto(f, function(blob, url){
+    S.epPhoto = { blob: blob };
+    $("epAvatar").innerHTML = '<img src="' + url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    var path = "avatars/" + S.user.id + "/avatar.jpg";
+    w2Upload(path, blob).then(function(){
+      return sb.storage.from("tc-media").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+    }).then(function(res){
+      if (res.data && res.data.signedUrl) S.epAvatarUrl = res.data.signedUrl;
+    }).catch(function(){ toast("Photo upload failed", "Check your connection and try again."); });
+  });
+});
+$("epSave").addEventListener("click", function(){
+  var name = $("epName").value.trim();
+  if (name.length < 2){ toast("Name too short", "Your name needs at least 2 characters."); return; }
+  var btn = this; btn.disabled = true;
+  sb.rpc("tc_update_profile", { p_name: name, p_bio: $("epBio").value.trim() || null, p_avatar_url: S.epAvatarUrl || null, p_listed: null }).then(function(res){
+    btn.disabled = false;
+    var d = res.data;
+    if (!d || !d.ok){
+      if (d && d.error === "bio_too_long") toast("Bio too long", "Keep your bio under 160 characters.");
+      else toast("Couldn't save", "Try again in a moment.");
+      return;
+    }
+    S.profile.full_name = name;
+    if (S.epAvatarUrl) S.profile.avatar_url = S.epAvatarUrl;
+    renderProfile(); paintHeader(); paintWallMe();
+    $("editProfileOverlay").classList.add("hidden");
+    toast("Profile updated", "Your new look is live everywhere.");
+  }).catch(function(){ btn.disabled = false; });
+});
+</script>
+
 </body>
 </html>
