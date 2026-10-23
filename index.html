@@ -211,6 +211,65 @@
   .toast{ background:var(--navy); color:#fff; border:1px solid var(--gold); border-radius:14px; padding:13px 16px; font-size:14px; box-shadow:0 14px 34px rgba(11,17,50,.3); }
   .toast b{ display:block; font-family:"Manrope",sans-serif; margin-bottom:2px; }
   .spin-note{ text-align:center; color:var(--mut); font-size:13.5px; padding:16px; }
+
+/* ---- feature wave 2026-10-23 ---- */
+.msg.deleted { opacity:.75; font-style:italic; }
+.msg .edited-tag { font-size:10px; opacity:.65; margin-left:6px; font-style:normal; }
+.msg .pin-tag { font-size:10px; margin-left:4px; }
+.react-row { display:flex; gap:4px; flex-wrap:wrap; margin-top:3px; }
+.react-chip { border:1px solid rgba(11,17,50,.14); background:#fff; border-radius:999px; padding:1px 7px; font-size:12px; cursor:pointer; line-height:1.5; }
+.react-chip.mine { background:#0B1132; color:#fff; border-color:#0B1132; }
+.msg.me .react-chip { }
+.seen-line { text-align:right; font-size:11px; color:var(--mut); padding:2px 6px 0; }
+.tip-line { text-align:center; font-size:12.5px; color:#7A5B12; background:#FBF3D9; border:1px solid #EBD98C; border-radius:999px; padding:5px 12px; margin:6px auto; width:fit-content; max-width:92%; }
+.file-chip { display:flex; align-items:center; gap:9px; background:rgba(11,17,50,.05); border:1px solid rgba(11,17,50,.12); border-radius:12px; padding:9px 11px; cursor:pointer; margin-bottom:2px; }
+.msg.me .file-chip { background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.25); }
+.file-chip .fi { font-size:19px; }
+.file-chip .fn { font-size:13.5px; font-weight:600; word-break:break-all; }
+.file-chip .fs { font-size:11.5px; opacity:.7; }
+.preview-card { display:block; border:1px solid rgba(11,17,50,.14); border-radius:12px; overflow:hidden; margin-top:5px; text-decoration:none; color:inherit; background:#fff; }
+.msg.me .preview-card { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25); }
+.preview-card img { width:100%; max-height:150px; object-fit:cover; display:block; }
+.preview-card .pv-b { padding:8px 10px; }
+.preview-card .pv-t { font-size:13.5px; font-weight:700; line-height:1.35; }
+.preview-card .pv-d { font-size:12px; opacity:.75; line-height:1.4; margin-top:2px; }
+.preview-card .pv-dom { font-size:10.5px; text-transform:uppercase; letter-spacing:.4px; opacity:.55; margin-top:4px; }
+.mention { color:#8A6D1F; font-weight:700; }
+.msg.me .mention { color:#FFD968; }
+.pin-bar { display:none; align-items:center; gap:8px; background:#FFF7DC; border-bottom:1px solid #EBD98C; padding:7px 14px; font-size:13px; cursor:pointer; }
+.pin-bar.on { display:flex; }
+.pin-bar .pb-t { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#5C4A0E; }
+.search-bar { display:none; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid rgba(11,17,50,.1); background:#fff; }
+.search-bar.on { display:flex; }
+.search-bar input { flex:1; border:1.5px solid rgba(11,17,50,.15); border-radius:999px; padding:8px 13px; font-size:14px; font-family:inherit; }
+.search-results { display:none; max-height:240px; overflow-y:auto; background:#fff; border-bottom:1px solid rgba(11,17,50,.1); }
+.search-results.on { display:block; }
+.sr-row { padding:9px 14px; border-bottom:1px solid rgba(11,17,50,.06); cursor:pointer; font-size:13.5px; }
+.sr-row .sr-who { font-weight:700; font-size:12px; color:var(--mut); }
+.sr-row .sr-when { float:right; font-size:11.5px; color:var(--mut); }
+.mention-pop { display:none; background:#fff; border-top:1px solid rgba(11,17,50,.1); max-height:190px; overflow-y:auto; }
+.mention-pop.on { display:block; }
+.mp-row { display:flex; align-items:center; gap:9px; padding:8px 14px; cursor:pointer; font-size:14px; }
+.head-btn { background:none; border:none; cursor:pointer; padding:6px; color:#0B1132; display:flex; align-items:center; }
+.sheet-overlay { position:fixed; inset:0; background:rgba(6,8,20,.5); z-index:600; display:none; align-items:flex-end; justify-content:center; }
+.sheet-overlay.on { display:flex; }
+.sheet-card { background:#fff; width:100%; max-width:520px; border-radius:20px 20px 0 0; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); max-height:82vh; overflow-y:auto; animation:sheetUp .18s ease-out; }
+@keyframes sheetUp { from { transform:translateY(24px); opacity:.4; } to { transform:none; opacity:1; } }
+.sheet-emoji-row { display:flex; justify-content:space-around; padding:4px 0 10px; border-bottom:1px solid rgba(11,17,50,.08); margin-bottom:6px; }
+.sheet-emoji { font-size:25px; background:none; border:none; cursor:pointer; padding:4px 7px; border-radius:12px; }
+.sheet-emoji.mine { background:#0B1132; }
+.sheet-act { display:block; width:100%; text-align:left; background:none; border:none; padding:12px 6px; font-size:15px; font-family:inherit; cursor:pointer; border-bottom:1px solid rgba(11,17,50,.06); color:#141a33; }
+.sheet-act.danger { color:#C0392B; }
+.sheet-act:last-child { border-bottom:none; }
+.sheet-title { font-size:16px; font-weight:800; margin:2px 0 10px; }
+.opt-row { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px; }
+.opt-pill { border:1.5px solid rgba(11,17,50,.18); background:#fff; border-radius:999px; padding:6px 13px; font-size:13px; font-family:inherit; cursor:pointer; }
+.opt-pill.on { background:#0B1132; color:#fff; border-color:#0B1132; }
+.mini-btn.mod-on { background:#0B1132; color:#fff; }
+.tag-chip.mod { background:#0B1132; color:#FFD968; }
+.tip-amt { width:100%; border:1.5px solid rgba(11,17,50,.18); border-radius:12px; padding:12px; font-size:17px; font-family:inherit; margin:6px 0 12px; }
+.edit-bar { display:none; align-items:center; gap:9px; padding:8px 14px; background:#EEF1FF; border-top:1px solid rgba(11,17,50,.1); font-size:13px; }
+.edit-bar.on { display:flex; }
 </style>
 </head>
 <body>
@@ -274,8 +333,11 @@
         <div class="thread-head">
           <button class="back-btn" id="threadBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
           <span class="av-wrap"><span class="avatar sm" id="threadAvatar">?</span><span class="pdot" id="threadDot" style="display:none;"></span></span>
-          <div class="chat-main"><div class="chat-name" id="threadName">Chat</div><div class="uname" id="threadSub" style="font-size:12.5px;color:var(--mut);"></div></div>
+          <div class="chat-main"><div class="chat-name" id="threadName">Chat</div><div class="uname" id="threadSub" style="font-size:12.5px;color:var(--mut);"></div></div><button class="head-btn" id="threadSearchBtn" type="button" aria-label="Search messages"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg></button><button class="head-btn" id="threadMenuBtn" type="button" aria-label="Chat options"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
         </div>
+        <div class="pin-bar" id="pinBar"><span>📌</span><span class="pb-t" id="pinBarText"></span><span style="font-size:11px;color:#8A6D1F;" id="pinBarCount"></span></div>
+        <div class="search-bar" id="searchBar"><input id="searchInput" type="text" placeholder="Search in this chat…" autocomplete="off"><button class="head-btn" id="searchClose" type="button" aria-label="Close search"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+        <div class="search-results" id="searchResults"></div>
         <div class="msgs" id="msgList"></div>
         <div class="typing-row hidden" id="typingRow"><span class="t-bubble"><i></i><i></i><i></i></span><span class="t-text" id="typingText"></span></div>
         <button class="scroll-down hidden" id="scrollDownBtn" type="button" aria-label="Jump to latest message"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><span class="sd-badge hidden" id="scrollDownBadge"></span></button>
@@ -283,6 +345,7 @@
           <div class="rb-main"><div class="rb-name" id="replyName"></div><div class="rb-body" id="replyBody"></div></div>
           <button class="rb-x" id="replyCancel" type="button" aria-label="Cancel reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </div>
+        <div class="edit-bar" id="editBar"><span style="flex:1;">✏️ Editing message</span><button class="rm" id="editCancel" type="button">Cancel</button></div>
         <div class="photo-strip" id="photoStrip">
           <img id="photoThumb" alt="">
           <span style="font-size:13px;color:var(--mut);">Photo ready — add a caption or just send</span>
@@ -295,10 +358,11 @@
           <button class="rm" id="recCancel" type="button">Cancel</button>
           <button class="rm send" id="recSend" type="button">Send voice</button>
         </div>
+        <div class="mention-pop" id="mentionPop"></div>
         <div class="input-row" id="inputRow">
           <button class="photo-btn" id="photoBtn" type="button" aria-label="Send a photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg></button>
           <button class="photo-btn" id="micBtn" type="button" aria-label="Record a voice message"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 19v3"/></svg></button>
-          <input id="photoFile" type="file" accept="image/*" class="hidden">
+          <button class="photo-btn" id="fileBtn" type="button" aria-label="Send a file"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.5v3a5.5 5.5 0 0 1-11 0V8a3.5 3.5 0 0 1 7 0v6.5a2 2 0 0 1-4 0V9"/></svg></button><input id="photoFile" type="file" accept="image/*" class="hidden"><input id="docFile" type="file" class="hidden">
           <textarea id="msgInput" rows="1" placeholder="Message…" maxlength="2000"></textarea>
           <button class="send-btn" id="sendBtn" type="button" aria-label="Send"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>
         </div>
@@ -354,6 +418,17 @@
           <div class="card">
             <h4>Members</h4>
             <div id="giMembers"></div>
+          </div>
+          <div class="card" id="giSettingsCard" style="display:none;">
+            <h4>Chat settings</h4>
+            <div style="font-size:13px;color:var(--mut);margin-top:4px;">Slow mode</div>
+            <div class="opt-row" id="giSlowRow"></div>
+            <div style="font-size:13px;color:var(--mut);margin-top:10px;">Disappearing messages</div>
+            <div class="opt-row" id="giDisRow"></div>
+          </div>
+          <div class="card" id="giBansCard" style="display:none;">
+            <h4>Banned</h4>
+            <div id="giBans"></div>
           </div>
           <div class="card" id="giAddCard">
             <h4>Add friends</h4>
@@ -452,6 +527,7 @@
       </div>
     </div>
 
+    <div class="sheet-overlay" id="sheetOverlay"><div class="sheet-card" id="sheetCard"></div></div>
     <div class="lightbox" id="lightbox"><img id="lightboxImg" alt="Photo"></div>
 
     <!-- Dock -->
@@ -492,7 +568,8 @@ var S = {
   user: null, profile: null, wallet: null, access: null, listed: true,
   chats: [], currentChat: null, messages: [], requests: [], friends: [],
   earnedToday: 0, sentToday: 0, profileCache: {}, rtStarted: false,
-  mediaUrls: {}, mediaPending: {}, pendingPhoto: null, sendingPhoto: false
+  mediaUrls: {}, mediaPending: {}, pendingPhoto: null, sendingPhoto: false,
+  reactions: {}, reads: [], pins: [], chatSettings: null, memberCache: {}, editTarget: null, mentionPicks: {}
 };
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -791,7 +868,9 @@ function renderChatList(){
   S.chats.forEach(function(c){
     var d = chatDisplay(c);
     var last;
-    if (c.last_kind === "voice") last = (c.last_sender === S.user.id ? "You: " : "") + "🎤 Voice message";
+    if (c.last_kind === "tip") last = "💸 TrybCoin tip";
+    else if (c.last_kind === "file") last = (c.last_sender === S.user.id ? "You: " : "") + "📄 " + (c.last_body || "File");
+    else if (c.last_kind === "voice") last = (c.last_sender === S.user.id ? "You: " : "") + "🎤 Voice message";
     else if (c.last_kind === "photo") last = (c.last_sender === S.user.id ? "You: " : "") + "📷 " + (c.last_body || "Photo");
     else last = c.last_body ? ((c.last_sender === S.user.id ? "You: " : "") + c.last_body) : "Say hello 👋";
     if (q && (d.name + " " + last).toLowerCase().indexOf(q) < 0) return;
@@ -858,15 +937,18 @@ function openChat(c){
   $("threadName").textContent = d.name;
   $("threadSub").textContent = d.sub;
   showChatsSub("thread");
+  S.reactions = {}; S.reads = []; S.pins = []; S.chatSettings = null; S.editTarget = null; S.mentionPicks = {};
+  hideSearch(); renderPinsBar();
   loadMessages(c.chat_id);
   joinTyping(c.chat_id);
   sb.rpc("tc_mark_read", { p_chat: c.chat_id }).then(function(){ loadChats(); }).catch(function(){});
 }
 $("threadBack").addEventListener("click", function(){ showChatsSub("list"); loadChats(); });
 function loadMessages(chatId){
-  sb.from("tc_messages").select("id, chat_id, sender_id, body, kind, media_path, media_duration, created_at, reply_to").eq("chat_id", chatId).order("created_at", { ascending: true }).limit(300).then(function(res){
+  sb.from("tc_messages").select("id, chat_id, sender_id, body, kind, media_path, media_duration, created_at, reply_to, edited_at, deleted_at, expires_at, pinned_at, mentions, preview, file_name, file_size, tip_to, tip_amount").eq("chat_id", chatId).or("expires_at.is.null,expires_at.gt." + new Date().toISOString()).order("created_at", { ascending: true }).limit(300).then(function(res){
     S.messages = res.data || [];
     renderMessages();
+    loadReactions(); loadReads(); loadPins(); loadChatSettings();
   }).catch(function(){});
 }
 function ensureMedia(path){
@@ -878,12 +960,79 @@ function ensureMedia(path){
     if (row && row.signedUrl){ S.mediaUrls[path] = row.signedUrl; renderMessages(); }
   }).catch(function(){ delete S.mediaPending[path]; });
 }
+function firstUrl(text){
+  var mt = String(text || "").match(/https?:\/\/[^\s<>"']+/i);
+  return mt ? mt[0].replace(/[.,!?;:)]+$/, "") : null;
+}
+function mentionText(m){
+  var html = richText(m.body || "");
+  var ids = m.mentions || [];
+  if (!ids.length) return html;
+  var names = {};
+  ids.forEach(function(id){
+    var p = S.profileCache[id];
+    if (p && p.username) names[p.username.toLowerCase()] = true;
+    else if (p) senderProfile(id);
+  });
+  if (!Object.keys(names).length) return html;
+  return html.split(/(<[^>]+>)/g).map(function(seg){
+    if (seg.charAt(0) === "<") return seg;
+    return seg.replace(/@([A-Za-z0-9_.]+)/g, function(w, un){
+      return names[un.toLowerCase()] ? '<span class="mention">' + w + "</span>" : w;
+    });
+  }).join("");
+}
+function previewHTML(m){
+  var pv = m.preview;
+  if (!pv || !pv.title) return "";
+  var url = firstUrl(m.body || "");
+  if (!url) return "";
+  return '<a class="preview-card" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' +
+    (pv.image ? '<img src="' + esc(pv.image) + '" alt="" loading="lazy">' : "") +
+    '<span class="pv-b" style="display:block;"><span class="pv-t" style="display:block;">' + esc(pv.title) + "</span>" +
+    (pv.description ? '<span class="pv-d" style="display:block;">' + esc(pv.description) + "</span>" : "") +
+    (pv.domain ? '<span class="pv-dom" style="display:block;">' + esc(pv.domain) + "</span>" : "") +
+    "</span></a>";
+}
+function reactionsHTML(m){
+  var agg = S.reactions[m.id];
+  if (!agg) return "";
+  var counts = {}, mineEmoji = null;
+  Object.keys(agg).forEach(function(uid){
+    var e = agg[uid];
+    counts[e] = (counts[e] || 0) + 1;
+    if (uid === S.user.id) mineEmoji = e;
+  });
+  var emojis = Object.keys(counts);
+  if (!emojis.length) return "";
+  return '<div class="react-row">' + emojis.map(function(e){
+    return '<button class="react-chip' + (e === mineEmoji ? " mine" : "") + '" type="button" data-react="' + m.id + '" data-emoji="' + e + '">' + e + (counts[e] > 1 ? " " + counts[e] : "") + "</button>";
+  }).join("") + "</div>";
+}
+function fmtBytes(n){
+  n = Number(n) || 0;
+  if (n >= 1048576) return (n / 1048576).toFixed(1) + " MB";
+  if (n >= 1024) return Math.round(n / 1024) + " KB";
+  return n + " B";
+}
+function nameOf(id){
+  if (id === S.user.id) return "You";
+  var p = S.profileCache[id];
+  if (!p){ senderProfile(id).then(function(){ renderMessages(); }); return "Someone"; }
+  return p.full_name || ("@" + (p.username || ""));
+}
 function msgHTML(m){
   var mine = m.sender_id === S.user.id;
+  if (m.deleted_at){
+    return '<div class="msg ' + (mine ? "me" : "them") + ' deleted" data-mid="' + m.id + '">This message was deleted</div>';
+  }
+  if (m.kind === "tip"){
+    return '<div class="tip-line" data-mid="' + m.id + '">💸 ' + esc(nameOf(m.sender_id)) + " sent <b>" + (m.tip_amount || 0) + " TN</b> to " + esc(nameOf(m.tip_to)) + "</div>";
+  }
   var senderLine = "";
   if (!mine && S.currentChat && S.currentChat.kind === "group"){
     var p = S.profileCache[m.sender_id];
-    senderLine = '<span class="msender">' + esc(p ? (p.full_name || ("@" + (p.username || ""))) : "Member") + '</span>';
+    senderLine = '<span class="msender">' + esc(p ? (p.full_name || ("@" + (p.username || ""))) : "Member") + "</span>";
     if (!p) senderProfile(m.sender_id).then(function(){ renderMessages(); });
   }
   var content = "";
@@ -895,10 +1044,17 @@ function msgHTML(m){
   if (m.kind === "voice" && m.media_path){
     ensureMedia(m.media_path);
     var playing = S.voicePath === m.media_path && S.voiceAudio && !S.voiceAudio.paused;
-    content += '<span class="voice-msg"><button class="voice-play" type="button" data-voice="' + esc(m.media_path) + '" aria-label="Play voice message">' + (playing ? "❚❚" : "▶") + '</button><span class="voice-dur">' + esc(fmtDur(m.media_duration)) + '</span></span>';
+    content += '<span class="voice-msg"><button class="voice-play" type="button" data-voice="' + esc(m.media_path) + '" aria-label="Play voice message">' + (playing ? "\u275A\u275A" : "\u25B6") + '</button><span class="voice-dur">' + esc(fmtDur(m.media_duration)) + "</span></span>";
   }
-  if (m.body) content += richText(m.body);
-  return '<div class="msg ' + (mine ? "me" : "them") + '" data-mid="' + m.id + '">' + senderLine + quoteHTML(m) + content + '</div>';
+  if (m.kind === "file" && m.media_path){
+    content += '<span class="file-chip" data-file="' + esc(m.media_path) + '"><span class="fi">📄</span><span><span class="fn">' + esc(m.file_name || "File") + '</span><br><span class="fs">' + esc(fmtBytes(m.file_size)) + " \u00B7 tap to open</span></span></span>";
+  }
+  if (m.body) content += mentionText(m);
+  content += previewHTML(m);
+  var tail = "";
+  if (m.edited_at) tail += '<span class="edited-tag">edited</span>';
+  if (m.pinned_at) tail += '<span class="pin-tag">📌</span>';
+  return '<div class="msg ' + (mine ? "me" : "them") + '" data-mid="' + m.id + '">' + senderLine + quoteHTML(m) + content + tail + "</div>" + reactionsHTML(m);
 }
 $("msgList").addEventListener("click", function(e){
   var q = e.target.closest ? e.target.closest("[data-quote]") : null;
@@ -937,6 +1093,19 @@ function threadCardHTML(){
   else meta = esc(d.sub) + " · Group chat";
   return '<div class="thread-card"><span class="avatar lg">' + av + '</span><div class="tc-name">' + esc(d.name) + '</div><div class="tc-meta">' + meta + '</div></div>';
 }
+function seenLineHTML(){
+  if (!S.currentChat || !S.reads || !S.reads.length) return "";
+  var lastMine = null;
+  for (var i = S.messages.length - 1; i >= 0; i--){
+    if (S.messages[i].sender_id === S.user.id && !S.messages[i].deleted_at){ lastMine = S.messages[i]; break; }
+  }
+  if (!lastMine) return "";
+  var t = new Date(lastMine.created_at).getTime();
+  var seenBy = S.reads.filter(function(r){ return r.user_id !== S.user.id && r.last_read_at && new Date(r.last_read_at).getTime() >= t; }).length;
+  if (!seenBy) return "";
+  if (S.currentChat.kind === "dm") return '<div class="seen-line">Seen</div>';
+  return '<div class="seen-line">Seen by ' + seenBy + "</div>";
+}
 function renderMessages(){
   var host = $("msgList"); if (!host) return;
   var html = threadCardHTML();
@@ -950,9 +1119,11 @@ function renderMessages(){
     prev = dt.getTime(); prevDay = day;
     html += msgHTML(m);
   });
+  html += seenLineHTML();
   var stick = host.scrollHeight - host.scrollTop - host.clientHeight < 260 ||
     (S.messages.length && S.messages[S.messages.length - 1].sender_id === S.user.id);
   host.innerHTML = html;
+  renderPinsBar();
   if (stick){ host.scrollTop = host.scrollHeight; S.seenTailId = S.messages.length ? S.messages[S.messages.length - 1].id : null; }
   paintScrollDown();
 }
@@ -985,6 +1156,7 @@ $("scrollDownBtn").addEventListener("click", function(){
   }, 380);
 });
 function sendCurrent(){
+  if (S.editTarget){ submitEdit(); return; }
   if (S.pendingPhoto){ sendPhoto(); return; }
   var inp = $("msgInput");
   var body = inp.value.trim();
@@ -993,6 +1165,7 @@ function sendCurrent(){
   inp.value = "";
   inp.style.height = "auto";
   sb.rpc("tc_send_message", { p_chat: chatId, p_body: body }).then(function(res){
+    if (res.error && slowModeWait(res.error)){ inp.value = body; autoGrowInput(); return; }
     var d = res.data;
     if (!d || !d.ok){
       if (d && d.error === "no_access"){ refreshAccess().then(gate); toast("Membership needed", "Your access has ended — renew to keep chatting."); }
@@ -1002,6 +1175,7 @@ function sendCurrent(){
     }
     S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, body: body, created_at: new Date().toISOString(), reply_to: S.replyTo ? S.replyTo.id : null });
     applyReply(d.message_id);
+    applyMentionsEtc(d.message_id, body);
     renderMessages();
     if (typeof d.earned_today === "number") S.earnedToday = d.earned_today;
     if (d.earned > 0) refreshWallet();
@@ -1062,6 +1236,7 @@ function sendPhoto(){
     })
     .then(function(res){
       S.sendingPhoto = false;
+      if (res.error && slowModeWait(res.error)) return;
       var d = res.data;
       if (!d || !d.ok){
         if (d && d.error === "no_access"){ refreshAccess().then(gate); toast("Membership needed", "Your access has ended — renew to keep chatting."); }
@@ -1157,6 +1332,7 @@ function sendVoice(blob, seconds, mime){
     })
     .then(function(res){
       S.sendingVoice = false;
+      if (res.error && slowModeWait(res.error)) return;
       var d = res.data;
       if (!d || !d.ok){
         if (d && d.error === "no_access"){ refreshAccess().then(gate); toast("Membership needed", "Your access has ended — renew to keep chatting."); }
@@ -1172,6 +1348,11 @@ function sendVoice(blob, seconds, mime){
       loadChats();
     })
     .catch(function(){ S.sendingVoice = false; toast("Couldn't send voice message", "Check your connection and try again."); });
+}
+function autoGrowInput(){
+  var el = $("msgInput"); if (!el) return;
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 120) + "px";
 }
 $("sendBtn").addEventListener("click", sendCurrent);
 $("msgInput").addEventListener("input", function(){
@@ -1203,7 +1384,7 @@ function fetchReplyTarget(id){
   S.replyCache = S.replyCache || {}; S.replyFetching = S.replyFetching || {};
   if (S.replyFetching[id]) return;
   S.replyFetching[id] = true;
-  sb.from("tc_messages").select("id, chat_id, sender_id, body, kind, media_path, media_duration, created_at, reply_to").eq("id", id).maybeSingle().then(function(r){
+  sb.from("tc_messages").select("id, chat_id, sender_id, body, kind, media_path, media_duration, created_at, reply_to, edited_at, deleted_at, pinned_at, mentions, preview, file_name, file_size, tip_to, tip_amount").eq("id", id).maybeSingle().then(function(r){
     delete S.replyFetching[id];
     if (r.data){ S.replyCache[id] = r.data; renderMessages(); }
   }).catch(function(){ delete S.replyFetching[id]; });
@@ -1328,6 +1509,18 @@ function startRealtime(){
         loadChats();
       }
     })
+    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "tc_messages" }, function(payload){
+      var m = payload.new;
+      if (!m || !S.currentChat || m.chat_id !== S.currentChat.chat_id) return;
+      var cur = findMsg(m.id);
+      if (cur){ Object.keys(m).forEach(function(k){ cur[k] = m[k]; }); renderMessages(); }
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "tc_reactions" }, function(payload){
+      var row = payload.new && payload.new.message_id ? payload.new : payload.old;
+      if (!row || !S.currentChat) return;
+      var m = findMsg(row.message_id);
+      if (m && m.chat_id === S.currentChat.chat_id) loadReactions();
+    })
     .on("postgres_changes", { event: "*", schema: "public", table: "tc_friendships" }, function(){
       loadRequests(); loadFriends($("dirSearch") ? $("dirSearch").value.trim() : "");
     })
@@ -1425,11 +1618,26 @@ function renderGroupInfo(){
     var tags = "";
     if (p.user_id === S.user.id) tags += ' <span class="tag-chip">YOU</span>';
     if (p.user_id === d.created_by) tags += ' <span class="tag-chip">CREATOR</span>';
-    var rm = (mine && !d.is_community && p.user_id !== S.user.id)
-      ? '<button class="mini-btn ghost" type="button" data-remove="' + p.user_id + '">Remove</button>' : "";
+    if (p.is_mod) tags += ' <span class="tag-chip mod">MOD</span>';
+    var btns = "";
+    if (mine && !d.is_community && p.user_id !== S.user.id)
+      btns += '<button class="mini-btn ghost" type="button" data-remove="' + p.user_id + '">Remove</button>';
+    if (d.can_moderate && p.user_id !== S.user.id && p.user_id !== d.created_by){
+      btns += '<button class="mini-btn ghost' + (p.is_mod ? " mod-on" : "") + '" type="button" data-mod="' + p.user_id + '" data-on="' + (p.is_mod ? "1" : "0") + '" style="margin-left:6px;">' + (p.is_mod ? "Unmod" : "Make mod") + "</button>";
+      btns += '<button class="mini-btn ghost" type="button" data-ban="' + p.user_id + '" style="margin-left:6px;color:#C0392B;">Ban</button>';
+    }
     var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
-    return '<div class="user-row"><span class="av-wrap"><span class="avatar sm">' + av + '</span><span class="pdot' + (p.online ? " on" : "") + '"></span></span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + tags + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + rm + '</div>';
+    return '<div class="user-row"><span class="av-wrap"><span class="avatar sm">' + av + '</span><span class="pdot' + (p.online ? " on" : "") + '"></span></span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + tags + '</div><div class="uname">@' + esc(p.username || "") + "</div></span>" + btns + "</div>";
   }).join("");
+  renderGiSettings(d);
+  var bc = $("giBansCard");
+  if (d.can_moderate && d.bans && d.bans.length){
+    bc.style.display = "";
+    $("giBans").innerHTML = d.bans.map(function(p){
+      var av = esc(initials(p.full_name || "?"));
+      return '<div class="user-row"><span class="avatar sm">' + av + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span><button class="mini-btn ghost" type="button" data-unban="' + p.user_id + '">Unban</button></div>';
+    }).join("");
+  } else bc.style.display = "none";
 }
 function renderGroupAddList(){
   var d = S.grpInfo; if (!d || d.is_community) return;
@@ -1860,6 +2068,516 @@ if (!sb){
 </script>
 <script>
 if ("serviceWorker" in navigator) { window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); }); }
+
+/* ================= feature wave: reactions, edit, pins, seen, search,
+   mentions, previews, files, tips, disappearing, slow mode, mods ======== */
+function slowModeWait(err){
+  var mt = /slow_mode:(\d+)/.exec((err && err.message) || "");
+  if (!mt) return false;
+  toast("Slow mode is on", "Wait " + mt[1] + "s before sending again in this group.");
+  return true;
+}
+function openSheet(html){
+  $("sheetCard").innerHTML = html;
+  $("sheetOverlay").classList.add("on");
+}
+function closeSheet(){ $("sheetOverlay").classList.remove("on"); }
+$("sheetOverlay").addEventListener("click", function(e){ if (e.target === this) closeSheet(); });
+
+function loadReactions(){
+  if (!S.currentChat || !S.messages.length) return;
+  var ids = S.messages.map(function(m){ return m.id; });
+  sb.rpc("tc_reactions_for", { p_ids: ids }).then(function(res){
+    var map = {};
+    (res.data || []).forEach(function(r){
+      map[r.message_id] = map[r.message_id] || {};
+      map[r.message_id][r.user_id] = r.emoji;
+    });
+    S.reactions = map;
+    renderMessages();
+  }).catch(function(){});
+}
+function loadReads(){
+  if (!S.currentChat) return;
+  sb.rpc("tc_chat_reads", { p_chat: S.currentChat.chat_id }).then(function(res){
+    S.reads = res.data || [];
+    renderMessages();
+  }).catch(function(){});
+}
+function loadPins(){
+  if (!S.currentChat) return;
+  sb.rpc("tc_pins", { p_chat: S.currentChat.chat_id }).then(function(res){
+    var d = res.data;
+    S.pins = (d && d.pins) || [];
+    renderPinsBar();
+  }).catch(function(){});
+}
+function loadChatSettings(){
+  if (!S.currentChat) return;
+  sb.rpc("tc_chat_settings", { p_chat: S.currentChat.chat_id }).then(function(res){
+    if (res.data && res.data.ok) S.chatSettings = res.data;
+  }).catch(function(){});
+}
+function renderPinsBar(){
+  var bar = $("pinBar"); if (!bar) return;
+  if (!S.currentChat || !S.pins || !S.pins.length){ bar.classList.remove("on"); return; }
+  var p = S.pins[0];
+  $("pinBarText").textContent = p.kind === "text" ? (p.body || "") : (p.kind === "photo" ? "\uD83D\uDCF7 Photo" : p.kind === "voice" ? "\uD83C\uDFA4 Voice message" : p.kind === "file" ? "\uD83D\uDCC4 File" : "Pinned message");
+  $("pinBarCount").textContent = S.pins.length > 1 ? S.pins.length + " pinned" : "";
+  bar.classList.add("on");
+}
+$("pinBar").addEventListener("click", function(){
+  if (S.pins && S.pins.length) jumpToMsg(S.pins[0].id);
+});
+setInterval(function(){
+  if (S.currentChat && $("threadWrap") && !$("threadWrap").classList.contains("hidden")) loadReads();
+}, 30000);
+
+/* ---- message action sheet (double-tap a message) ---- */
+var REACT_EMOJIS = ["\u2764\uFE0F", "\uD83D\uDE02", "\uD83D\uDE2E", "\uD83D\uDE22", "\uD83D\uDE4F", "\uD83D\uDD25"];
+function openMsgSheet(m){
+  if (!m || m.deleted_at || m.kind === "tip") return;
+  var mine = m.sender_id === S.user.id;
+  var myEmoji = (S.reactions[m.id] || {})[S.user.id];
+  var canMod = !!(S.chatSettings && S.chatSettings.can_moderate);
+  var html = '<div class="sheet-emoji-row">' + REACT_EMOJIS.map(function(e){
+    return '<button class="sheet-emoji' + (e === myEmoji ? " mine" : "") + '" type="button" data-react-pick="' + e + '">' + e + "</button>";
+  }).join("") + "</div>";
+  html += '<button class="sheet-act" type="button" data-act="reply">\u21A9\uFE0F Reply</button>';
+  var isGroup = S.currentChat && S.currentChat.kind === "group";
+  if (!isGroup || canMod)
+    html += '<button class="sheet-act" type="button" data-act="pin">' + (m.pinned_at ? "\uD83D\uDCCC Unpin" : "\uD83D\uDCCC Pin") + "</button>";
+  if (m.kind === "text" && m.body)
+    html += '<button class="sheet-act" type="button" data-act="copy">\uD83D\uDCCB Copy text</button>';
+  if (mine && m.kind === "text")
+    html += '<button class="sheet-act" type="button" data-act="edit">\u270F\uFE0F Edit</button>';
+  if (mine || (isGroup && canMod))
+    html += '<button class="sheet-act danger" type="button" data-act="delete">\uD83D\uDDD1\uFE0F Delete</button>';
+  openSheet(html);
+  $("sheetCard").querySelectorAll("[data-react-pick]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var e = b.getAttribute("data-react-pick");
+      closeSheet();
+      sb.rpc("tc_react", { p_message: m.id, p_emoji: e }).then(function(res){
+        var d = res.data;
+        if (!d || !d.ok){ toast("Couldn't react", "Try again in a moment."); return; }
+        var map = {};
+        (d.reactions || []).forEach(function(r){ map[r.user_id] = r.emoji; });
+        S.reactions[m.id] = map;
+        renderMessages();
+      }).catch(function(){ toast("Couldn't react", "Check your connection."); });
+    });
+  });
+  $("sheetCard").querySelectorAll("[data-act]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var act = b.getAttribute("data-act");
+      if (act === "reply"){ closeSheet(); setReplyTarget(m); $("msgInput").focus(); }
+      else if (act === "copy"){
+        closeSheet();
+        if (navigator.clipboard) navigator.clipboard.writeText(m.body || "").then(function(){ toast("Copied", "Message text copied."); }).catch(function(){});
+      }
+      else if (act === "pin"){
+        closeSheet();
+        sb.rpc("tc_pin_message", { p_message: m.id, p_pin: !m.pinned_at }).then(function(res){
+          var d = res.data;
+          if (!d || !d.ok){ toast("Couldn't pin", d && d.error === "mods_only" ? "Only mods can pin in this group." : "Try again in a moment."); return; }
+          m.pinned_at = m.pinned_at ? null : new Date().toISOString();
+          renderMessages(); loadPins();
+          toast(m.pinned_at ? "Pinned" : "Unpinned", "");
+        }).catch(function(){ toast("Couldn't pin", "Check your connection."); });
+      }
+      else if (act === "edit"){ closeSheet(); startEdit(m); }
+      else if (act === "delete"){
+        if (b.getAttribute("data-arm") !== "1"){
+          b.setAttribute("data-arm", "1");
+          b.textContent = "Tap again to delete for everyone";
+          return;
+        }
+        closeSheet();
+        sb.rpc("tc_delete_message", { p_message: m.id }).then(function(res){
+          var d = res.data;
+          if (!d || !d.ok){ toast("Couldn't delete", "Try again in a moment."); return; }
+          m.deleted_at = new Date().toISOString(); m.body = "";
+          delete S.reactions[m.id];
+          renderMessages(); loadPins();
+        }).catch(function(){ toast("Couldn't delete", "Check your connection."); });
+      }
+    });
+  });
+}
+$("msgList").addEventListener("dblclick", function(e){
+  var el = e.target.closest ? e.target.closest(".msg") : null;
+  if (!el) return;
+  var m = findMsg(el.getAttribute("data-mid"));
+  if (m) openMsgSheet(m);
+});
+$("msgList").addEventListener("click", function(e){
+  var chip = e.target.closest ? e.target.closest("[data-react]") : null;
+  if (chip){
+    var m = findMsg(chip.getAttribute("data-react"));
+    if (m) openMsgSheet(m);
+    return;
+  }
+  var fc = e.target.closest ? e.target.closest("[data-file]") : null;
+  if (fc) openFile(fc.getAttribute("data-file"));
+});
+function openFile(path){
+  if (!path) return;
+  if (S.mediaUrls[path]){ window.open(S.mediaUrls[path], "_blank"); return; }
+  ensureMedia(path);
+  toast("Preparing file", "Tap again in a second to open it.");
+}
+
+/* ---- edit ---- */
+function startEdit(m){
+  S.editTarget = m;
+  $("editBar").classList.add("on");
+  var inp = $("msgInput");
+  inp.value = m.body || "";
+  autoGrowInput();
+  inp.focus();
+}
+function cancelEdit(){
+  S.editTarget = null;
+  $("editBar").classList.remove("on");
+  $("msgInput").value = "";
+  autoGrowInput();
+}
+$("editCancel").addEventListener("click", cancelEdit);
+function submitEdit(){
+  var m = S.editTarget; if (!m) return;
+  var body = $("msgInput").value.trim();
+  if (!body){ toast("Empty message", "Type something or cancel the edit."); return; }
+  sb.rpc("tc_edit_message", { p_message: m.id, p_body: body }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){ toast("Couldn't edit", "Only your own text messages can be edited."); return; }
+    m.body = body; m.edited_at = new Date().toISOString();
+    cancelEdit();
+    renderMessages();
+  }).catch(function(){ toast("Couldn't edit", "Check your connection."); });
+}
+
+/* ---- search ---- */
+function openSearch(){
+  $("searchBar").classList.add("on");
+  $("searchInput").focus();
+}
+function hideSearch(){
+  var b = $("searchBar"); if (b) b.classList.remove("on");
+  var r = $("searchResults"); if (r){ r.classList.remove("on"); r.innerHTML = ""; }
+  var i = $("searchInput"); if (i) i.value = "";
+}
+$("threadSearchBtn").addEventListener("click", openSearch);
+$("searchClose").addEventListener("click", hideSearch);
+var searchTimer = null;
+$("searchInput").addEventListener("input", function(){
+  clearTimeout(searchTimer);
+  var q = this.value.trim();
+  var host = $("searchResults");
+  if (q.length < 2){ host.classList.remove("on"); host.innerHTML = ""; return; }
+  searchTimer = setTimeout(function(){
+    if (!S.currentChat) return;
+    sb.rpc("tc_search_messages", { p_chat: S.currentChat.chat_id, p_query: q }).then(function(res){
+      var d = res.data;
+      var rows = (d && d.results) || [];
+      if (!rows.length){ host.innerHTML = '<div class="sr-row">No matches</div>'; host.classList.add("on"); return; }
+      host.innerHTML = rows.map(function(r){
+        var who = r.sender_id === S.user.id ? "You" : nameOf(r.sender_id);
+        return '<div class="sr-row" data-jump="' + r.id + '"><span class="sr-when">' + esc(fmtClock(r.created_at)) + '</span><span class="sr-who">' + esc(who) + "</span><br>" + esc(r.body || "") + "</div>";
+      }).join("");
+      host.classList.add("on");
+    }).catch(function(){});
+  }, 260);
+});
+$("searchResults").addEventListener("click", function(e){
+  var row = e.target.closest ? e.target.closest("[data-jump]") : null;
+  if (!row) return;
+  var id = row.getAttribute("data-jump");
+  hideSearch();
+  if (findMsg(id)) jumpToMsg(id);
+  else if (S.currentChat){ loadMessages(S.currentChat.chat_id); setTimeout(function(){ jumpToMsg(id); }, 600); }
+});
+
+/* ---- mentions + link previews after send ---- */
+function loadMemberCache(chatId){
+  if (S.memberCache[chatId]) return Promise.resolve(S.memberCache[chatId]);
+  return sb.rpc("tc_group_info", { p_chat: chatId }).then(function(res){
+    var d = res.data;
+    var mem = (d && d.members) || [];
+    S.memberCache[chatId] = mem;
+    return mem;
+  }).catch(function(){ return []; });
+}
+$("msgInput").addEventListener("input", function(){
+  var pop = $("mentionPop");
+  if (!S.currentChat || S.currentChat.kind !== "group"){ pop.classList.remove("on"); return; }
+  var v = this.value;
+  var mt = /(^|\s)@([A-Za-z0-9_.]*)$/.exec(v);
+  if (!mt){ pop.classList.remove("on"); return; }
+  var q = mt[2].toLowerCase();
+  var chatId = S.currentChat.chat_id;
+  loadMemberCache(chatId).then(function(mem){
+    var hits = mem.filter(function(p){
+      return p.user_id !== S.user.id &&
+        ((p.username || "").toLowerCase().indexOf(q) === 0 || (p.full_name || "").toLowerCase().indexOf(q) !== -1);
+    }).slice(0, 6);
+    if (!hits.length){ pop.classList.remove("on"); return; }
+    pop.innerHTML = hits.map(function(p){
+      return '<div class="mp-row" data-mention="' + esc(p.username || "") + '" data-uid="' + p.user_id + '"><span class="avatar sm">' + esc(initials(p.full_name || "?")) + '</span><span><b>' + esc(p.full_name || "") + "</b> <span style=\"color:var(--mut);\">@" + esc(p.username || "") + "</span></span></div>";
+    }).join("");
+    pop.classList.add("on");
+  });
+});
+$("mentionPop").addEventListener("click", function(e){
+  var row = e.target.closest ? e.target.closest("[data-mention]") : null;
+  if (!row) return;
+  var un = row.getAttribute("data-mention");
+  S.mentionPicks[un.toLowerCase()] = row.getAttribute("data-uid");
+  var inp = $("msgInput");
+  inp.value = inp.value.replace(/(^|\s)@([A-Za-z0-9_.]*)$/, function(w, pre){ return pre + "@" + un + " "; });
+  $("mentionPop").classList.remove("on");
+  autoGrowInput();
+  inp.focus();
+});
+function applyMentionsEtc(messageId, body){
+  var ids = [];
+  Object.keys(S.mentionPicks || {}).forEach(function(un){
+    if (body.toLowerCase().indexOf("@" + un) !== -1) ids.push(S.mentionPicks[un]);
+  });
+  S.mentionPicks = {};
+  if (ids.length) sb.rpc("tc_set_mentions", { p_message: messageId, p_mentions: ids }).catch(function(){});
+  var url = firstUrl(body);
+  if (!url) return;
+  fetchPreview(url).then(function(pv){
+    if (!pv || !pv.title) return;
+    sb.rpc("tc_attach_preview", { p_message: messageId, p_preview: pv }).then(function(){
+      var m = findMsg(messageId);
+      if (m){ m.preview = pv; renderMessages(); }
+    }).catch(function(){});
+  });
+}
+function fetchPreview(url){
+  return sb.auth.getSession().then(function(sr){
+    var tok = sr && sr.data && sr.data.session ? sr.data.session.access_token : "";
+    return fetch(SUPABASE_URL + "/functions/v1/tc-preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + tok, "apikey": SUPABASE_ANON_KEY },
+      body: JSON.stringify({ url: url })
+    }).then(function(r){ return r.json(); }).then(function(j){ return j && j.preview ? j.preview : null; });
+  }).catch(function(){ return null; });
+}
+
+/* ---- file sending ---- */
+$("fileBtn").addEventListener("click", function(){ $("docFile").click(); });
+$("docFile").addEventListener("change", function(){
+  var f = this.files && this.files[0];
+  this.value = "";
+  if (!f || !S.currentChat) return;
+  if (f.size > 26214400){ toast("File too large", "Files are limited to 25 MB."); return; }
+  var chatId = S.currentChat.chat_id;
+  var safe = f.name.replace(/[^\w.\-]+/g, "_").slice(-60);
+  var path = chatId + "/" + S.user.id + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + "-" + safe;
+  toast("Sending file", f.name);
+  sb.storage.from("tc-media").upload(path, f, { contentType: f.type || "application/octet-stream", upsert: false })
+    .then(function(up){
+      if (up.error) throw new Error("upload_failed");
+      return sb.rpc("tc_send_file", { p_chat: chatId, p_path: path, p_name: f.name, p_size: f.size });
+    })
+    .then(function(res){
+      if (res.error && slowModeWait(res.error)) return;
+      var d = res.data;
+      if (!d || !d.ok){ toast("Couldn't send file", d && d.error === "file_too_large" ? "Files are limited to 25 MB." : "Try again in a moment."); return; }
+      S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, kind: "file", media_path: path, file_name: f.name, file_size: f.size, body: "", created_at: new Date().toISOString(), reply_to: null });
+      applyReply(d.message_id);
+      renderMessages();
+      loadChats();
+    })
+    .catch(function(){ toast("Couldn't send file", "Check your connection and try again."); });
+});
+
+/* ---- TrybCoin tipping ---- */
+function openTipSheet(){
+  if (!S.currentChat) return;
+  var c = S.currentChat;
+  var bal = S.wallet ? (S.wallet.trybcoin || 0) : 0;
+  function paint(members){
+    var others = members.filter(function(p){ return p.user_id !== S.user.id; });
+    if (!others.length){ toast("No one to tip", "There is nobody else in this chat."); return; }
+    S.tipTo = others.length === 1 ? others[0].user_id : null;
+    var html = '<div class="sheet-title">\uD83D\uDCB8 Send TrybCoin</div>' +
+      '<p style="font-size:13px;color:var(--mut);margin:0 0 8px;">Your balance: <b>' + bal.toLocaleString() + " TN</b>. Tips move instantly and can\u2019t be undone.</p>" +
+      others.map(function(p){
+        return '<button class="sheet-act" type="button" data-tip-to="' + p.user_id + '">' + (others.length === 1 ? "\u2713 " : "") + esc(p.full_name || ("@" + (p.username || ""))) + ' <span style="color:var(--mut);">@' + esc(p.username || "") + "</span></button>";
+      }).join("") +
+      '<input class="tip-amt" id="tipAmt" type="number" inputmode="numeric" min="1" placeholder="Amount in TN">' +
+      '<button class="btn gold" id="tipSendBtn" type="button" style="width:100%;">Send tip</button>';
+    openSheet(html);
+    $("sheetCard").querySelectorAll("[data-tip-to]").forEach(function(b){
+      b.addEventListener("click", function(){
+        S.tipTo = b.getAttribute("data-tip-to");
+        $("sheetCard").querySelectorAll("[data-tip-to]").forEach(function(x){ x.textContent = x.textContent.replace(/^\u2713 /, ""); });
+        b.textContent = "\u2713 " + b.textContent;
+      });
+    });
+    $("tipSendBtn").addEventListener("click", function(){
+      var amt = parseInt($("tipAmt").value, 10);
+      if (!S.tipTo){ toast("Pick a person", "Choose who receives the tip."); return; }
+      if (!amt || amt < 1){ toast("Enter an amount", "Tips start at 1 TN."); return; }
+      if (amt > bal){ toast("Not enough TrybCoin", "Your balance is " + bal.toLocaleString() + " TN."); return; }
+      sb.rpc("tc_tip", { p_chat: c.chat_id, p_to: S.tipTo, p_amount: amt }).then(function(res){
+        var d = res.data;
+        if (!d || !d.ok){ toast("Tip failed", d && d.error === "insufficient_coins" ? "Not enough TrybCoin." : "Try again in a moment."); return; }
+        closeSheet();
+        refreshWallet();
+        S.messages.push({ id: d.message_id, chat_id: c.chat_id, sender_id: S.user.id, kind: "tip", body: "", tip_to: S.tipTo, tip_amount: amt, created_at: new Date().toISOString(), reply_to: null });
+        renderMessages();
+        loadChats();
+        toast("Tip sent", amt + " TN on its way.");
+      }).catch(function(){ toast("Tip failed", "Check your connection."); });
+    });
+  }
+  if (c.kind === "dm") paint([{ user_id: c.peer_id, full_name: c.peer_name, username: c.peer_username }]);
+  else loadMemberCache(c.chat_id).then(paint);
+}
+
+/* ---- thread menu ---- */
+$("threadMenuBtn").addEventListener("click", function(){
+  if (!S.currentChat) return;
+  var c = S.currentChat;
+  var dis = S.chatSettings ? (S.chatSettings.disappearing_seconds || 0) : 0;
+  var disLabel = dis === 0 ? "Off" : dis <= 3600 ? "1 hour" : dis <= 86400 ? "1 day" : "7 days";
+  var html = '<div class="sheet-title">' + esc(chatDisplay(c).name) + "</div>" +
+    '<button class="sheet-act" type="button" data-tm="search">\uD83D\uDD0D Search messages</button>' +
+    '<button class="sheet-act" type="button" data-tm="tip">\uD83D\uDCB8 Send TrybCoin</button>' +
+    '<button class="sheet-act" type="button" data-tm="pins">\uD83D\uDCCC Pinned messages' + (S.pins && S.pins.length ? " (" + S.pins.length + ")" : "") + "</button>" +
+    '<button class="sheet-act" type="button" data-tm="disappear">\u23F1\uFE0F Disappearing messages \u00B7 ' + disLabel + "</button>" +
+    (c.kind === "group" ? '<button class="sheet-act" type="button" data-tm="ginfo">\u2139\uFE0F Group info</button>' : "");
+  openSheet(html);
+  $("sheetCard").querySelectorAll("[data-tm]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var act = b.getAttribute("data-tm");
+      closeSheet();
+      if (act === "search") openSearch();
+      else if (act === "tip") openTipSheet();
+      else if (act === "pins") openPinsSheet();
+      else if (act === "disappear") openDisappearSheet();
+      else if (act === "ginfo") openGroupInfo();
+    });
+  });
+});
+function openPinsSheet(){
+  if (!S.pins || !S.pins.length){ toast("No pins yet", "Double-tap a message to pin it."); return; }
+  var html = '<div class="sheet-title">\uD83D\uDCCC Pinned messages</div>' + S.pins.map(function(p){
+    var who = p.sender_id === S.user.id ? "You" : nameOf(p.sender_id);
+    var body = p.kind === "text" ? (p.body || "") : p.kind === "photo" ? "\uD83D\uDCF7 Photo" : p.kind === "voice" ? "\uD83C\uDFA4 Voice message" : p.kind === "file" ? "\uD83D\uDCC4 File" : "Message";
+    return '<button class="sheet-act" type="button" data-pin-jump="' + p.id + '"><b>' + esc(who) + "</b> \u00B7 " + esc(body.slice(0, 90)) + "</button>";
+  }).join("");
+  openSheet(html);
+  $("sheetCard").querySelectorAll("[data-pin-jump]").forEach(function(b){
+    b.addEventListener("click", function(){ closeSheet(); jumpToMsg(b.getAttribute("data-pin-jump")); });
+  });
+}
+function openDisappearSheet(){
+  if (!S.currentChat) return;
+  var cur = S.chatSettings ? (S.chatSettings.disappearing_seconds || 0) : 0;
+  var opts = [[0, "Off"], [3600, "1 hour"], [86400, "1 day"], [604800, "7 days"]];
+  var html = '<div class="sheet-title">\u23F1\uFE0F Disappearing messages</div>' +
+    '<p style="font-size:13px;color:var(--mut);margin:0 0 6px;">New messages vanish after the chosen time. In groups, only mods can change this.</p>' +
+    opts.map(function(o){
+      return '<button class="sheet-act" type="button" data-dis="' + o[0] + '">' + (o[0] === cur ? "\u2713 " : "") + o[1] + "</button>";
+    }).join("");
+  openSheet(html);
+  $("sheetCard").querySelectorAll("[data-dis]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var secs = parseInt(b.getAttribute("data-dis"), 10);
+      closeSheet();
+      sb.rpc("tc_set_disappearing", { p_chat: S.currentChat.chat_id, p_seconds: secs }).then(function(res){
+        var d = res.data;
+        if (!d || !d.ok){ toast("Couldn't change", d && d.error === "mods_only" ? "Only mods can change this in a group." : "Try again in a moment."); return; }
+        if (S.chatSettings) S.chatSettings.disappearing_seconds = secs;
+        toast("Disappearing messages", secs === 0 ? "Turned off." : "New messages now vanish after " + b.textContent.replace(/^\u2713 /, "") + ".");
+      }).catch(function(){ toast("Couldn't change", "Check your connection."); });
+    });
+  });
+}
+
+/* ---- group settings + moderation ---- */
+function renderGiSettings(d){
+  var card = $("giSettingsCard");
+  if (!d.can_moderate){ card.style.display = "none"; return; }
+  card.style.display = "";
+  var slowOpts = [[0, "Off"], [5, "5s"], [10, "10s"], [30, "30s"], [60, "1m"], [300, "5m"]];
+  var disOpts = [[0, "Off"], [3600, "1 hour"], [86400, "1 day"], [604800, "7 days"]];
+  function pills(hostId, opts, cur, attr){
+    $(hostId).innerHTML = opts.map(function(o){
+      return '<button class="opt-pill' + (o[0] === cur ? " on" : "") + '" type="button" ' + attr + '="' + o[0] + '">' + o[1] + "</button>";
+    }).join("");
+  }
+  pills("giSlowRow", slowOpts, d.slow_seconds || 0, "data-slow");
+  pills("giDisRow", disOpts, d.disappearing_seconds || 0, "data-gdis");
+  $("giSlowRow").querySelectorAll("[data-slow]").forEach(function(b){
+    b.addEventListener("click", function(){
+      sb.rpc("tc_set_slow_mode", { p_chat: d.chat_id, p_seconds: parseInt(b.getAttribute("data-slow"), 10) }).then(function(res){
+        var r = res.data;
+        if (!r || !r.ok){ toast("Couldn't set slow mode", "Try again in a moment."); return; }
+        d.slow_seconds = parseInt(b.getAttribute("data-slow"), 10);
+        renderGiSettings(d);
+        toast("Slow mode", d.slow_seconds === 0 ? "Turned off." : "Members can now send one message every " + b.textContent + ".");
+      }).catch(function(){ toast("Couldn't set slow mode", "Check your connection."); });
+    });
+  });
+  $("giDisRow").querySelectorAll("[data-gdis]").forEach(function(b){
+    b.addEventListener("click", function(){
+      sb.rpc("tc_set_disappearing", { p_chat: d.chat_id, p_seconds: parseInt(b.getAttribute("data-gdis"), 10) }).then(function(res){
+        var r = res.data;
+        if (!r || !r.ok){ toast("Couldn't change", "Try again in a moment."); return; }
+        d.disappearing_seconds = parseInt(b.getAttribute("data-gdis"), 10);
+        if (S.chatSettings) S.chatSettings.disappearing_seconds = d.disappearing_seconds;
+        renderGiSettings(d);
+        toast("Disappearing messages", d.disappearing_seconds === 0 ? "Turned off." : "Set to " + b.textContent + ".");
+      }).catch(function(){ toast("Couldn't change", "Check your connection."); });
+    });
+  });
+}
+$("giMembers").addEventListener("click", function(e){
+  if (!S.grpInfo) return;
+  var mb = e.target.closest ? e.target.closest("[data-mod]") : null;
+  if (mb){
+    var on = mb.getAttribute("data-on") === "1";
+    sb.rpc("tc_set_mod", { p_chat: S.grpInfo.chat_id, p_user: mb.getAttribute("data-mod"), p_mod: !on }).then(function(res){
+      var d = res.data;
+      if (!d || !d.ok){ toast("Couldn't update mod", d && d.error === "creator_only" ? "Only the group creator can manage mods." : "Try again in a moment."); return; }
+      openGroupInfo();
+    }).catch(function(){ toast("Couldn't update mod", "Check your connection."); });
+    return;
+  }
+  var bb = e.target.closest ? e.target.closest("[data-ban]") : null;
+  if (bb){
+    if (bb.getAttribute("data-arm") !== "1"){
+      bb.setAttribute("data-arm", "1");
+      bb.textContent = "Tap again to ban";
+      return;
+    }
+    sb.rpc("tc_ban_member", { p_chat: S.grpInfo.chat_id, p_user: bb.getAttribute("data-ban") }).then(function(res){
+      var d = res.data;
+      if (!d || !d.ok){ toast("Couldn't ban", "Try again in a moment."); return; }
+      toast("Banned", "They have been removed and can't rejoin.");
+      openGroupInfo();
+      loadChats();
+    }).catch(function(){ toast("Couldn't ban", "Check your connection."); });
+  }
+});
+$("giBans").addEventListener("click", function(e){
+  var ub = e.target.closest ? e.target.closest("[data-unban]") : null;
+  if (!ub || !S.grpInfo) return;
+  sb.rpc("tc_unban_member", { p_chat: S.grpInfo.chat_id, p_user: ub.getAttribute("data-unban") }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){ toast("Couldn't unban", "Try again in a moment."); return; }
+    toast("Unbanned", "They can be added to the group again.");
+    openGroupInfo();
+  }).catch(function(){ toast("Couldn't unban", "Check your connection."); });
+});
+
 </script>
 </body>
 </html>
