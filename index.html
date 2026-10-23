@@ -270,6 +270,38 @@
 .tip-amt { width:100%; border:1.5px solid rgba(11,17,50,.18); border-radius:12px; padding:12px; font-size:17px; font-family:inherit; margin:6px 0 12px; }
 .edit-bar { display:none; align-items:center; gap:9px; padding:8px 14px; background:#EEF1FF; border-top:1px solid rgba(11,17,50,.1); font-size:13px; }
 .edit-bar.on { display:flex; }
+
+/* ---- threads / wall ---- */
+.wall-head { padding:16px 16px 4px; }
+.wall-title { font-size:21px; font-weight:800; }
+.wall-sub { font-size:13px; color:var(--mut); margin-top:2px; }
+.composer-card { background:#fff; border:1px solid #ECEEF4; border-radius:16px; padding:12px; margin:10px 16px 4px; }
+.composer-card textarea { width:100%; border:none; resize:none; font-family:inherit; font-size:15px; line-height:1.45; outline:none; min-height:44px; }
+.composer-row { display:flex; align-items:center; gap:8px; border-top:1px solid #F1F2F7; padding-top:10px; margin-top:6px; }
+.composer-row .sp { flex:1; }
+.wall-photo-strip { display:none; align-items:center; gap:9px; margin-top:8px; }
+.wall-photo-strip.on { display:flex; }
+.wall-photo-strip img { width:46px; height:46px; object-fit:cover; border-radius:9px; }
+.post-card { background:#fff; border:1px solid #ECEEF4; border-radius:16px; padding:13px 14px; margin:10px 16px 0; }
+.post-head { display:flex; gap:10px; align-items:center; }
+.post-head .pn { font-weight:800; font-size:14.5px; }
+.post-head .pu { font-size:12.5px; color:var(--mut); }
+.post-body { font-size:15px; line-height:1.5; margin-top:9px; white-space:pre-wrap; word-break:break-word; }
+.post-photo { width:100%; border-radius:12px; margin-top:10px; display:block; cursor:pointer; }
+.post-actions { display:flex; gap:6px; margin-top:11px; border-top:1px solid #F1F2F7; padding-top:9px; }
+.act-btn { background:none; border:none; font-family:inherit; font-size:13.5px; font-weight:700; color:#5A6076; cursor:pointer; padding:5px 10px; border-radius:999px; display:flex; align-items:center; gap:6px; }
+.act-btn.liked { color:#F02849; }
+.act-btn:active { background:#F4F5FA; }
+.comments-box { display:none; margin-top:8px; border-top:1px solid #F1F2F7; padding-top:9px; }
+.comments-box.on { display:block; }
+.comment-row { display:flex; gap:8px; margin-bottom:9px; }
+.comment-bubble { background:#F4F5FA; border-radius:12px; padding:7px 11px; flex:1; }
+.comment-bubble .cn { font-size:12.5px; font-weight:800; }
+.comment-bubble .cb { font-size:13.5px; line-height:1.4; }
+.comment-form { display:flex; gap:8px; margin-top:4px; }
+.comment-form input { flex:1; border:1.5px solid rgba(11,17,50,.14); border-radius:999px; padding:8px 13px; font-size:13.5px; font-family:inherit; }
+.comment-form button { background:#0B1132; color:#fff; border:none; border-radius:999px; padding:8px 15px; font-weight:700; font-family:inherit; cursor:pointer; }
+.load-more { display:block; margin:16px auto 26px; background:#fff; border:1.5px solid rgba(11,17,50,.16); border-radius:999px; padding:9px 22px; font-family:inherit; font-weight:700; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -309,6 +341,30 @@
   <div id="appScreen" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0;">
 
     <!-- Chats tab -->
+    <div id="tabWall" class="hidden" style="overflow-y:auto;flex:1;">
+      <div class="wall-head">
+        <div class="wall-title">Threads</div>
+        <div class="wall-sub">Share something worth reading — good posts earn TrybCoin.</div>
+      </div>
+      <div class="composer-card">
+        <textarea id="wallInput" rows="2" maxlength="2000" placeholder="Post a thread… tips, lessons, wins, questions"></textarea>
+        <div class="wall-photo-strip" id="wallPhotoStrip">
+          <img id="wallPhotoThumb" alt="">
+          <span style="font-size:13px;color:var(--mut);">Photo attached</span>
+          <button class="rm" id="wallPhotoRemove" type="button">Remove</button>
+        </div>
+        <div class="composer-row">
+          <button class="photo-btn" id="wallPhotoBtn" type="button" aria-label="Add a photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg></button>
+          <input id="wallPhotoFile" type="file" accept="image/*" class="hidden">
+          <span class="sp"></span>
+          <span style="font-size:11.5px;color:var(--mut);">Text + photo only · no links</span>
+          <button class="btn gold" id="wallPostBtn" type="button" style="width:auto;padding:9px 22px;">Post</button>
+        </div>
+      </div>
+      <div id="wallFeed"></div>
+      <button class="load-more hidden" id="wallMore" type="button">Load more</button>
+    </div>
+
     <div id="tabChats" style="display:flex;flex-direction:column;flex:1;min-height:0;">
       <div id="chatsListWrap" style="overflow-y:auto;flex:1;">
         <div class="app-head">
@@ -532,7 +588,8 @@
 
     <!-- Dock -->
     <nav class="dock" id="dock">
-      <button id="dockChats" class="active" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6c-5.7 0-10.3 3.9-10.3 8.8 0 2.8 1.5 5.2 3.8 6.8-.2 1.1-.8 2.4-1.6 3.4 0 0 3-.2 4.9-1.3 1 .3 2.1.4 3.2.4 5.7 0 10.3-3.9 10.3-8.8S17.7 2.6 12 2.6z"/></svg><span class="dbdg hidden" id="dockChatBadge">0</span></span>Chats</button>
+      <button id="dockWall" class="active" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5v-15zM7 7v2.2h10V7H7zm0 4.4v2.2h10v-2.2H7zM7 15.8V18h6.5v-2.2H7z"/></svg></span>Threads</button>
+      <button id="dockChats" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6c-5.7 0-10.3 3.9-10.3 8.8 0 2.8 1.5 5.2 3.8 6.8-.2 1.1-.8 2.4-1.6 3.4 0 0 3-.2 4.9-1.3 1 .3 2.1.4 3.2.4 5.7 0 10.3-3.9 10.3-8.8S17.7 2.6 12 2.6z"/></svg><span class="dbdg hidden" id="dockChatBadge">0</span></span>Chats</button>
       <button id="dockFriends" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8.2" r="3.7"/><path d="M2.3 20.2c.7-3.4 3.4-5.3 6.7-5.3s6 1.9 6.7 5.3H2.3z"/><circle cx="17.6" cy="9.2" r="2.9"/><path d="M16.3 14.4c2.4.3 4.3 2 5 4.7l.3 1.1h-3.6c-.3-2.1-1-4-2.2-5.5.2-.1.3-.2.5-.3z"/></svg></span>Friends</button>
       <button id="dockNotif" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8a6.1 6.1 0 0 0-6.1 6.1c0 3.9-1.2 5.3-2.3 6.5-.4.5 0 1.4.8 1.4h15.2c.8 0 1.2-.9.8-1.4C19.2 14.2 18 12.8 18 8.9A6.1 6.1 0 0 0 12 2.8z"/><path d="M9.7 18.7a2.4 2.4 0 0 0 4.6 0H9.7z"/></svg><span class="dbdg hidden" id="reqBadge">0</span></span>Notifications</button>
       <button id="dockMenu" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><rect x="3.4" y="5.4" width="17.2" height="2.7" rx="1.35"/><rect x="3.4" y="10.65" width="17.2" height="2.7" rx="1.35"/><rect x="3.4" y="15.9" width="17.2" height="2.7" rx="1.35"/></svg></span>Menu</button>
@@ -569,7 +626,8 @@ var S = {
   chats: [], currentChat: null, messages: [], requests: [], friends: [],
   earnedToday: 0, sentToday: 0, profileCache: {}, rtStarted: false,
   mediaUrls: {}, mediaPending: {}, pendingPhoto: null, sendingPhoto: false,
-  reactions: {}, reads: [], pins: [], chatSettings: null, memberCache: {}, editTarget: null, mentionPicks: {}
+  reactions: {}, reads: [], pins: [], chatSettings: null, memberCache: {}, editTarget: null, mentionPicks: {},
+  wallPosts: [], wallPhoto: null, wallBefore: null, wallComments: {}
 };
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -636,6 +694,7 @@ function showScreen(which){
 }
 function paintDock(){
   var onFriends = S.tab === "chats" && S.chatsSub === "friends";
+  $("dockWall").classList.toggle("active", S.tab === "wall");
   $("dockChats").classList.toggle("active", S.tab === "chats" && !onFriends);
   $("dockFriends").classList.toggle("active", onFriends);
   $("dockNotif").classList.toggle("active", S.tab === "notifications");
@@ -643,6 +702,7 @@ function paintDock(){
 }
 function showTab(tab){
   S.tab = tab;
+  $("tabWall").classList.toggle("hidden", tab !== "wall");
   $("tabChats").classList.toggle("hidden", tab !== "chats");
   $("tabNotif").classList.toggle("hidden", tab !== "notifications");
   $("tabEarn").classList.toggle("hidden", tab !== "earn");
@@ -650,6 +710,7 @@ function showTab(tab){
   paintDock();
   if (tab === "earn") loadEarn();
   if (tab === "profile") renderProfile();
+  if (tab === "wall") loadFeed(true);
 }
 function showChatsSub(which){
   S.chatsSub = which;
@@ -767,7 +828,7 @@ function gate(){
   /* Chatting is always free (Erudite's rule, 2026-10-22) — access state
      only drives earning banners/cards now, never a paywall. */
   showScreen("app");
-  showTab("chats"); showChatsSub("list");
+  showTab("wall"); showChatsSub("list");
   paintHeader(); renderBanner(); loadChats(); loadRequests(); loadFriends(null); loadEarn();
   startRealtime();
   tcHeartbeat();
@@ -2037,6 +2098,7 @@ $("subPayBtn").addEventListener("click", function(){
 });
 
 /* ---------------- dock + boot ---------------- */
+$("dockWall").addEventListener("click", function(){ showTab("wall"); });
 $("dockChats").addEventListener("click", function(){ showTab("chats"); showChatsSub("list"); });
 $("dockFriends").addEventListener("click", function(){ showTab("chats"); showChatsSub("friends"); });
 $("dockNotif").addEventListener("click", function(){ showTab("notifications"); loadRequests(); });
@@ -2577,6 +2639,254 @@ $("giBans").addEventListener("click", function(e){
     openGroupInfo();
   }).catch(function(){ toast("Couldn't unban", "Check your connection."); });
 });
+
+
+/* ================= threads / wall ================= */
+function timeAgo(ts){
+  var secs = Math.max(1, Math.floor((Date.now() - new Date(ts).getTime()) / 1000));
+  if (secs < 60) return "now";
+  var mins = Math.floor(secs / 60);
+  if (mins < 60) return mins + "m";
+  var hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + "h";
+  var days = Math.floor(hrs / 24);
+  if (days < 7) return days + "d";
+  return fmtTime(ts);
+}
+function wallEnsureMedia(path){
+  if (!path || S.mediaUrls[path] || S.mediaPending[path] || !sb) return;
+  S.mediaPending[path] = true;
+  sb.storage.from("tc-media").createSignedUrls([path], 3600).then(function(res){
+    delete S.mediaPending[path];
+    var row = (res.data || [])[0];
+    if (row && row.signedUrl){ S.mediaUrls[path] = row.signedUrl; renderFeed(); }
+  }).catch(function(){ delete S.mediaPending[path]; });
+}
+function loadFeed(reset){
+  if (!sb || !S.user) return;
+  var before = reset ? null : S.wallBefore;
+  sb.rpc("tc_feed", { p_limit: 20, p_before: before }).then(function(res){
+    var rows = res.data || [];
+    if (reset) S.wallPosts = rows;
+    else {
+      var seen = {};
+      S.wallPosts.forEach(function(p){ seen[p.id] = true; });
+      rows.forEach(function(p){ if (!seen[p.id]) S.wallPosts.push(p); });
+    }
+    if (S.wallPosts.length) S.wallBefore = S.wallPosts[S.wallPosts.length - 1].created_at;
+    $("wallMore").classList.toggle("hidden", rows.length < 20);
+    renderFeed();
+  }).catch(function(){});
+}
+function postAvatarHTML(p){
+  var inner = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
+  return '<span class="avatar sm">' + inner + "</span>";
+}
+function postHTML(p){
+  var photo = "";
+  if (p.media_path){
+    wallEnsureMedia(p.media_path);
+    var url = S.mediaUrls[p.media_path];
+    photo = '<img class="post-photo" data-pmedia="' + esc(p.media_path) + '" src="' + (url ? esc(url) : "data:image/gif;base64,R0lGODlhAQABAAAAACw=") + '" alt="Post photo">';
+  }
+  var comments = (S.wallComments[p.id] || []).map(commentHTML).join("");
+  return '<div class="post-card" data-post="' + p.id + '">' +
+    '<div class="post-head">' + postAvatarHTML(p) +
+      '<div><div class="pn">' + esc(p.full_name || "") + '</div><div class="pu">@' + esc(p.username || "") + " \u00B7 " + esc(timeAgo(p.created_at)) + "</div></div>" +
+      (p.mine ? '<span style="flex:1;"></span><button class="mini-btn ghost" type="button" data-del-post="' + p.id + '">Delete</button>' : "") +
+    "</div>" +
+    (p.body ? '<div class="post-body">' + esc(p.body) + "</div>" : "") +
+    photo +
+    '<div class="post-actions">' +
+      '<button class="act-btn' + (p.liked ? " liked" : "") + '" type="button" data-like="' + p.id + '">\u2764\uFE0F <span class="like-n">' + (p.like_count || 0) + "</span></button>" +
+      '<button class="act-btn" type="button" data-ctoggle="' + p.id + '">\uD83D\uDCAC <span class="c-n">' + (p.comment_count || 0) + "</span></button>" +
+    "</div>" +
+    '<div class="comments-box" id="cb-' + p.id + '">' +
+      '<div class="comments-list">' + comments + "</div>" +
+      '<div class="comment-form"><input id="ci-' + p.id + '" type="text" maxlength="500" placeholder="Add a comment\u2026"><button type="button" data-csend="' + p.id + '">Send</button></div>' +
+    "</div>" +
+  "</div>";
+}
+function commentHTML(c){
+  var inner = c.avatar_url ? '<img src="' + esc(c.avatar_url) + '" alt="">' : esc(initials(c.full_name || "?"));
+  return '<div class="comment-row"><span class="avatar sm">' + inner + '</span><span class="comment-bubble"><span class="cn">' + esc(c.full_name || "") + '</span><br><span class="cb">' + esc(c.body) + "</span></span></div>";
+}
+function renderFeed(){
+  var host = $("wallFeed"); if (!host) return;
+  if (!S.wallPosts.length){
+    host.innerHTML = '<div class="empty-note" style="margin:18px 16px;">No threads yet.<br>Be the first to post something worth reading.</div>';
+    return;
+  }
+  host.innerHTML = S.wallPosts.map(postHTML).join("");
+}
+$("wallMore").addEventListener("click", function(){ loadFeed(false); });
+
+/* ---- composer ---- */
+function clearWallPhoto(){
+  if (S.wallPhoto && S.wallPhoto.url) URL.revokeObjectURL(S.wallPhoto.url);
+  S.wallPhoto = null;
+  $("wallPhotoStrip").classList.remove("on");
+}
+$("wallPhotoRemove").addEventListener("click", clearWallPhoto);
+$("wallPhotoBtn").addEventListener("click", function(){ $("wallPhotoFile").click(); });
+$("wallPhotoFile").addEventListener("change", function(){
+  var f = this.files && this.files[0];
+  this.value = "";
+  if (!f) return;
+  var url = URL.createObjectURL(f);
+  var img = new Image();
+  img.onload = function(){
+    var max = 1600, w = img.naturalWidth || 0, h = img.naturalHeight || 0;
+    if (!w || !h){ toast("Couldn't read that photo", "Try another image."); return; }
+    var scale = Math.min(1, max / Math.max(w, h));
+    var cv = document.createElement("canvas");
+    cv.width = Math.round(w * scale); cv.height = Math.round(h * scale);
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+    cv.toBlob(function(blob){
+      if (!blob){ toast("Couldn't read that photo", "Try another image."); return; }
+      blob.arrayBuffer().then(function(buf){ return crypto.subtle.digest("SHA-256", buf); })
+        .then(function(digest){
+          var hex = Array.from(new Uint8Array(digest)).map(function(b){ return b.toString(16).padStart(2, "0"); }).join("");
+          clearWallPhoto();
+          S.wallPhoto = { blob: blob, hash: hex, url: URL.createObjectURL(blob) };
+          $("wallPhotoThumb").src = S.wallPhoto.url;
+          $("wallPhotoStrip").classList.add("on");
+        })
+        .catch(function(){ toast("Couldn't prepare that photo", "Try another image."); });
+    }, "image/jpeg", 0.85);
+  };
+  img.onerror = function(){ toast("Couldn't read that photo", "Try another image."); };
+  img.src = url;
+});
+$("wallPostBtn").addEventListener("click", function(){
+  var body = $("wallInput").value.trim();
+  var wp = S.wallPhoto;
+  if (!body && !wp){ toast("Write something", "A thread needs text or a photo."); return; }
+  var btn = this;
+  btn.disabled = true;
+  function create(path){
+    sb.rpc("tc_create_post", { p_body: body, p_path: path || null, p_hash: wp ? wp.hash : null }).then(function(res){
+      btn.disabled = false;
+      var d = res.data;
+      if (!d || !d.ok){
+        if (d && d.error === "links_not_allowed") toast("Links aren't allowed", "Threads can only contain text and photos.");
+        else if (d && d.error === "post_too_long") toast("Too long", "Threads are limited to 2,000 characters.");
+        else toast("Couldn't post", "Check your connection and try again.");
+        return;
+      }
+      $("wallInput").value = "";
+      clearWallPhoto();
+      if (path) S.mediaUrls[path] = wp.url;
+      loadFeed(true);
+      if (d.earned > 0) refreshWallet();
+      toast("Posted", "Your thread is live on the wall.");
+    }).catch(function(){ btn.disabled = false; toast("Couldn't post", "Check your connection and try again."); });
+  }
+  if (wp){
+    var path = "wall/" + S.user.id + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + ".jpg";
+    sb.storage.from("tc-media").upload(path, wp.blob, { contentType: "image/jpeg", upsert: false })
+      .then(function(up){
+        if (up.error) throw new Error("upload_failed");
+        create(path);
+      })
+      .catch(function(){ btn.disabled = false; toast("Couldn't upload the photo", "Check your connection and try again."); });
+  } else create(null);
+});
+
+/* ---- feed interactions ---- */
+function findPost(id){ return S.wallPosts.find(function(p){ return p.id === id; }) || null; }
+$("wallFeed").addEventListener("click", function(e){
+  var t = e.target;
+  var likeBtn = t.closest ? t.closest("[data-like]") : null;
+  if (likeBtn){
+    var pid = likeBtn.getAttribute("data-like");
+    sb.rpc("tc_like_post", { p_post: pid }).then(function(res){
+      var d = res.data;
+      if (!d || !d.ok) return;
+      var p = findPost(pid);
+      if (p){ p.liked = d.liked; p.like_count = d.like_count; }
+      likeBtn.classList.toggle("liked", !!d.liked);
+      var n = likeBtn.querySelector(".like-n");
+      if (n) n.textContent = d.like_count;
+    }).catch(function(){});
+    return;
+  }
+  var ct = t.closest ? t.closest("[data-ctoggle]") : null;
+  if (ct){
+    var cid = ct.getAttribute("data-ctoggle");
+    var box = $("cb-" + cid);
+    var opening = !box.classList.contains("on");
+    box.classList.toggle("on");
+    if (opening) loadComments(cid);
+    return;
+  }
+  var cs = t.closest ? t.closest("[data-csend]") : null;
+  if (cs){ sendComment(cs.getAttribute("data-csend")); return; }
+  var del = t.closest ? t.closest("[data-del-post]") : null;
+  if (del){
+    if (del.getAttribute("data-arm") !== "1"){
+      del.setAttribute("data-arm", "1");
+      del.textContent = "Tap again to delete";
+      return;
+    }
+    var did = del.getAttribute("data-del-post");
+    sb.rpc("tc_delete_post", { p_post: did }).then(function(res){
+      var d = res.data;
+      if (d && d.ok){
+        if (d.media_path){ try { sb.storage.from("tc-media").remove([d.media_path]); } catch (err) {} }
+        S.wallPosts = S.wallPosts.filter(function(p){ return p.id !== did; });
+        renderFeed();
+        toast("Deleted", "Your thread was removed.");
+      } else toast("Couldn't delete", "Try again in a moment.");
+    }).catch(function(){ toast("Couldn't delete", "Check your connection."); });
+    return;
+  }
+  var img = t.closest ? t.closest("img.post-photo") : null;
+  if (img){
+    var path = img.getAttribute("data-pmedia");
+    var url = S.mediaUrls[path];
+    if (url){ $("lightboxImg").src = url; $("lightbox").classList.add("on"); }
+    else wallEnsureMedia(path);
+  }
+});
+$("wallFeed").addEventListener("keydown", function(e){
+  if (e.key !== "Enter") return;
+  var inp = e.target;
+  if (inp && inp.id && inp.id.indexOf("ci-") === 0){
+    e.preventDefault();
+    sendComment(inp.id.slice(3));
+  }
+});
+function loadComments(postId){
+  sb.rpc("tc_post_comments", { p_post: postId }).then(function(res){
+    S.wallComments[postId] = res.data || [];
+    var box = $("cb-" + postId);
+    if (box) box.querySelector(".comments-list").innerHTML = S.wallComments[postId].map(commentHTML).join("");
+  }).catch(function(){});
+}
+function sendComment(postId){
+  var inp = $("ci-" + postId);
+  if (!inp) return;
+  var body = inp.value.trim();
+  if (!body) return;
+  sb.rpc("tc_comment_post", { p_post: postId, p_body: body }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){
+      if (d && d.error === "links_not_allowed") toast("Links aren't allowed", "Comments can only contain text.");
+      else toast("Couldn't comment", "Try again in a moment.");
+      return;
+    }
+    inp.value = "";
+    var p = findPost(postId);
+    if (p) p.comment_count = (p.comment_count || 0) + 1;
+    var card = $("wallFeed").querySelector('[data-post="' + postId + '"]');
+    if (card){
+      var n = card.querySelector(".c-n");
+      if (n && p) n.textContent = p.comment_count;
+    }
+    loadComments(postId);
+  }).catch(function(){ toast("Couldn't comment", "Check your connection."); });
+}
 
 </script>
 </body>
