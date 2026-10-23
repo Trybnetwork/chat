@@ -321,6 +321,12 @@
 .avatar.lg { width:74px; height:74px; font-size:25px; }
 .tn-pill { display:inline-flex; align-items:center; gap:6px; background:#FBF3DC; color:#8A6D1F; border-radius:999px; padding:6px 15px; font-weight:800; font-size:14.5px; }
 [data-profile] { cursor:pointer; }
+
+.post-card.callit { border:1.5px solid var(--gold); background:#FFFDF4; }
+.callit-tag { display:inline-block; background:var(--navy); color:#fff; font-size:10.5px; font-weight:800; letter-spacing:.6px; border-radius:999px; padding:3px 9px; margin-bottom:8px; }
+
+.callit-meta { margin-top:10px; background:#0B1132; color:#fff; border-radius:10px; padding:8px 12px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:7px; }
+.callit-meta .cm-sub { color:#C9A24B; font-weight:700; }
 </style>
 </head>
 <body>
@@ -2704,13 +2710,16 @@ function postHTML(p, pfx){
     photo = '<img class="post-photo" data-pmedia="' + esc(p.media_path) + '" src="' + (url ? esc(url) : "data:image/gif;base64,R0lGODlhAQABAAAAACw=") + '" alt="Post photo">';
   }
   var comments = (S.wallComments[p.id] || []).map(commentHTML).join("");
-  return '<div class="post-card" data-post="' + p.id + '" data-pfx="' + pfx + '">' +
+  var isCallIt = (p.body || "").indexOf("\uD83C\uDFAF CALL IT") === 0;
+  return '<div class="post-card' + (isCallIt ? " callit" : "") + '" data-post="' + p.id + '" data-pfx="' + pfx + '">' +
+    (isCallIt ? '<span class="callit-tag">DAILY PREDICTION</span>' : "") +
     '<div class="post-head">' + postAvatarHTML(p) +
       '<div><div class="pn">' + esc(p.full_name || "") + '</div><div class="pu">@' + esc(p.username || "") + " \u00B7 " + esc(timeAgo(p.created_at)) + "</div></div>" +
       (p.mine ? '<span style="flex:1;"></span><button class="mini-btn ghost" type="button" data-del-post="' + p.id + '">Delete</button>' : "") +
     "</div>" +
     (p.body ? '<div class="post-body">' + esc(p.body) + "</div>" : "") +
     photo +
+    (isCallIt ? '<div class="callit-meta" data-callit="' + lagosDate(p.created_at) + '">\u23F0 Loading countdown\u2026</div>' : "") +
     '<div class="post-actions">' +
       '<button class="act-btn' + (p.liked ? " liked" : "") + '" type="button" data-like="' + p.id + '">\u2764\uFE0F <span class="like-n">' + (p.like_count || 0) + "</span></button>" +
       '<button class="act-btn" type="button" data-ctoggle="' + p.id + '">\uD83D\uDCAC <span class="c-n">' + (p.comment_count || 0) + "</span></button>" +
@@ -2920,6 +2929,8 @@ function sendComment(postId, pfx){
     var d = res.data;
     if (!d || !d.ok){
       if (d && d.error === "links_not_allowed") toast("Links aren't allowed", "Comments can only contain text.");
+      else if (d && d.error === "already_called") toast("Call locked in", "You already called this one — your first call sticks.");
+      else if (d && d.error === "calls_closed") toast("Calls closed", "The call window for this round expired at the New York open.");
       else toast("Couldn't comment", "Try again in a moment.");
       return;
     }
@@ -3100,6 +3111,59 @@ function ensurePostVisible(pid, openComments, tries){
     if (box && !box.classList.contains("on")){ box.classList.add("on"); loadComments(pid); }
   }
 }
+
+
+/* ---- Call It countdown (times shown in the viewer's own timezone) ---- */
+function lagosDate(ts){
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lagos", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(ts));
+  } catch (e) { return ""; }
+}
+function zonedInstant(dateStr, timeStr, tz){
+  var dp = dateStr.split("-"), tp = timeStr.split(":");
+  var want = Date.UTC(+dp[0], +dp[1] - 1, +dp[2], +tp[0], +tp[1]);
+  var guess = want;
+  var fmt = new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  for (var i = 0; i < 3; i++){
+    var parts = {};
+    fmt.formatToParts(new Date(guess)).forEach(function(p){ parts[p.type] = p.value; });
+    var wall = Date.UTC(+parts.year, +parts.month - 1, +parts.day, (+parts.hour) % 24, +parts.minute, +parts.second);
+    var err = wall - want;
+    if (Math.abs(err) < 1000) break;
+    guess -= err;
+  }
+  return guess;
+}
+function fmtCountdown(ms){
+  var secs = Math.max(0, Math.floor(ms / 1000));
+  var h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), sec = secs % 60;
+  function p2(n){ return (n < 10 ? "0" : "") + n; }
+  return h + ":" + p2(m) + ":" + p2(sec);
+}
+function paintCallitTimers(){
+  document.querySelectorAll("[data-callit]").forEach(function(el){
+    var day = el.getAttribute("data-callit");
+    if (!day) return;
+    var cutoff = zonedInstant(day, "09:30", "America/New_York");
+    var settle = zonedInstant(day, "22:00", "Africa/Lagos");
+    var now = Date.now();
+    var cutLocal = new Date(cutoff).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (now < cutoff){
+      el.innerHTML = "\u23F0 Calls close in <b>" + fmtCountdown(cutoff - now) + '</b> <span class="cm-sub">' + esc(cutLocal) + " your time</span>";
+    } else if (now < settle){
+      var setLocal = new Date(settle).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      el.innerHTML = '\uD83D\uDD12 Calls closed <span class="cm-sub">settles ' + esc(setLocal) + " your time</span>";
+    } else {
+      el.innerHTML = '\uD83C\uDFC6 Round settled <span class="cm-sub">see the results thread</span>';
+    }
+  });
+}
+if (!window._callitTimer){
+  window._callitTimer = setInterval(paintCallitTimers, 1000);
+}
+var _rf = renderFeed, _rpp = renderProfilePosts;
+renderFeed = function(){ _rf(); paintCallitTimers(); };
+renderProfilePosts = function(){ _rpp(); paintCallitTimers(); };
 
 </script>
 </body>
