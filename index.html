@@ -2405,7 +2405,7 @@ function openTipSheet(){
     if (!others.length){ toast("No one to tip", "There is nobody else in this chat."); return; }
     S.tipTo = others.length === 1 ? others[0].user_id : null;
     var html = '<div class="sheet-title">\uD83D\uDCB8 Send TrybCoin</div>' +
-      '<p style="font-size:13px;color:var(--mut);margin:0 0 8px;">Your balance: <b>' + bal.toLocaleString() + " TN</b>. Tips move instantly and can\u2019t be undone.</p>" +
+      '<p style="font-size:13px;color:var(--mut);margin:0 0 8px;">Your balance: <b>' + bal.toLocaleString() + " TN</b>. Tips move instantly and can’t be undone. Limit: 500 TN sent and 500 TN received per day.</p>" +
       others.map(function(p){
         return '<button class="sheet-act" type="button" data-tip-to="' + p.user_id + '">' + (others.length === 1 ? "\u2713 " : "") + esc(p.full_name || ("@" + (p.username || ""))) + ' <span style="color:var(--mut);">@' + esc(p.username || "") + "</span></button>";
       }).join("") +
@@ -2426,7 +2426,7 @@ function openTipSheet(){
       if (amt > bal){ toast("Not enough TrybCoin", "Your balance is " + bal.toLocaleString() + " TN."); return; }
       sb.rpc("tc_tip", { p_chat: c.chat_id, p_to: S.tipTo, p_amount: amt }).then(function(res){
         var d = res.data;
-        if (!d || !d.ok){ toast("Tip failed", d && d.error === "insufficient_coins" ? "Not enough TrybCoin." : "Try again in a moment."); return; }
+        if (!d || !d.ok){ toast("Tip failed", d && d.error === "insufficient_coins" ? "Not enough TrybCoin." : d && d.error === "daily_send_limit" ? "You have hit today\u2019s 500 TN sending limit." : d && d.error === "daily_receive_limit" ? "They have hit today\u2019s 500 TN receiving limit." : "Try again in a moment."); return; }
         closeSheet();
         refreshWallet();
         S.messages.push({ id: d.message_id, chat_id: c.chat_id, sender_id: S.user.id, kind: "tip", body: "", tip_to: S.tipTo, tip_amount: amt, created_at: new Date().toISOString(), reply_to: null });
