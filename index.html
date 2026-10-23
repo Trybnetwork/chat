@@ -1156,10 +1156,18 @@ function renderBanner(){
 /* ---------------- chats ---------------- */
 function senderProfile(id){
   if (S.profileCache[id]) return Promise.resolve(S.profileCache[id]);
-  return sb.from("tn_profiles").select("id, full_name, username, avatar_url").eq("id", id).maybeSingle().then(function(res){
-    if (res.data) S.profileCache[id] = res.data;
-    return res.data;
-  }).catch(function(){ return null; });
+  return sb.rpc("tc_user_profile", { p_user: id }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok) throw new Error("rpc");
+    var p = { id: d.user_id, full_name: d.full_name, username: d.username, avatar_url: d.avatar_url };
+    S.profileCache[id] = p;
+    return p;
+  }).catch(function(){
+    return sb.from("tn_profiles").select("id, full_name, username, avatar_url").eq("id", id).maybeSingle().then(function(res){
+      if (res.data) S.profileCache[id] = res.data;
+      return res.data;
+    }).catch(function(){ return null; });
+  });
 }
 function loadChats(){
   return sb.rpc("tc_my_chats").then(function(res){
