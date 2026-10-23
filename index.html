@@ -408,6 +408,46 @@
   .w2-toggle button.active { background:#0B1132; color:#fff; box-shadow:0 4px 12px rgba(11,17,50,.25); }
   #w2Sections { display:none; }
 </style>
+
+<style>
+/* ===== WA-style face, floating pill dock, earnings + settings (2026-10-24) ===== */
+.dock{ position:fixed !important; left:12px !important; right:12px !important; bottom:calc(10px + env(safe-area-inset-bottom)) !important; top:auto !important; background:rgba(255,255,255,.97) !important; border:1px solid #E8EAF3 !important; border-radius:30px !important; box-shadow:0 12px 34px rgba(11,17,50,.20) !important; padding:6px 8px !important; z-index:120; display:flex !important; }
+.dock button{ flex:1; background:none; border:0; display:flex; flex-direction:column; align-items:center; gap:1px; font-size:10.5px; font-weight:600; color:#5A6070; padding:4px 0 3px; border-radius:22px; position:relative; font-family:inherit; cursor:pointer; }
+.dock button .d-ic{ display:flex; align-items:center; justify-content:center; padding:3px 15px; border-radius:999px; position:relative; }
+.dock button.active{ color:#0B1132; }
+.dock button.active .d-ic{ background:#E9ECF7; }
+.dock .dbdg{ position:absolute; top:-4px; right:-8px; }
+.wa-bar{ display:flex; align-items:center; justify-content:space-between; padding:10px 16px 0; }
+.wa-title{ font-family:"Manrope",sans-serif; font-size:28px; font-weight:800; padding:8px 16px 4px; color:#0B1132; }
+.wa-plus{ width:44px; height:44px; border-radius:50%; background:#0B1132; color:#fff; border:0; font-size:27px; line-height:1; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(11,17,50,.28); cursor:pointer; }
+.wa-dots{ width:40px; height:40px; border-radius:50%; background:#F1F2F8; border:0; color:#0B1132; font-size:16px; letter-spacing:1px; cursor:pointer; }
+#chatList{ padding-bottom:104px; }
+#chatList .chat-row{ padding:11px 16px; }
+#chatList .chat-name{ font-size:16.5px; font-weight:700; }
+#chatList .chat-time{ font-size:12px; }
+#chatList .chat-row.unread .chat-time{ color:#0B1132; font-weight:800; }
+#wallFeed{ padding-bottom:104px; }
+#tabProfile .pad, #tabNotif .pad, #tabEarn .pad, #friendsWrap .pad{ padding-bottom:110px; }
+.prof-av-wrap{ position:relative; display:inline-block; flex:none; }
+.prof-flag{ position:absolute; right:-3px; bottom:-3px; background:#fff; border-radius:50%; width:25px; height:25px; display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:0 1px 5px rgba(11,17,50,.3); line-height:1; }
+.earn-bal{ background:linear-gradient(135deg,#0B1132,#1B2450); color:#fff; border:0; }
+.earn-bal .eb-label{ font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:#B9BDD6; font-weight:700; }
+.earn-bal .eb-tn{ font-family:"Manrope",sans-serif; font-size:32px; font-weight:800; color:#E9C767; margin-top:4px; }
+.earn-bal .eb-usd{ font-size:16px; font-weight:700; margin-top:1px; }
+.earn-bal .eb-note{ font-size:12.5px; color:#B9BDD6; margin-top:8px; }
+.earn-stats{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px; }
+.estat{ background:#fff; border:1px solid #E7E9F2; border-radius:18px; padding:12px 12px 10px; box-shadow:0 2px 10px rgba(11,17,50,.05); }
+.estat-ic{ font-size:17px; }
+.estat-num{ font-family:"Manrope",sans-serif; font-weight:800; font-size:16.5px; margin-top:5px; color:#0B1132; white-space:nowrap; }
+.estat-lab{ font-size:11.5px; color:var(--mut); margin-top:1px; }
+.ev-row{ display:flex; align-items:center; gap:11px; padding:9px 0; border-bottom:1px solid #EFF0F6; }
+.ev-row:last-child{ border-bottom:0; }
+.ev-ic{ font-size:19px; width:26px; text-align:center; flex:none; }
+.ev-main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.ev-name{ font-weight:700; font-size:14.5px; color:var(--ink); }
+.ev-time{ font-size:12px; color:var(--mut); }
+.ev-amt{ font-family:"Manrope",sans-serif; font-weight:800; color:#12805C; font-size:14.5px; white-space:nowrap; }
+</style>
 </head>
 <body>
 <div class="phone" id="phoneRoot">
@@ -456,7 +496,7 @@
       <div class="wall-top">
         <div class="wall-brand">Tryb<b>Chat</b></div>
         <div class="wall-top-actions">
-          <button class="top-icon-btn" id="wallChatsBtn" type="button" aria-label="Chats"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6c-5.7 0-10.3 3.9-10.3 8.8 0 2.8 1.5 5.2 3.8 6.8-.2 1.1-.8 2.4-1.6 3.4 0 0 3-.2 4.9-1.3 1 .3 2.1.4 3.2.4 5.7 0 10.3-3.9 10.3-8.8S17.7 2.6 12 2.6z"/></svg><span class="top-badge hidden" id="dockChatBadge">0</span></button>
+          <button class="top-icon-btn" id="wallBellBtn" type="button" aria-label="Notifications"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8a6.1 6.1 0 0 0-6.1 6.1c0 3.9-1.2 5.3-2.3 6.5-.4.5 0 1.4.8 1.4h15.2c.8 0 1.2-.9.8-1.4C19.2 14.2 18 12.8 18 8.9A6.1 6.1 0 0 0 12 2.8z"/><path d="M9.7 18.7a2.4 2.4 0 0 0 4.6 0H9.7z"/></svg><span class="top-badge hidden" id="reqBadge">0</span></button>
           <button class="top-icon-btn" id="wallSearchBtn" type="button" aria-label="Search threads"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.6-4.6"/></svg></button>
         </div>
       </div>
@@ -502,22 +542,10 @@
             <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
           </button>
         </div>
+        <div class="wa-bar"><button class="wa-dots" id="chatsMenuBtn" type="button" aria-label="Settings">•••</button><button class="wa-plus" id="chatsNewBtn" type="button" aria-label="New chat">+</button></div>
+        <div class="wa-title">Chats</div>
         <div class="chat-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chatSearch" type="text" placeholder="Search chats"></div>
         
-        <div class="w2-toggle" id="chatsToggle">
-          <button type="button" data-seg="chats" class="active">Chats</button>
-          <button type="button" data-seg="discover">Discover</button>
-          <button type="button" data-seg="channels">Channels</button>
-        </div>
-        <div id="segDiscover" class="hidden" style="padding:12px 16px 0;">
-          <div class="chat-search" style="margin:0 0 12px;"><input id="segGrpSearch" type="text" placeholder="Search public groups"></div>
-          <div id="segGroupsList"></div>
-        </div>
-        <div id="segChannels" class="hidden" style="padding:12px 16px 0;">
-          <div class="chat-search" style="margin:0 0 12px;"><input id="segChSearch" type="text" placeholder="Search channels"></div>
-          <div id="segChannelsList"></div>
-          <button class="btn gold" id="segChCreate" type="button" style="margin:6px 0 18px;">＋ Create a channel</button>
-        </div>
         <div class="strip" id="friendsStrip"></div>
         <div class="pad" id="bannerSlot"></div>
         <div id="chatList"></div>
@@ -645,7 +673,24 @@
     </div>
 
     <!-- Notifications tab -->
-    <div id="tabNotif" class="hidden" style="overflow-y:auto;flex:1;">
+    <div id="tabChannels" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div style="overflow-y:auto;flex:1;">
+        <div class="wa-title" style="padding-top:16px;">Channels</div>
+        <div style="padding:0 16px 4px;font-size:13.5px;color:var(--mut);">Follow channels for updates, and discover public groups.</div>
+        <div id="segDiscover" style="padding:12px 16px 110px;">
+          <div class="chat-search" style="margin:0 0 12px;"><input id="segGrpSearch" type="text" placeholder="Search public groups"></div>
+          <div id="segGroupsList"></div>
+        </div>
+        <div id="segChannels" style="padding:12px 16px 0;">
+          <div class="chat-search" style="margin:0 0 12px;"><input id="segChSearch" type="text" placeholder="Search channels"></div>
+          <div id="segChannelsList"></div>
+          <button class="btn gold" id="segChCreate" type="button" style="margin:6px 0 18px;">＋ Create a channel</button>
+        </div>
+        
+      </div>
+    </div>
+
+        <div id="tabNotif" class="hidden" style="overflow-y:auto;flex:1;">
       <div class="pad">
         <div class="view-title">Notifications</div>
         <div id="reqSection"></div>
@@ -658,33 +703,52 @@
     <div id="tabEarn" class="hidden" style="overflow-y:auto;flex:1;">
       <div class="pad">
         <div style="display:flex;align-items:center;gap:11px;margin:16px 0 4px;">
-          <button class="back-btn" id="earnBack" type="button" aria-label="Back to menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-          <div class="view-title" style="margin:0;">Earn</div>
+          <button class="back-btn hidden" id="earnBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div class="view-title" style="margin:0;">Earnings</div>
+        </div>
+        <div class="card earn-bal">
+          <div class="eb-label">TrybCoin balance</div>
+          <div class="eb-tn" id="earnBalTn">0 TN</div>
+          <div class="eb-usd" id="earnBalUsd">≈ $0.00</div>
+          <div class="eb-note">1,000 TN = $1.00 · Spend it in TrybNetwork — trade, play games, buy miners</div>
+        </div>
+        <div class="earn-stats">
+          <div class="estat"><div class="estat-ic">💬</div><div class="estat-num" id="earnStatToday">0 TN</div><div class="estat-lab">Earned today</div></div>
+          <div class="estat"><div class="estat-ic">📅</div><div class="estat-num" id="earnStatWeek">0 TN</div><div class="estat-lab">Last 7 days</div></div>
+          <div class="estat"><div class="estat-ic">✉️</div><div class="estat-num" id="earnStatSent">0</div><div class="estat-lab">Messages today</div></div>
         </div>
         <div class="card">
-          <h4>Today</h4>
-          <div style="display:flex;gap:22px;margin-top:8px;">
-            <div><div style="font-family:Manrope,sans-serif;font-weight:800;font-size:21px;" id="earnTodayTn">0 TN</div><div style="font-size:12px;color:var(--mut);">Earned from sending today</div></div>
-            <div><div style="font-family:Manrope,sans-serif;font-weight:800;font-size:21px;" id="earnTodaySent">0</div><div style="font-size:12px;color:var(--mut);">Messages sent</div></div>
-          </div>
+          <h4>Daily cap</h4>
           <div class="capbar"><i id="earnCapBar" style="width:0%"></i></div>
           <p style="margin-top:8px;" id="earnCapText">0 / 150 TN daily cap</p>
+        </div>
+        <div class="card">
+          <h4>Get Premium</h4>
+          <p id="earnMemberLine">—</p>
+          <p id="earnRateLine" style="margin-top:4px;font-weight:700;color:var(--ink);">—</p>
+          <ul class="how-list" style="margin-top:8px;">
+            <li><span>Per message you send on Premium</span><b>+5 TN</b></li>
+            <li><span>Membership price</span><b>$12 / 6 months</b></li>
+          </ul>
+          <button class="btn gold" id="earnPremBtn" type="button" style="margin-top:12px;">Get Premium — $12 / 6 months</button>
+        </div>
+        <div class="card">
+          <h4>Activities that paid you</h4>
+          <div id="earnEvents"><div class="empty-note">Loading…</div></div>
+          <p style="margin-top:8px;font-size:12px;">Itemized history starts today — earlier earnings are in your balance, they just weren't listed line by line.</p>
         </div>
         <div class="card">
           <h4>How earning works</h4>
           <ul class="how-list">
             <li><span>Per message you send — free month</span><b>+1 TN</b></li>
-            <li><span>Per message you send — members</span><b>+5 TN</b></li>
-            <li><span>Replies you receive</span><b>No earning</b></li>
+            <li><span>Per message you send — Premium</span><b>+5 TN</b></li>
+            <li><span>An update you post that earns</span><b>+1 / +5 TN</b></li>
+            <li><span>A friend views your story</span><b>+1 TN</b></li>
+            <li><span>A correct Call It prediction</span><b>+20 TN</b></li>
             <li><span>Daily cap — for everyone</span><b>150 TN</b></li>
             <li><span>Your earnings</span><b>Never locked</b></li>
           </ul>
           <p style="margin-top:10px;">Real messages earn — repeated, very short, or spam messages don't. Your TrybCoin lands in your TrybNetwork wallet, ready to trade, play and mine with.</p>
-        </div>
-        <div class="card">
-          <h4>Membership</h4>
-          <p id="earnMemberLine">—</p>
-          <p id="earnRateLine" style="margin-top:4px;font-weight:700;color:var(--ink);">—</p>
         </div>
       </div>
     </div>
@@ -692,34 +756,28 @@
     <!-- Profile tab -->
     <div id="tabProfile" class="hidden" style="overflow-y:auto;flex:1;">
       <div class="pad">
-        <div class="view-title">Menu</div>
-        <div class="card" style="display:flex;align-items:center;gap:14px;">
-          <span class="avatar lg" id="profAvatar">?</span>
-          <div><div style="font-family:Manrope,sans-serif;font-weight:800;font-size:18px;" id="profName">—</div><div style="color:var(--mut);font-size:13.5px;" id="profUser">@—</div></div>
+        <div class="view-title">Settings</div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <span class="prof-av-wrap"><span class="avatar lg" id="profAvatar">?</span><span class="prof-flag" id="profFlag">🌍</span></span>
+            <div style="min-width:0;">
+              <div style="font-family:Manrope,sans-serif;font-weight:800;font-size:19px;" id="profName">—</div>
+              <div style="color:var(--mut);font-size:13.5px;" id="profUser">@—</div>
+              <div style="color:var(--mut);font-size:12.5px;margin-top:2px;" id="profJoined">Joined —</div>
+            </div>
+          </div>
+          <p id="profMemberLine" style="margin-top:12px;">—</p>
+          <p id="profRateLine" style="margin-top:3px;font-weight:700;color:var(--ink);">—</p>
+          <button class="btn navy" id="menuEditProfile" type="button" style="margin-top:12px;">Edit profile</button>
+          <button class="btn gold" id="profMemberBtn" type="button" style="margin-top:9px;">Get membership — $12 / 6 months</button>
         </div>
-        <button class="menu-row" id="menuEditProfile" type="button">
-          <span class="mr-ic">✏️</span>
-          <span class="mr-main"><span class="mr-name">Edit profile</span><div class="mr-sub">Photo, name and bio</div></span>
-          <span class="mr-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
-        </button>
         <button class="menu-row" id="menuCallit" type="button">
           <span class="mr-ic">🎯</span>
           <span class="mr-main"><span class="mr-name">Call It leaderboard</span><div class="mr-sub">Top callers, wins and streaks</div></span>
           <span class="mr-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
         </button>
-        <button class="menu-row" id="menuEarnRow" type="button">
-          <span class="mr-ic">TN</span>
-          <span class="mr-main"><span class="mr-name">Earn TrybCoin</span><div class="mr-sub">Today's earnings and how earning works</div></span>
-          <span class="mr-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
-        </button>
         <div class="card">
-          <h4>Membership</h4>
-          <p id="profMemberLine">—</p>
-          <p id="profRateLine" style="margin-top:4px;font-weight:700;color:var(--ink);">—</p>
-          <button class="btn gold" id="profMemberBtn" type="button" style="margin-top:12px;">Get membership — $12 / 6 months</button>
-        </div>
-        <div class="card">
-          <h4>Directory listing</h4>
+          <h4>Privacy</h4>
           <p>Listed users appear in the All TrybChat users directory and in search. Private users appear in neither.</p>
           <div class="toggle-row">
             <button id="listedBtn" type="button">Listed</button>
@@ -728,7 +786,7 @@
           <p id="dirStateNote" style="margin-top:10px;"></p>
         </div>
         <div class="card">
-          <h4>Message notifications</h4>
+          <h4>Notifications</h4>
           <p>Get notified when a new message arrives while TrybChat is closed. On iPhone, this works after adding TrybChat to your Home Screen.</p>
           <button class="btn navy" id="pushToggleBtn" type="button" style="margin-top:12px;">Turn on notifications</button>
           <p id="pushStateNote" style="margin-top:10px;"></p>
@@ -751,7 +809,7 @@
         <div class="view-title" style="margin:0;">Profile</div>
       </div>
       <div id="upoCard"></div>
-      <div class="sect-title" style="padding:16px 16px 0;">Threads</div>
+      <div class="sect-title" style="padding:16px 16px 0;">Updates</div>
       <div id="upoPosts"></div>
       <button class="load-more hidden" id="upoMore" type="button">Load more</button>
       <div style="height:34px;"></div>
@@ -850,10 +908,11 @@
     </div>
 
 <nav class="dock" id="dock">
-      <button id="dockWall" class="active" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5v-15zM7 7v2.2h10V7H7zm0 4.4v2.2h10v-2.2H7zM7 15.8V18h6.5v-2.2H7z"/></svg></span>Threads</button>
-      <button id="dockFriends" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8.2" r="3.7"/><path d="M2.3 20.2c.7-3.4 3.4-5.3 6.7-5.3s6 1.9 6.7 5.3H2.3z"/><circle cx="17.6" cy="9.2" r="2.9"/><path d="M16.3 14.4c2.4.3 4.3 2 5 4.7l.3 1.1h-3.6c-.3-2.1-1-4-2.2-5.5.2-.1.3-.2.5-.3z"/></svg></span>Friends</button>
-      <button id="dockNotif" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8a6.1 6.1 0 0 0-6.1 6.1c0 3.9-1.2 5.3-2.3 6.5-.4.5 0 1.4.8 1.4h15.2c.8 0 1.2-.9.8-1.4C19.2 14.2 18 12.8 18 8.9A6.1 6.1 0 0 0 12 2.8z"/><path d="M9.7 18.7a2.4 2.4 0 0 0 4.6 0H9.7z"/></svg><span class="dbdg hidden" id="reqBadge">0</span></span>Notifications</button>
-      <button id="dockMenu" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><rect x="3.4" y="5.4" width="17.2" height="2.7" rx="1.35"/><rect x="3.4" y="10.65" width="17.2" height="2.7" rx="1.35"/><rect x="3.4" y="15.9" width="17.2" height="2.7" rx="1.35"/></svg></span>Menu</button>
+      <button id="dockWall" class="active" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5v-15zM7 7v2.2h10V7H7zm0 4.4v2.2h10v-2.2H7zM7 15.8V18h6.5v-2.2H7z"/></svg></span>Updates</button>
+      <button id="dockChannels" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.8a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4z"/><path d="M8.9 15.7a4.4 4.4 0 0 1 0-6.2l-1.5-1.5a6.5 6.5 0 0 0 0 9.2l1.5-1.5zm6.2 0a4.4 4.4 0 0 0 0-6.2l1.5-1.5a6.5 6.5 0 0 1 0 9.2l-1.5-1.5zM5.6 19a9.4 9.4 0 0 1 0-12.9L4.1 4.6a11.5 11.5 0 0 0 0 15.9L5.6 19zm12.8 0a9.4 9.4 0 0 0 0-12.9l1.5-1.5a11.5 11.5 0 0 1 0 15.9L18.4 19z"/></svg></span>Channels</button>
+      <button id="dockEarn" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1.2 15.3v1.2h-2.4v-1.1c-1.2-.2-2.3-.9-2.5-2.2h2.5c.2.7.8 1 1.6 1 1 0 1.6-.4 1.6-1.1 0-.6-.4-.9-1.7-1.2-1.6-.4-3.3-.9-3.3-2.9 0-1.6 1.2-2.7 2.8-3V5.6h2.4v1.1c1.4.2 2.4 1.1 2.5 2.5h-2.5c-.1-.7-.7-1.1-1.5-1.1-.9 0-1.5.4-1.5 1 0 .6.6.9 1.8 1.2 1.7.4 3.2 1 3.2 2.9 0 1.7-1.3 2.8-3 3.1z"/></svg></span>Earnings</button>
+      <button id="dockChats" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6c-5.7 0-10.3 3.9-10.3 8.8 0 2.8 1.5 5.2 3.8 6.8-.2 1.1-.8 2.4-1.6 3.4 0 0 3-.2 4.9-1.3 1 .3 2.1.4 3.2.4 5.7 0 10.3-3.9 10.3-8.8S17.7 2.6 12 2.6z"/></svg><span class="dbdg hidden" id="dockChatBadge">0</span></span>Chats</button>
+      <button id="dockMenu" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8.6A3.4 3.4 0 1 0 12 15.4 3.4 3.4 0 0 0 12 8.6zm9.2 5.1l2 1.5-2 3.4-2.3-1a8.6 8.6 0 0 1-1.7 1L16.9 21H7.1L6.8 18.6a8.6 8.6 0 0 1-1.7-1l-2.3 1-2-3.4 2-1.5a8.4 8.4 0 0 1 0-2L.8 10.2l2-3.4 2.3 1a8.6 8.6 0 0 1 1.7-1L7.1 3h9.8l.3 2.6a8.6 8.6 0 0 1 1.7 1l2.3-1 2 3.4-2 1.5a8.4 8.4 0 0 1 0 2z"/></svg></span>Settings</button>
     </nav>
   </div>
 </div>
@@ -955,21 +1014,23 @@ function showScreen(which){
   $("appScreen").classList.toggle("hidden", which !== "app");
 }
 function paintDock(){
-  var onFriends = S.tab === "chats" && S.chatsSub === "friends";
-  $("dockWall").classList.toggle("active", S.tab === "wall");
-  $("dockFriends").classList.toggle("active", onFriends);
-  $("dockNotif").classList.toggle("active", S.tab === "notifications");
-  $("dockMenu").classList.toggle("active", S.tab === "profile" || S.tab === "earn");
+  $("dockWall").classList.toggle("active", S.tab === "wall" || S.tab === "notifications");
+  $("dockChannels").classList.toggle("active", S.tab === "channels");
+  $("dockEarn").classList.toggle("active", S.tab === "earn");
+  $("dockChats").classList.toggle("active", S.tab === "chats");
+  $("dockMenu").classList.toggle("active", S.tab === "profile");
 }
 function showTab(tab){
   S.tab = tab;
   $("tabWall").classList.toggle("hidden", tab !== "wall");
   $("tabChats").classList.toggle("hidden", tab !== "chats");
+  $("tabChannels").classList.toggle("hidden", tab !== "channels");
   $("tabNotif").classList.toggle("hidden", tab !== "notifications");
   $("tabEarn").classList.toggle("hidden", tab !== "earn");
   $("tabProfile").classList.toggle("hidden", tab !== "profile");
   paintDock();
   if (tab === "earn") loadEarn();
+  if (tab === "channels"){ renderSegChannels($("segChSearch").value || null); renderSegGroups($("segGrpSearch").value || null); }
   if (tab === "profile") renderProfile();
   if (tab === "wall") loadFeed(true);
 }
@@ -2208,18 +2269,41 @@ function loadEarn(){
   if (!sb || !S.user) return Promise.resolve();
   var day = lagosToday();
   var startISO = day + "T00:00:00+01:00";
+  var weekDay = new Date(Date.now() - 6 * 864e5).toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
   return Promise.all([
     sb.from("tc_earn_daily").select("earned").eq("user_id", S.user.id).eq("day", day).maybeSingle(),
-    sb.from("tc_messages").select("id", { count: "exact", head: true }).eq("sender_id", S.user.id).gte("created_at", startISO)
+    sb.from("tc_messages").select("id", { count: "exact", head: true }).eq("sender_id", S.user.id).gte("created_at", startISO),
+    sb.from("tc_earn_daily").select("earned").eq("user_id", S.user.id).gte("day", weekDay),
+    sb.from("tc_earn_events").select("kind, amount, created_at").eq("user_id", S.user.id).order("created_at", { ascending: false }).limit(30),
+    sb.from("tn_wallets").select("trybcoin").eq("user_id", S.user.id).maybeSingle()
   ]).then(function(results){
     S.earnedToday = results[0].data ? (results[0].data.earned || 0) : 0;
     S.sentToday = results[1].count || 0;
-    $("earnTodayTn").textContent = S.earnedToday + " TN";
-    $("earnTodaySent").textContent = S.sentToday;
+    var week = (results[2].data || []).reduce(function(a, r){ return a + (r.earned || 0); }, 0);
+    var coins = results[4].data ? (results[4].data.trybcoin || 0) : (S.wallet ? (S.wallet.trybcoin || 0) : 0);
+    $("earnBalTn").textContent = coins + " TN";
+    $("earnBalUsd").textContent = "\u2248 $" + (coins / 1000).toFixed(2);
+    $("earnStatToday").textContent = S.earnedToday + " TN";
+    $("earnStatWeek").textContent = week + " TN";
+    $("earnStatSent").textContent = S.sentToday;
     $("earnCapBar").style.width = Math.min(100, (S.earnedToday / DAILY_CAP) * 100) + "%";
     $("earnCapText").textContent = S.earnedToday + " / " + DAILY_CAP + " TN daily cap";
+    var pb = $("earnPremBtn");
+    if (pb) pb.textContent = S.access && S.access.member_active ? "Renew Premium — $12 / 6 months" : "Get Premium — $12 / 6 months";
+    renderEarnEvents(results[3].data || []);
     renderMemberLines();
   }).catch(function(){ renderMemberLines(); });
+}
+function renderEarnEvents(rows){
+  var host = $("earnEvents"); if (!host) return;
+  if (!rows.length){ host.innerHTML = '<div class="empty-note">Nothing yet — send a message, post an update, get a story view, or call a Call It right and it will show up here.</div>'; return; }
+  var META = { message: ["\U0001F4AC", "Message sent"], post: ["\U0001F4DD", "Update posted"], story_view: ["\U0001F441", "Your story was viewed"], callit: ["\U0001F3AF", "Call It win"], tip: ["\U0001F4B8", "TrybCoin tip received"] };
+  host.innerHTML = rows.map(function(r){
+    var m = META[r.kind] || ["\U0001FA99", "Earning"];
+    var when = "";
+    try { when = new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " · " + fmtTime(r.created_at); } catch (e) {}
+    return '<div class="ev-row"><span class="ev-ic">' + m[0] + '</span><span class="ev-main"><span class="ev-name">' + m[1] + '</span><span class="ev-time">' + esc(when) + '</span></span><span class="ev-amt">+' + r.amount + ' TN</span></div>';
+  }).join("");
 }
 function memberStateLines(){
   if (!S.access) return { prof: "—", rate: "—", earn: "—" };
@@ -2257,6 +2341,11 @@ function renderProfile(){
   $("profMemberLine").textContent = L.prof;
   $("profRateLine").textContent = L.rate;
   $("profMemberBtn").textContent = S.access && S.access.member_active ? "Renew membership — $12 / 6 months" : "Get membership — $12 / 6 months";
+  try {
+    var cc = ((S.profile && S.profile.country) || "NG").toUpperCase();
+    $("profFlag").textContent = cc.length === 2 ? String.fromCodePoint(127397 + cc.charCodeAt(0), 127397 + cc.charCodeAt(1)) : "🌍";
+    $("profJoined").textContent = S.profile && S.profile.created_at ? "Joined " + new Date(S.profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Joined —";
+  } catch (e) {}
   paintWallet();
   renderDirToggle();
   paintPushRow();
@@ -2376,10 +2465,12 @@ $("subPayBtn").addEventListener("click", function(){
 
 /* ---------------- dock + boot ---------------- */
 $("dockWall").addEventListener("click", function(){ showTab("wall"); });
-$("dockFriends").addEventListener("click", function(){ showTab("chats"); showChatsSub("friends"); });
-$("dockNotif").addEventListener("click", function(){ showTab("notifications"); loadRequests(); loadNotifications(true); });
+$("dockChannels").addEventListener("click", function(){ showTab("channels"); });
+$("dockEarn").addEventListener("click", function(){ showTab("earn"); });
+$("dockChats").addEventListener("click", function(){ showTab("chats"); showChatsSub("list"); });
 $("dockMenu").addEventListener("click", function(){ showTab("profile"); });
-$("menuEarnRow").addEventListener("click", function(){ showTab("earn"); });
+$("chatsMenuBtn").addEventListener("click", function(){ showTab("profile"); });
+$("chatsNewBtn").addEventListener("click", function(){ showChatsSub("friends"); });
 $("earnBack").addEventListener("click", function(){ showTab("profile"); });
 window.addEventListener("focus", function(){
   if (!S.user) return;
@@ -3031,8 +3122,8 @@ $("wallPostBtn").addEventListener("click", function(){
       btn.disabled = false;
       var d = res.data;
       if (!d || !d.ok){
-        if (d && d.error === "links_not_allowed") toast("Links aren't allowed", "Threads can only contain text and photos.");
-        else if (d && d.error === "post_too_long") toast("Too long", "Threads are limited to 2,000 characters.");
+        if (d && d.error === "links_not_allowed") toast("Links aren't allowed", "Updates can only contain text and photos.");
+        else if (d && d.error === "post_too_long") toast("Too long", "Updates are limited to 2,000 characters.");
         else toast("Couldn't post", "Check your connection and try again.");
         return;
       }
@@ -3183,7 +3274,7 @@ function paintWallMe(){
   var p = S.profile || {};
   el.innerHTML = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || (S.user ? S.user.email : "?") || "?"));
 }
-$("wallChatsBtn").addEventListener("click", function(){ showTab("chats"); showChatsSub("list"); });
+$("wallBellBtn").addEventListener("click", function(){ showTab("notifications"); loadRequests(); loadNotifications(true); });
 $("wallSearchBtn").addEventListener("click", function(){
   var row = $("wallSearchRow");
   var opening = row.classList.contains("hidden");
@@ -3671,7 +3762,7 @@ $("svViews").addEventListener("click", function(){
 
 /* ------------------------------- CHANNELS --------------------------------- */
 S.chan = null; S.chanBefore = null; S.chanPhoto = null;
-function loadChannelSection(){
+function loadChannelSectionOld(){
   if (!sb || !S.user) return;
   sb.rpc("tc_channels_discover", { p_q: null }).then(function(res){
     var d = res.data; if (!d || !d.ok) return;
@@ -3993,24 +4084,6 @@ $("epSave").addEventListener("click", function(){
 <script>
 /* ============ Chats / Discover / Channels toggle (Wave 2.1) ============ */
 S.seg = "chats";
-function setSeg(name){
-  S.seg = name;
-  document.querySelectorAll("#chatsToggle button").forEach(function(b){
-    b.classList.toggle("active", b.getAttribute("data-seg") === name);
-  });
-  var chats = name === "chats";
-  $("friendsStrip").classList.toggle("hidden", !chats);
-  $("bannerSlot").classList.toggle("hidden", !chats);
-  $("chatList").classList.toggle("hidden", !chats);
-  document.querySelector("#tabChats .chat-search").style.display = chats ? "" : "none";
-  $("segDiscover").classList.toggle("hidden", name !== "discover");
-  $("segChannels").classList.toggle("hidden", name !== "channels");
-  if (name === "discover") renderSegGroups($("segGrpSearch").value || null);
-  if (name === "channels") renderSegChannels($("segChSearch").value || null);
-}
-document.querySelectorAll("#chatsToggle button").forEach(function(b){
-  b.addEventListener("click", function(){ setSeg(b.getAttribute("data-seg")); });
-});
 function segBindRows(host){
   host.querySelectorAll("[data-gjoin]").forEach(function(b){
     b.addEventListener("click", function(){
@@ -4025,7 +4098,7 @@ function segBindRows(host){
   host.querySelectorAll("[data-gopen]").forEach(function(b){
     b.addEventListener("click", function(){
       var id = b.getAttribute("data-gopen");
-      setSeg("chats");
+      showTab("chats"); showChatsSub("list");
       var c = (S.chats || []).filter(function(x){ return x.id === id; })[0];
       if (c) openChat(c);
       else loadChats();
@@ -4085,3 +4158,6 @@ loadChannelSection = function(){ if (S.seg === "channels") renderSegChannels($("
 
 </body>
 </html>
+
+<script>function loadChannelSection(){ /* channels live in their own dock tab now */ }
+var epb = document.getElementById("earnPremBtn"); if (epb) epb.addEventListener("click", openSub);</script>
