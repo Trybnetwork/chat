@@ -302,6 +302,18 @@
 .comment-form input { flex:1; border:1.5px solid rgba(11,17,50,.14); border-radius:999px; padding:8px 13px; font-size:13.5px; font-family:inherit; }
 .comment-form button { background:#0B1132; color:#fff; border:none; border-radius:999px; padding:8px 15px; font-weight:700; font-family:inherit; cursor:pointer; }
 .load-more { display:block; margin:16px auto 26px; background:#fff; border:1.5px solid rgba(11,17,50,.16); border-radius:999px; padding:9px 22px; font-family:inherit; font-weight:700; cursor:pointer; }
+
+.wall-top { position:sticky; top:0; z-index:6; background:#fff; display:flex; align-items:center; padding:12px 16px 10px; border-bottom:1px solid #EFF0F5; }
+.wall-brand { font-size:23px; font-weight:800; letter-spacing:-.3px; color:var(--navy); }
+.wall-brand b { color:var(--gold); font-weight:800; }
+.wall-top-actions { margin-left:auto; display:flex; gap:8px; }
+.top-icon-btn { position:relative; width:39px; height:39px; border-radius:50%; border:none; background:#F0F1F6; color:var(--navy); display:grid; place-items:center; cursor:pointer; }
+.top-badge { position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; padding:0 4px; border-radius:999px; background:#F02849; color:#fff; font-size:10.5px; font-weight:800; display:grid; place-items:center; border:2px solid #fff; }
+.wall-searchrow { display:flex; gap:8px; align-items:center; padding:10px 16px 0; }
+.wall-searchrow input { flex:1; border:1.5px solid rgba(11,17,50,.14); border-radius:999px; padding:9px 15px; font-size:14px; font-family:inherit; }
+.wall-searchrow button { background:none; border:none; font-size:15px; color:var(--mut); cursor:pointer; padding:6px; }
+.composer-top { display:flex; gap:10px; align-items:flex-start; }
+.composer-top textarea { flex:1; }
 </style>
 </head>
 <body>
@@ -342,12 +354,23 @@
 
     <!-- Chats tab -->
     <div id="tabWall" class="hidden" style="overflow-y:auto;flex:1;">
-      <div class="wall-head">
-        <div class="wall-title">Threads</div>
-        <div class="wall-sub">Share something worth reading — good posts earn TrybCoin.</div>
+      <div class="wall-top">
+        <div class="wall-brand">Tryb<b>Chat</b></div>
+        <div class="wall-top-actions">
+          <button class="top-icon-btn" id="wallChatsBtn" type="button" aria-label="Chats"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6c-5.7 0-10.3 3.9-10.3 8.8 0 2.8 1.5 5.2 3.8 6.8-.2 1.1-.8 2.4-1.6 3.4 0 0 3-.2 4.9-1.3 1 .3 2.1.4 3.2.4 5.7 0 10.3-3.9 10.3-8.8S17.7 2.6 12 2.6z"/></svg><span class="top-badge hidden" id="dockChatBadge">0</span></button>
+          <button class="top-icon-btn" id="wallSearchBtn" type="button" aria-label="Search threads"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.6-4.6"/></svg></button>
+        </div>
       </div>
+      <div class="wall-searchrow hidden" id="wallSearchRow">
+        <input id="wallSearchInput" type="text" placeholder="Search threads and people…">
+        <button id="wallSearchClear" type="button" aria-label="Close search">✕</button>
+      </div>
+      <div class="wall-sub" style="padding:10px 16px 0;">Share something worth reading — good posts earn TrybCoin.</div>
       <div class="composer-card">
-        <textarea id="wallInput" rows="2" maxlength="2000" placeholder="Post a thread… tips, lessons, wins, questions"></textarea>
+        <div class="composer-top">
+          <span class="avatar" id="wallMeAvatar"></span>
+          <textarea id="wallInput" rows="2" maxlength="2000" placeholder="Post a thread… tips, lessons, wins, questions"></textarea>
+        </div>
         <div class="wall-photo-strip" id="wallPhotoStrip">
           <img id="wallPhotoThumb" alt="">
           <span style="font-size:13px;color:var(--mut);">Photo attached</span>
@@ -358,7 +381,7 @@
           <input id="wallPhotoFile" type="file" accept="image/*" class="hidden">
           <span class="sp"></span>
           <span style="font-size:11.5px;color:var(--mut);">Text + photo only · no links</span>
-          <button class="btn gold" id="wallPostBtn" type="button" style="width:auto;padding:9px 22px;">Post</button>
+          <button class="btn navy" id="wallPostBtn" type="button" style="width:auto;padding:9px 22px;">Post</button>
         </div>
       </div>
       <div id="wallFeed"></div>
@@ -589,7 +612,6 @@
     <!-- Dock -->
     <nav class="dock" id="dock">
       <button id="dockWall" class="active" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5v-15zM7 7v2.2h10V7H7zm0 4.4v2.2h10v-2.2H7zM7 15.8V18h6.5v-2.2H7z"/></svg></span>Threads</button>
-      <button id="dockChats" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6c-5.7 0-10.3 3.9-10.3 8.8 0 2.8 1.5 5.2 3.8 6.8-.2 1.1-.8 2.4-1.6 3.4 0 0 3-.2 4.9-1.3 1 .3 2.1.4 3.2.4 5.7 0 10.3-3.9 10.3-8.8S17.7 2.6 12 2.6z"/></svg><span class="dbdg hidden" id="dockChatBadge">0</span></span>Chats</button>
       <button id="dockFriends" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8.2" r="3.7"/><path d="M2.3 20.2c.7-3.4 3.4-5.3 6.7-5.3s6 1.9 6.7 5.3H2.3z"/><circle cx="17.6" cy="9.2" r="2.9"/><path d="M16.3 14.4c2.4.3 4.3 2 5 4.7l.3 1.1h-3.6c-.3-2.1-1-4-2.2-5.5.2-.1.3-.2.5-.3z"/></svg></span>Friends</button>
       <button id="dockNotif" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8a6.1 6.1 0 0 0-6.1 6.1c0 3.9-1.2 5.3-2.3 6.5-.4.5 0 1.4.8 1.4h15.2c.8 0 1.2-.9.8-1.4C19.2 14.2 18 12.8 18 8.9A6.1 6.1 0 0 0 12 2.8z"/><path d="M9.7 18.7a2.4 2.4 0 0 0 4.6 0H9.7z"/></svg><span class="dbdg hidden" id="reqBadge">0</span></span>Notifications</button>
       <button id="dockMenu" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><rect x="3.4" y="5.4" width="17.2" height="2.7" rx="1.35"/><rect x="3.4" y="10.65" width="17.2" height="2.7" rx="1.35"/><rect x="3.4" y="15.9" width="17.2" height="2.7" rx="1.35"/></svg></span>Menu</button>
@@ -695,7 +717,6 @@ function showScreen(which){
 function paintDock(){
   var onFriends = S.tab === "chats" && S.chatsSub === "friends";
   $("dockWall").classList.toggle("active", S.tab === "wall");
-  $("dockChats").classList.toggle("active", S.tab === "chats" && !onFriends);
   $("dockFriends").classList.toggle("active", onFriends);
   $("dockNotif").classList.toggle("active", S.tab === "notifications");
   $("dockMenu").classList.toggle("active", S.tab === "profile" || S.tab === "earn");
@@ -828,6 +849,7 @@ function gate(){
   /* Chatting is always free (Erudite's rule, 2026-10-22) — access state
      only drives earning banners/cards now, never a paywall. */
   showScreen("app");
+  paintWallMe();
   showTab("wall"); showChatsSub("list");
   paintHeader(); renderBanner(); loadChats(); loadRequests(); loadFriends(null); loadEarn();
   startRealtime();
@@ -2099,7 +2121,6 @@ $("subPayBtn").addEventListener("click", function(){
 
 /* ---------------- dock + boot ---------------- */
 $("dockWall").addEventListener("click", function(){ showTab("wall"); });
-$("dockChats").addEventListener("click", function(){ showTab("chats"); showChatsSub("list"); });
 $("dockFriends").addEventListener("click", function(){ showTab("chats"); showChatsSub("friends"); });
 $("dockNotif").addEventListener("click", function(){ showTab("notifications"); loadRequests(); });
 $("dockMenu").addEventListener("click", function(){ showTab("profile"); });
@@ -2717,7 +2738,17 @@ function renderFeed(){
     host.innerHTML = '<div class="empty-note" style="margin:18px 16px;">No threads yet.<br>Be the first to post something worth reading.</div>';
     return;
   }
-  host.innerHTML = S.wallPosts.map(postHTML).join("");
+  var q = (S.wallQuery || "").toLowerCase();
+  var list = q ? S.wallPosts.filter(function(p){
+    return (p.body || "").toLowerCase().indexOf(q) >= 0
+      || (p.full_name || "").toLowerCase().indexOf(q) >= 0
+      || (p.username || "").toLowerCase().indexOf(q) >= 0;
+  }) : S.wallPosts;
+  if (!list.length){
+    host.innerHTML = '<div class="empty-note" style="margin:18px 16px;">No threads match your search.</div>';
+    return;
+  }
+  host.innerHTML = list.map(postHTML).join("");
 }
 $("wallMore").addEventListener("click", function(){ loadFeed(false); });
 
@@ -2887,6 +2918,31 @@ function sendComment(postId){
     loadComments(postId);
   }).catch(function(){ toast("Couldn't comment", "Check your connection."); });
 }
+
+
+/* ---- wall top bar ---- */
+function paintWallMe(){
+  var el = $("wallMeAvatar"); if (!el) return;
+  var p = S.profile || {};
+  el.innerHTML = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || (S.user ? S.user.email : "?") || "?"));
+}
+$("wallChatsBtn").addEventListener("click", function(){ showTab("chats"); showChatsSub("list"); });
+$("wallSearchBtn").addEventListener("click", function(){
+  var row = $("wallSearchRow");
+  var opening = row.classList.contains("hidden");
+  row.classList.toggle("hidden");
+  if (opening) $("wallSearchInput").focus();
+  else { S.wallQuery = ""; $("wallSearchInput").value = ""; renderFeed(); }
+});
+$("wallSearchClear").addEventListener("click", function(){
+  $("wallSearchRow").classList.add("hidden");
+  S.wallQuery = ""; $("wallSearchInput").value = "";
+  renderFeed();
+});
+$("wallSearchInput").addEventListener("input", function(){
+  S.wallQuery = this.value.trim();
+  renderFeed();
+});
 
 </script>
 </body>
