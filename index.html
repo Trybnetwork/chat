@@ -354,6 +354,7 @@
             <div id="giAddList"></div>
             <button class="btn gold" id="giAddBtn" type="button" style="margin-top:12px;">Add selected</button>
           </div>
+          <button class="btn ghost" id="giClearBtn" type="button" style="margin:4px 0 6px;color:#C0392B;display:none;">Clear conversation</button>
           <button class="btn ghost" id="giLeaveBtn" type="button" style="margin:4px 0 30px;color:#C0392B;">Leave group</button>
         </div>
       </div>
@@ -1357,6 +1358,8 @@ function openGroupInfo(){
   var chatId = S.currentChat.chat_id;
   S.leaveArm = false;
   $("giLeaveBtn").textContent = "Leave group";
+  S.clearArm = false;
+  $("giClearBtn").textContent = "Clear conversation";
   sb.rpc("tc_group_info", { p_chat: chatId }).then(function(res){
     var d = res.data;
     if (!d || !d.ok){ toast("Couldn't load group", "Try again in a moment."); return; }
@@ -1378,6 +1381,7 @@ function renderGroupInfo(){
   $("giName").value = d.title || "";
   $("giAddCard").style.display = d.is_community ? "none" : "";
   $("giLeaveBtn").style.display = d.is_community ? "none" : "";
+  $("giClearBtn").style.display = d.can_clear ? "" : "none";
   $("giMembers").innerHTML = d.members.map(function(p){
     var tags = "";
     if (p.user_id === S.user.id) tags += ' <span class="tag-chip">YOU</span>';
@@ -1454,6 +1458,27 @@ $("giLeaveBtn").addEventListener("click", function(){
     loadChats();
     toast("Left group", "You've left the group.");
   }).catch(function(){ toast("Couldn't leave", "Check your connection."); });
+});
+$("giClearBtn").addEventListener("click", function(){
+  if (!S.grpInfo) return;
+  if (!S.clearArm){
+    S.clearArm = true;
+    $("giClearBtn").textContent = "Tap again to confirm — deletes all messages for everyone";
+    return;
+  }
+  S.clearArm = false;
+  $("giClearBtn").textContent = "Clear conversation";
+  sb.rpc("tc_clear_chat", { p_chat: S.grpInfo.chat_id }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){ toast("Couldn't clear", d && d.error === "not_allowed" ? "Only the group owner can clear this conversation." : "Try again in a moment."); return; }
+    if (d.media_paths && d.media_paths.length){
+      try { sb.storage.from("tc-media").remove(d.media_paths); } catch (e) {}
+    }
+    S.grpInfo = null;
+    showChatsSub("list");
+    loadChats();
+    toast("Conversation cleared", (d.deleted || 0) + ((d.deleted === 1) ? " message" : " messages") + " removed for everyone.");
+  }).catch(function(){ toast("Couldn't clear", "Check your connection."); });
 });
 $("groupInfoBack").addEventListener("click", function(){
   if (S.currentChat) showChatsSub("thread");
