@@ -129,7 +129,7 @@
   .msg.them .voice-play{ background:var(--navy); color:var(--gold); }
   .voice-dur{ font-size:12.5px; font-weight:700; opacity:.85; }
   #threadWrap{ position:relative; }
-  .scroll-down{ position:absolute; right:14px; bottom:84px; width:40px; height:40px; border-radius:50%; border:1px solid #E6E7EE; background:#fff; color:var(--navy); box-shadow:0 6px 18px rgba(11,17,50,.18); display:grid; place-items:center; cursor:pointer; z-index:5; }
+  .scroll-down{ position:absolute; right:14px; bottom:84px; width:44px; height:44px; border-radius:50%; border:none; background:var(--navy); color:#fff; box-shadow:0 8px 22px rgba(11,17,50,.35); display:grid; place-items:center; cursor:pointer; z-index:5; }
   .scroll-down .sd-badge{ position:absolute; top:-6px; right:-6px; min-width:19px; height:19px; padding:0 5px; border-radius:999px; background:#F02849; color:#fff; font-size:10.5px; font-weight:800; display:grid; place-items:center; border:2px solid #fff; }
   .typing-row{ display:flex; align-items:center; gap:9px; padding:6px 16px 2px; background:#fff; }
   .t-bubble{ background:#EFF0F5; border-radius:20px; border-bottom-left-radius:5px; padding:11px 13px; display:inline-flex; gap:4px; }
@@ -408,7 +408,7 @@
       </div>
 
       <!-- Thread -->
-      <div id="threadWrap" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div id="threadWrap" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0;position:relative;">
         <div class="thread-head">
           <button class="back-btn" id="threadBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
           <span class="av-wrap"><span class="avatar sm" id="threadAvatar">?</span><span class="pdot" id="threadDot" style="display:none;"></span></span>
@@ -441,7 +441,7 @@
         <div class="input-row" id="inputRow">
           <button class="photo-btn" id="photoBtn" type="button" aria-label="Send a photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg></button>
           <button class="photo-btn" id="micBtn" type="button" aria-label="Record a voice message"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 19v3"/></svg></button>
-          <button class="photo-btn" id="fileBtn" type="button" aria-label="Send a file"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.5v3a5.5 5.5 0 0 1-11 0V8a3.5 3.5 0 0 1 7 0v6.5a2 2 0 0 1-4 0V9"/></svg></button><input id="photoFile" type="file" accept="image/*" class="hidden"><input id="docFile" type="file" class="hidden">
+          <input id="photoFile" type="file" accept="image/*" class="hidden">
           <textarea id="msgInput" rows="1" placeholder="Message…" maxlength="2000"></textarea>
           <button class="send-btn" id="sendBtn" type="button" aria-label="Send"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>
         </div>
@@ -1214,7 +1214,7 @@ function paintScrollDown(){
   var host = $("msgList"), btn = $("scrollDownBtn");
   if (!host || !btn) return;
   var gap = host.scrollHeight - host.scrollTop - host.clientHeight;
-  if (gap < 260 || !S.currentChat){ btn.classList.add("hidden"); return; }
+  if (gap < 140 || !S.currentChat){ btn.classList.add("hidden"); return; }
   btn.classList.remove("hidden");
   var unseen = 0;
   if (S.seenTailId){
@@ -2449,34 +2449,6 @@ function fetchPreview(url){
     }).then(function(r){ return r.json(); }).then(function(j){ return j && j.preview ? j.preview : null; });
   }).catch(function(){ return null; });
 }
-
-/* ---- file sending ---- */
-$("fileBtn").addEventListener("click", function(){ $("docFile").click(); });
-$("docFile").addEventListener("change", function(){
-  var f = this.files && this.files[0];
-  this.value = "";
-  if (!f || !S.currentChat) return;
-  if (f.size > 26214400){ toast("File too large", "Files are limited to 25 MB."); return; }
-  var chatId = S.currentChat.chat_id;
-  var safe = f.name.replace(/[^\w.\-]+/g, "_").slice(-60);
-  var path = chatId + "/" + S.user.id + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + "-" + safe;
-  toast("Sending file", f.name);
-  sb.storage.from("tc-media").upload(path, f, { contentType: f.type || "application/octet-stream", upsert: false })
-    .then(function(up){
-      if (up.error) throw new Error("upload_failed");
-      return sb.rpc("tc_send_file", { p_chat: chatId, p_path: path, p_name: f.name, p_size: f.size });
-    })
-    .then(function(res){
-      if (res.error && slowModeWait(res.error)) return;
-      var d = res.data;
-      if (!d || !d.ok){ toast("Couldn't send file", d && d.error === "file_too_large" ? "Files are limited to 25 MB." : "Try again in a moment."); return; }
-      S.messages.push({ id: d.message_id, chat_id: chatId, sender_id: S.user.id, kind: "file", media_path: path, file_name: f.name, file_size: f.size, body: "", created_at: new Date().toISOString(), reply_to: null });
-      applyReply(d.message_id);
-      renderMessages();
-      loadChats();
-    })
-    .catch(function(){ toast("Couldn't send file", "Check your connection and try again."); });
-});
 
 /* ---- TrybCoin tipping ---- */
 function openTipSheet(){
