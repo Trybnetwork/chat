@@ -86,6 +86,12 @@
   .msg{ max-width:78%; padding:10px 14px; border-radius:20px; font-size:14.5px; line-height:1.45; word-wrap:break-word; white-space:pre-wrap; }
   .msg a{ color:inherit; text-decoration:underline; text-underline-offset:2px; font-weight:600; overflow-wrap:anywhere; }
   .msg{ -webkit-touch-callout:none; }
+.av-wrap{ position:relative; display:inline-flex; flex:none; }
+.pdot{ position:absolute; right:-2px; bottom:-2px; width:11px; height:11px; border-radius:50%; background:#B9BECF; border:2px solid #fff; z-index:2; }
+.pdot.on{ background:#1D9D63; }
+.mcount{ font-size:11px; font-weight:700; color:var(--mut); white-space:nowrap; }
+#msgInput{ flex:1; background:#EFF0F5; border:1.5px solid transparent; border-radius:24px; padding:12px 17px; font-size:14.5px; outline:none; color:var(--ink); font-family:inherit; resize:none; line-height:1.4; max-height:120px; overflow-y:auto; }
+#msgInput:focus{ border-color:var(--gold); }
   .msg .quote{ display:block; background:rgba(11,17,50,.07); border-left:3px solid var(--gold); border-radius:8px; padding:7px 9px; margin-bottom:7px; cursor:pointer; }
   .msg.me .quote{ background:rgba(255,255,255,.15); }
   .msg .quote .qname{ display:block; font-size:11px; font-weight:800; color:var(--gold-dark); }
@@ -267,7 +273,7 @@
       <div id="threadWrap" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0;">
         <div class="thread-head">
           <button class="back-btn" id="threadBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-          <span class="avatar sm" id="threadAvatar">?</span>
+          <span class="av-wrap"><span class="avatar sm" id="threadAvatar">?</span><span class="pdot" id="threadDot" style="display:none;"></span></span>
           <div class="chat-main"><div class="chat-name" id="threadName">Chat</div><div class="uname" id="threadSub" style="font-size:12.5px;color:var(--mut);"></div></div>
         </div>
         <div class="msgs" id="msgList"></div>
@@ -293,7 +299,7 @@
           <button class="photo-btn" id="photoBtn" type="button" aria-label="Send a photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg></button>
           <button class="photo-btn" id="micBtn" type="button" aria-label="Record a voice message"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 19v3"/></svg></button>
           <input id="photoFile" type="file" accept="image/*" class="hidden">
-          <input id="msgInput" type="text" placeholder="Message…" autocomplete="off" maxlength="2000">
+          <textarea id="msgInput" rows="1" placeholder="Message…" maxlength="2000"></textarea>
           <button class="send-btn" id="sendBtn" type="button" aria-label="Send"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>
         </div>
       </div>
@@ -687,6 +693,15 @@ function gate(){
   showTab("chats"); showChatsSub("list");
   paintHeader(); renderBanner(); loadChats(); loadRequests(); loadFriends(null); loadEarn();
   startRealtime();
+  tcHeartbeat();
+  if (!S._presTimer){
+    S._presTimer = setInterval(function(){
+      if (document.hidden) return;
+      tcHeartbeat();
+      loadChats();
+    }, 45000);
+    document.addEventListener("visibilitychange", function(){ if (!document.hidden) tcHeartbeat(); });
+  }
 }
 function renderPaywall(){
   paintAvatar($("pwAvatar"), S.profile.full_name, S.profile.avatar_url);
@@ -747,6 +762,8 @@ function senderProfile(id){
 function loadChats(){
   return sb.rpc("tc_my_chats").then(function(res){
     S.chats = res.data || [];
+    S.presence = S.presence || {};
+    S.chats.forEach(function(c){ if (c.kind === "dm" && c.peer_id) S.presence[c.peer_id] = !!c.peer_online; });
     renderChatList();
   }).catch(function(){});
 }
@@ -780,9 +797,13 @@ function renderChatList(){
     if (q && (d.name + " " + last).toLowerCase().indexOf(q) < 0) return;
     shown++;
     var av = d.avatarUrl ? '<img src="' + esc(d.avatarUrl) + '" alt="">' : esc(initials(d.avatarName));
+    var avBlock = c.kind === "dm"
+      ? '<span class="av-wrap"><span class="avatar">' + av + '</span><span class="pdot' + (c.peer_online ? " on" : "") + '"></span></span>'
+      : '<span class="avatar">' + av + '</span>';
+    var mcount = c.kind === "group" ? '<span class="mcount">' + (c.member_count || 0) + ((c.member_count === 1) ? " member" : " members") + '</span>' : '';
     html += '<button class="chat-row' + (c.unread > 0 ? " unread" : "") + '" type="button" data-chat="' + c.chat_id + '">' +
-      '<span class="avatar">' + av + '</span>' +
-      '<span class="chat-main"><span class="chat-top"><span class="chat-name">' + esc(d.name) + '</span><span class="chat-time">' + esc(c.last_at ? fmtTime(c.last_at) : "") + '</span></span>' +
+      avBlock +
+      '<span class="chat-main"><span class="chat-top"><span class="chat-name">' + esc(d.name) + '</span>' + mcount + '<span class="chat-time">' + esc(c.last_at ? fmtTime(c.last_at) : "") + '</span></span>' +
       '<span class="chat-last"><span style="overflow:hidden;text-overflow:ellipsis;">' + esc(last) + '</span>' +
       (c.unread > 0 ? '<span class="unread-dot">' + c.unread + '</span>' : '') + '</span></span></button>';
   });
@@ -800,7 +821,8 @@ function renderStrip(){
     var pid = f.requester_id === S.user.id ? f.addressee_id : f.requester_id;
     var p = S.profileCache[pid]; if (!p) return;
     var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
-    html += '<button class="s-item" type="button" data-stripdm="' + pid + '"><span class="avatar">' + av + '</span><span>' + esc((p.full_name || "").split(" ")[0] || "Friend") + '</span></button>';
+    var sdot = (S.presence && S.presence[pid] !== undefined) ? '<span class="pdot' + (S.presence[pid] ? " on" : "") + '"></span>' : '';
+    html += '<button class="s-item" type="button" data-stripdm="' + pid + '"><span class="av-wrap"><span class="avatar">' + av + '</span>' + sdot + '</span><span>' + esc((p.full_name || "").split(" ")[0] || "Friend") + '</span></button>';
   });
   host.innerHTML = html;
   host.style.display = html ? "" : "none";
@@ -828,6 +850,11 @@ function openChat(c){
   S.currentChat = c;
   var d = chatDisplay(c);
   paintAvatar($("threadAvatar"), d.avatarName, d.avatarUrl);
+  var td = $("threadDot");
+  if (td){
+    if (c.kind === "dm"){ td.style.display = ""; td.className = "pdot" + (c.peer_online ? " on" : ""); }
+    else td.style.display = "none";
+  }
   $("threadName").textContent = d.name;
   $("threadSub").textContent = d.sub;
   showChatsSub("thread");
@@ -964,6 +991,7 @@ function sendCurrent(){
   if (!body || !S.currentChat) return;
   var chatId = S.currentChat.chat_id;
   inp.value = "";
+  inp.style.height = "auto";
   sb.rpc("tc_send_message", { p_chat: chatId, p_body: body }).then(function(res){
     var d = res.data;
     if (!d || !d.ok){
@@ -1146,7 +1174,11 @@ function sendVoice(blob, seconds, mime){
     .catch(function(){ S.sendingVoice = false; toast("Couldn't send voice message", "Check your connection and try again."); });
 }
 $("sendBtn").addEventListener("click", sendCurrent);
-$("msgInput").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); sendCurrent(); } });
+$("msgInput").addEventListener("input", function(){
+  var el = $("msgInput");
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 120) + "px";
+});
 
 /* ---------------- realtime ---------------- */
 /* ---------------- quote replies ---------------- */
@@ -1304,7 +1336,14 @@ function startRealtime(){
 
 /* ---------------- groups ---------------- */
 function loadMyFriends(){
-  return sb.rpc("tc_my_friends").then(function(res){ return res.data || []; }).catch(function(){ return []; });
+  return sb.rpc("tc_my_friends").then(function(res){
+    S.presence = S.presence || {};
+    (res.data || []).forEach(function(u){ S.presence[u.user_id] = !!u.online; });
+    return res.data || [];
+  }).catch(function(){ return []; });
+}
+function tcHeartbeat(){
+  if (sb && S.user) sb.rpc("tc_heartbeat").then(function(){}).catch(function(){});
 }
 function pickRowHTML(p, picked){
   var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
@@ -1389,7 +1428,7 @@ function renderGroupInfo(){
     var rm = (mine && !d.is_community && p.user_id !== S.user.id)
       ? '<button class="mini-btn ghost" type="button" data-remove="' + p.user_id + '">Remove</button>' : "";
     var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
-    return '<div class="user-row"><span class="avatar sm">' + av + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + tags + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + rm + '</div>';
+    return '<div class="user-row"><span class="av-wrap"><span class="avatar sm">' + av + '</span><span class="pdot' + (p.online ? " on" : "") + '"></span></span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + tags + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + rm + '</div>';
   }).join("");
 }
 function renderGroupAddList(){
@@ -1517,7 +1556,9 @@ function loadRequests(){
 }
 function userRowHTML(p, actionHTML){
   var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name));
-  return '<div class="user-row"><span class="avatar sm">' + av + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + actionHTML + '</div>';
+  var pid = p.user_id || p.id;
+  var dot = (pid && S.presence && S.presence[pid] !== undefined) ? '<span class="pdot' + (S.presence[pid] ? " on" : "") + '"></span>' : '';
+  return '<div class="user-row"><span class="av-wrap"><span class="avatar sm">' + av + '</span>' + dot + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + actionHTML + '</div>';
 }
 function renderRequests(){
   var host = $("reqSection"); if (!host) return;
@@ -1532,8 +1573,11 @@ function renderRequests(){
 function loadFriends(q){
   return Promise.all([
     sb.from("tc_friendships").select("id, requester_id, addressee_id, status").or("requester_id.eq." + S.user.id + ",addressee_id.eq." + S.user.id).eq("status", "accepted"),
-    sb.rpc("tc_directory", { p_q: q || null })
+    sb.rpc("tc_directory", { p_q: q || null }),
+    sb.rpc("tc_my_friends")
   ]).then(function(results){
+    S.presence = S.presence || {};
+    ((results[2] && results[2].data) || []).forEach(function(u){ S.presence[u.user_id] = !!u.online; });
     var frows = results[0].data || [];
     var ids = {};
     frows.forEach(function(f){ ids[f.requester_id === S.user.id ? f.addressee_id : f.requester_id] = true; });
@@ -1565,7 +1609,9 @@ function renderDirectory(rows){
   }
   var html = "";
   rows.forEach(function(r){
-    var p = { full_name: r.full_name, username: r.username, avatar_url: r.avatar_url };
+    S.presence = S.presence || {};
+    S.presence[r.user_id] = !!r.online;
+    var p = { user_id: r.user_id, full_name: r.full_name, username: r.username, avatar_url: r.avatar_url };
     var act;
     if (r.relation === "friends") act = '<span style="font-size:12.5px;color:var(--mut);font-weight:700;">Friends</span>';
     else if (r.relation === "pending_out") act = '<button class="mini-btn ghost" type="button" disabled>Requested</button>';
