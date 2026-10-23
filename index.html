@@ -314,6 +314,13 @@
 .wall-searchrow button { background:none; border:none; font-size:15px; color:var(--mut); cursor:pointer; padding:6px; }
 .composer-top { display:flex; gap:10px; align-items:flex-start; }
 .composer-top textarea { flex:1; }
+
+/* ---- user profile overlay + notifications ---- */
+.upo-head { position:sticky; top:0; z-index:2; background:#fff; display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid #EFF0F5; }
+.upo-card { background:#fff; margin:14px 16px 0; border:1px solid #ECEEF4; border-radius:16px; padding:20px 16px; text-align:center; }
+.avatar.lg { width:74px; height:74px; font-size:25px; }
+.tn-pill { display:inline-flex; align-items:center; gap:6px; background:#FBF3DC; color:#8A6D1F; border-radius:999px; padding:6px 15px; font-weight:800; font-size:14.5px; }
+[data-profile] { cursor:pointer; }
 </style>
 </head>
 <body>
@@ -525,7 +532,8 @@
       <div class="pad">
         <div class="view-title">Notifications</div>
         <div id="reqSection"></div>
-        <div id="notifEmpty" class="empty-note">Nothing new right now.<br>Friend requests will appear here.</div>
+        <div id="notifSection"></div>
+        <div id="notifEmpty" class="empty-note">Nothing new right now.<br>Likes, comments and friend requests will appear here.</div>
       </div>
     </div>
 
@@ -610,6 +618,18 @@
     <div class="lightbox" id="lightbox"><img id="lightboxImg" alt="Photo"></div>
 
     <!-- Dock -->
+    <div id="userProfileOverlay" class="hidden" style="position:fixed;inset:0;z-index:300;background:#F6F7FB;overflow-y:auto;">
+      <div class="upo-head">
+        <button class="back-btn" id="upoBack" type="button" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div class="view-title" style="margin:0;">Profile</div>
+      </div>
+      <div id="upoCard"></div>
+      <div class="sect-title" style="padding:16px 16px 0;">Threads</div>
+      <div id="upoPosts"></div>
+      <button class="load-more hidden" id="upoMore" type="button">Load more</button>
+      <div style="height:34px;"></div>
+    </div>
+
     <nav class="dock" id="dock">
       <button id="dockWall" class="active" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5v-15zM7 7v2.2h10V7H7zm0 4.4v2.2h10v-2.2H7zM7 15.8V18h6.5v-2.2H7z"/></svg></span>Threads</button>
       <button id="dockFriends" type="button"><span class="d-ic"><svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8.2" r="3.7"/><path d="M2.3 20.2c.7-3.4 3.4-5.3 6.7-5.3s6 1.9 6.7 5.3H2.3z"/><circle cx="17.6" cy="9.2" r="2.9"/><path d="M16.3 14.4c2.4.3 4.3 2 5 4.7l.3 1.1h-3.6c-.3-2.1-1-4-2.2-5.5.2-.1.3-.2.5-.3z"/></svg></span>Friends</button>
@@ -649,7 +669,8 @@ var S = {
   earnedToday: 0, sentToday: 0, profileCache: {}, rtStarted: false,
   mediaUrls: {}, mediaPending: {}, pendingPhoto: null, sendingPhoto: false,
   reactions: {}, reads: [], pins: [], chatSettings: null, memberCache: {}, editTarget: null, mentionPicks: {},
-  wallPosts: [], wallPhoto: null, wallBefore: null, wallComments: {}
+  wallPosts: [], wallPhoto: null, wallBefore: null, wallComments: {},
+  profilePosts: [], upoUser: null, upoBefore: null, upoProfile: null, reqCount: 0, notifUnseen: 0, notifEvents: []
 };
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -851,7 +872,7 @@ function gate(){
   showScreen("app");
   paintWallMe();
   showTab("wall"); showChatsSub("list");
-  paintHeader(); renderBanner(); loadChats(); loadRequests(); loadFriends(null); loadEarn();
+  paintHeader(); renderBanner(); loadChats(); loadRequests(); loadNotifications(false); loadFriends(null); loadEarn();
   startRealtime();
   tcHeartbeat();
   if (!S._presTimer){
@@ -960,7 +981,7 @@ function renderChatList(){
     shown++;
     var av = d.avatarUrl ? '<img src="' + esc(d.avatarUrl) + '" alt="">' : esc(initials(d.avatarName));
     var avBlock = c.kind === "dm"
-      ? '<span class="av-wrap"><span class="avatar">' + av + '</span><span class="pdot' + (c.peer_online ? " on" : "") + '"></span></span>'
+      ? '<span class="av-wrap"><span class="avatar" data-profile="' + c.peer_id + '">' + av + '</span><span class="pdot' + (c.peer_online ? " on" : "") + '"></span></span>'
       : '<span class="avatar">' + av + '</span>';
     var mcount = c.kind === "group" ? '<span class="mcount">' + (c.member_count || 0) + ((c.member_count === 1) ? " member" : " members") + '</span>' : '';
     html += '<button class="chat-row' + (c.unread > 0 ? " unread" : "") + '" type="button" data-chat="' + c.chat_id + '">' +
@@ -1837,10 +1858,9 @@ function loadRequests(){
     var rows = res.data || [];
     return Promise.all(rows.map(function(r){ return senderProfile(r.requester_id); })).then(function(){
       S.requests = rows;
-      var bdg = $("reqBadge");
-      if (rows.length){ bdg.textContent = rows.length; bdg.classList.remove("hidden"); }
-      else bdg.classList.add("hidden");
-      var ne = $("notifEmpty"); if (ne) ne.classList.toggle("hidden", rows.length > 0);
+      S.reqCount = rows.length;
+      paintReqBadge();
+      var ne = $("notifEmpty"); if (ne) ne.classList.toggle("hidden", rows.length > 0 || (S.notifEvents || []).length > 0);
       renderRequests();
     });
   }).catch(function(){});
@@ -1849,7 +1869,7 @@ function userRowHTML(p, actionHTML){
   var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name));
   var pid = p.user_id || p.id;
   var dot = (pid && S.presence && S.presence[pid] !== undefined) ? '<span class="pdot' + (S.presence[pid] ? " on" : "") + '"></span>' : '';
-  return '<div class="user-row"><span class="av-wrap"><span class="avatar sm">' + av + '</span>' + dot + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + actionHTML + '</div>';
+  return '<div class="user-row"><span class="av-wrap"><span class="avatar sm"' + (pid ? ' data-profile="' + pid + '"' : '') + '>' + av + '</span>' + dot + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + actionHTML + '</div>';
 }
 function renderRequests(){
   var host = $("reqSection"); if (!host) return;
@@ -2122,7 +2142,7 @@ $("subPayBtn").addEventListener("click", function(){
 /* ---------------- dock + boot ---------------- */
 $("dockWall").addEventListener("click", function(){ showTab("wall"); });
 $("dockFriends").addEventListener("click", function(){ showTab("chats"); showChatsSub("friends"); });
-$("dockNotif").addEventListener("click", function(){ showTab("notifications"); loadRequests(); });
+$("dockNotif").addEventListener("click", function(){ showTab("notifications"); loadRequests(); loadNotifications(true); });
 $("dockMenu").addEventListener("click", function(){ showTab("profile"); });
 $("menuEarnRow").addEventListener("click", function(){ showTab("earn"); });
 $("earnBack").addEventListener("click", function(){ showTab("profile"); });
@@ -2652,7 +2672,7 @@ function wallEnsureMedia(path){
   sb.storage.from("tc-media").createSignedUrls([path], 3600).then(function(res){
     delete S.mediaPending[path];
     var row = (res.data || [])[0];
-    if (row && row.signedUrl){ S.mediaUrls[path] = row.signedUrl; renderFeed(); }
+    if (row && row.signedUrl){ S.mediaUrls[path] = row.signedUrl; renderFeed(); renderProfilePosts(); }
   }).catch(function(){ delete S.mediaPending[path]; });
 }
 function loadFeed(reset){
@@ -2673,9 +2693,10 @@ function loadFeed(reset){
 }
 function postAvatarHTML(p){
   var inner = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
-  return '<span class="avatar sm">' + inner + "</span>";
+  return '<span class="avatar sm" data-profile="' + p.user_id + '">' + inner + "</span>";
 }
-function postHTML(p){
+function postHTML(p, pfx){
+  pfx = pfx || "";
   var photo = "";
   if (p.media_path){
     wallEnsureMedia(p.media_path);
@@ -2683,7 +2704,7 @@ function postHTML(p){
     photo = '<img class="post-photo" data-pmedia="' + esc(p.media_path) + '" src="' + (url ? esc(url) : "data:image/gif;base64,R0lGODlhAQABAAAAACw=") + '" alt="Post photo">';
   }
   var comments = (S.wallComments[p.id] || []).map(commentHTML).join("");
-  return '<div class="post-card" data-post="' + p.id + '">' +
+  return '<div class="post-card" data-post="' + p.id + '" data-pfx="' + pfx + '">' +
     '<div class="post-head">' + postAvatarHTML(p) +
       '<div><div class="pn">' + esc(p.full_name || "") + '</div><div class="pu">@' + esc(p.username || "") + " \u00B7 " + esc(timeAgo(p.created_at)) + "</div></div>" +
       (p.mine ? '<span style="flex:1;"></span><button class="mini-btn ghost" type="button" data-del-post="' + p.id + '">Delete</button>' : "") +
@@ -2694,15 +2715,15 @@ function postHTML(p){
       '<button class="act-btn' + (p.liked ? " liked" : "") + '" type="button" data-like="' + p.id + '">\u2764\uFE0F <span class="like-n">' + (p.like_count || 0) + "</span></button>" +
       '<button class="act-btn" type="button" data-ctoggle="' + p.id + '">\uD83D\uDCAC <span class="c-n">' + (p.comment_count || 0) + "</span></button>" +
     "</div>" +
-    '<div class="comments-box" id="cb-' + p.id + '">' +
+    '<div class="comments-box" id="' + pfx + 'cb-' + p.id + '">' +
       '<div class="comments-list">' + comments + "</div>" +
-      '<div class="comment-form"><input id="ci-' + p.id + '" type="text" maxlength="500" placeholder="Add a comment\u2026"><button type="button" data-csend="' + p.id + '">Send</button></div>' +
+      '<div class="comment-form"><input id="' + pfx + 'ci-' + p.id + '" type="text" maxlength="500" placeholder="Add a comment\u2026"><button type="button" data-csend="' + p.id + '">Send</button></div>' +
     "</div>" +
   "</div>";
 }
 function commentHTML(c){
   var inner = c.avatar_url ? '<img src="' + esc(c.avatar_url) + '" alt="">' : esc(initials(c.full_name || "?"));
-  return '<div class="comment-row"><span class="avatar sm">' + inner + '</span><span class="comment-bubble"><span class="cn">' + esc(c.full_name || "") + '</span><br><span class="cb">' + esc(c.body) + "</span></span></div>";
+  return '<div class="comment-row"><span class="avatar sm" data-profile="' + c.user_id + '">' + inner + '</span><span class="comment-bubble"><span class="cn">' + esc(c.full_name || "") + '</span><br><span class="cb">' + esc(c.body) + "</span></span></div>";
 }
 function renderFeed(){
   var host = $("wallFeed"); if (!host) return;
@@ -2720,7 +2741,7 @@ function renderFeed(){
     host.innerHTML = '<div class="empty-note" style="margin:18px 16px;">No threads match your search.</div>';
     return;
   }
-  host.innerHTML = list.map(postHTML).join("");
+  host.innerHTML = list.map(function(p){ return postHTML(p, ""); }).join("");
 }
 $("wallMore").addEventListener("click", function(){ loadFeed(false); });
 
@@ -2797,9 +2818,11 @@ $("wallPostBtn").addEventListener("click", function(){
 });
 
 /* ---- feed interactions ---- */
-function findPost(id){ return S.wallPosts.find(function(p){ return p.id === id; }) || null; }
-$("wallFeed").addEventListener("click", function(e){
+function findPost(id){ return (S.wallPosts || []).concat(S.profilePosts || []).find(function(p){ return p.id === id; }) || null; }
+function feedClick(e){
   var t = e.target;
+  var prof = t.closest ? t.closest("[data-profile]") : null;
+  if (prof){ openUserProfile(prof.getAttribute("data-profile")); return; }
   var likeBtn = t.closest ? t.closest("[data-like]") : null;
   if (likeBtn){
     var pid = likeBtn.getAttribute("data-like");
@@ -2808,23 +2831,36 @@ $("wallFeed").addEventListener("click", function(e){
       if (!d || !d.ok) return;
       var p = findPost(pid);
       if (p){ p.liked = d.liked; p.like_count = d.like_count; }
-      likeBtn.classList.toggle("liked", !!d.liked);
-      var n = likeBtn.querySelector(".like-n");
-      if (n) n.textContent = d.like_count;
+      document.querySelectorAll('[data-post="' + pid + '"]').forEach(function(card){
+        var b = card.querySelector("[data-like]");
+        if (b){
+          b.classList.toggle("liked", !!d.liked);
+          var n = b.querySelector(".like-n");
+          if (n) n.textContent = d.like_count;
+        }
+      });
     }).catch(function(){});
     return;
   }
   var ct = t.closest ? t.closest("[data-ctoggle]") : null;
   if (ct){
     var cid = ct.getAttribute("data-ctoggle");
-    var box = $("cb-" + cid);
+    var card0 = ct.closest("[data-post]");
+    var pfx0 = card0 ? (card0.getAttribute("data-pfx") || "") : "";
+    var box = $(pfx0 + "cb-" + cid);
+    if (!box) return;
     var opening = !box.classList.contains("on");
     box.classList.toggle("on");
     if (opening) loadComments(cid);
     return;
   }
   var cs = t.closest ? t.closest("[data-csend]") : null;
-  if (cs){ sendComment(cs.getAttribute("data-csend")); return; }
+  if (cs){
+    var card1 = cs.closest("[data-post]");
+    var pfx1 = card1 ? (card1.getAttribute("data-pfx") || "") : "";
+    sendComment(cs.getAttribute("data-csend"), pfx1);
+    return;
+  }
   var del = t.closest ? t.closest("[data-del-post]") : null;
   if (del){
     if (del.getAttribute("data-arm") !== "1"){
@@ -2838,7 +2874,9 @@ $("wallFeed").addEventListener("click", function(e){
       if (d && d.ok){
         if (d.media_path){ try { sb.storage.from("tc-media").remove([d.media_path]); } catch (err) {} }
         S.wallPosts = S.wallPosts.filter(function(p){ return p.id !== did; });
+        S.profilePosts = (S.profilePosts || []).filter(function(p){ return p.id !== did; });
         renderFeed();
+        renderProfilePosts();
         toast("Deleted", "Your thread was removed.");
       } else toast("Couldn't delete", "Try again in a moment.");
     }).catch(function(){ toast("Couldn't delete", "Check your connection."); });
@@ -2851,24 +2889,30 @@ $("wallFeed").addEventListener("click", function(e){
     if (url){ $("lightboxImg").src = url; $("lightbox").classList.add("on"); }
     else wallEnsureMedia(path);
   }
-});
-$("wallFeed").addEventListener("keydown", function(e){
+}
+$("wallFeed").addEventListener("click", feedClick);
+$("upoPosts").addEventListener("click", feedClick);
+function feedKeydown(e){
   if (e.key !== "Enter") return;
   var inp = e.target;
-  if (inp && inp.id && inp.id.indexOf("ci-") === 0){
-    e.preventDefault();
-    sendComment(inp.id.slice(3));
-  }
-});
+  if (!inp || !inp.id) return;
+  if (inp.id.indexOf("uci-") === 0){ e.preventDefault(); sendComment(inp.id.slice(4), "u"); }
+  else if (inp.id.indexOf("ci-") === 0){ e.preventDefault(); sendComment(inp.id.slice(3), ""); }
+}
+$("wallFeed").addEventListener("keydown", feedKeydown);
+$("upoPosts").addEventListener("keydown", feedKeydown);
 function loadComments(postId){
   sb.rpc("tc_post_comments", { p_post: postId }).then(function(res){
     S.wallComments[postId] = res.data || [];
-    var box = $("cb-" + postId);
-    if (box) box.querySelector(".comments-list").innerHTML = S.wallComments[postId].map(commentHTML).join("");
+    var html = S.wallComments[postId].map(commentHTML).join("");
+    document.querySelectorAll('[id$="cb-' + postId + '"]').forEach(function(box){
+      var list = box.querySelector(".comments-list");
+      if (list) list.innerHTML = html;
+    });
   }).catch(function(){});
 }
-function sendComment(postId){
-  var inp = $("ci-" + postId);
+function sendComment(postId, pfx){
+  var inp = $((pfx || "") + "ci-" + postId);
   if (!inp) return;
   var body = inp.value.trim();
   if (!body) return;
@@ -2882,11 +2926,10 @@ function sendComment(postId){
     inp.value = "";
     var p = findPost(postId);
     if (p) p.comment_count = (p.comment_count || 0) + 1;
-    var card = $("wallFeed").querySelector('[data-post="' + postId + '"]');
-    if (card){
+    document.querySelectorAll('[data-post="' + postId + '"]').forEach(function(card){
       var n = card.querySelector(".c-n");
       if (n && p) n.textContent = p.comment_count;
-    }
+    });
     loadComments(postId);
   }).catch(function(){ toast("Couldn't comment", "Check your connection."); });
 }
@@ -2915,6 +2958,148 @@ $("wallSearchInput").addEventListener("input", function(){
   S.wallQuery = this.value.trim();
   renderFeed();
 });
+
+
+/* ================= user profiles + notifications ================= */
+function paintReqBadge(){
+  var total = (S.reqCount || 0) + (S.notifUnseen || 0);
+  var bdg = $("reqBadge"); if (!bdg) return;
+  if (total > 0){ bdg.textContent = total; bdg.classList.remove("hidden"); }
+  else bdg.classList.add("hidden");
+}
+function openUserProfile(uid){
+  if (!uid) return;
+  S.upoUser = uid; S.profilePosts = []; S.upoBefore = null;
+  $("userProfileOverlay").classList.remove("hidden");
+  $("upoCard").innerHTML = '<div class="empty-note" style="margin:14px 16px;">Loading profile\u2026</div>';
+  $("upoPosts").innerHTML = "";
+  $("upoMore").classList.add("hidden");
+  sb.rpc("tc_user_profile", { p_user: uid }).then(function(res){
+    var d = res.data;
+    if (!d || !d.ok){ $("upoCard").innerHTML = '<div class="empty-note" style="margin:14px 16px;">Couldn\u2019t load this profile.</div>'; return; }
+    S.upoProfile = d;
+    var av = d.avatar_url ? '<img src="' + esc(d.avatar_url) + '" alt="">' : esc(initials(d.full_name || "?"));
+    var joined = "";
+    try { joined = new Date(d.joined_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }); } catch (e) {}
+    $("upoCard").innerHTML = '<div class="upo-card">' +
+      '<span class="avatar lg">' + av + "</span>" +
+      '<div style="font-size:19px;font-weight:800;margin-top:10px;">' + esc(d.full_name || "") + "</div>" +
+      '<div class="uname">@' + esc(d.username || "") + "</div>" +
+      '<div style="margin-top:11px;"><span class="tn-pill">\uD83E\uDE99 ' + (d.trybcoin || 0).toLocaleString() + " TN</span></div>" +
+      '<div style="font-size:13px;color:var(--mut);margin-top:11px;">Joined ' + esc(joined) + " \u00B7 " + (d.post_count || 0) + ((d.post_count === 1) ? " thread" : " threads") + "</div>" +
+      "</div>";
+  }).catch(function(){});
+  loadUserPosts(true);
+}
+function closeUserProfile(){ $("userProfileOverlay").classList.add("hidden"); S.upoUser = null; }
+$("upoBack").addEventListener("click", closeUserProfile);
+$("upoMore").addEventListener("click", function(){ loadUserPosts(false); });
+function loadUserPosts(reset){
+  var uid = S.upoUser; if (!uid) return;
+  sb.rpc("tc_user_posts", { p_user: uid, p_limit: 20, p_before: reset ? null : S.upoBefore }).then(function(res){
+    var rows = res.data || [];
+    if (reset) S.profilePosts = rows;
+    else {
+      var seen = {};
+      S.profilePosts.forEach(function(p){ seen[p.id] = true; });
+      rows.forEach(function(p){ if (!seen[p.id]) S.profilePosts.push(p); });
+    }
+    if (S.profilePosts.length) S.upoBefore = S.profilePosts[S.profilePosts.length - 1].created_at;
+    $("upoMore").classList.toggle("hidden", rows.length < 20);
+    renderProfilePosts();
+  }).catch(function(){});
+}
+function renderProfilePosts(){
+  var host = $("upoPosts"); if (!host) return;
+  if (!S.upoUser) return;
+  if (!S.profilePosts.length){ host.innerHTML = '<div class="empty-note" style="margin:6px 16px;">No threads yet.</div>'; return; }
+  host.innerHTML = S.profilePosts.map(function(p){ return postHTML(p, "u"); }).join("");
+}
+$("threadAvatar").addEventListener("click", function(){
+  if (S.currentChat && S.currentChat.kind === "dm" && S.currentChat.peer_id) openUserProfile(S.currentChat.peer_id);
+});
+/* avatar taps in lists (capture phase beats the row openers) */
+["chatsListWrap", "friendsWrap", "groupInfoWrap", "reqSection"].forEach(function(id){
+  var el = $(id); if (!el) return;
+  el.addEventListener("click", function(e){
+    var av = e.target.closest ? e.target.closest("[data-profile]") : null;
+    if (av){ e.stopPropagation(); openUserProfile(av.getAttribute("data-profile")); }
+  }, true);
+});
+
+/* ---- notifications: likes + comments on my threads ---- */
+function renderNotifications(){
+  var host = $("notifSection"); if (!host) return;
+  var evs = S.notifEvents || [];
+  var ne = $("notifEmpty");
+  if (ne) ne.classList.toggle("hidden", (S.requests || []).length > 0 || evs.length > 0);
+  if (!evs.length){ host.innerHTML = ""; return; }
+  var html = '<div class="sect-title">Activity</div>';
+  evs.forEach(function(ev){
+    var av = ev.actor_avatar ? '<img src="' + esc(ev.actor_avatar) + '" alt="">' : esc(initials(ev.actor_name || "?"));
+    var text = ev.kind === "like"
+      ? "<b>" + esc(ev.actor_name || "") + "</b> liked your thread"
+      : "<b>" + esc(ev.actor_name || "") + "</b> commented: \u201C" + esc(ev.comment_body || "") + "\u201D";
+    var snip = ev.snippet ? '<div class="uname" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\u201C' + esc(ev.snippet) + "\u201D</div>" : "";
+    html += '<button class="chat-row" type="button" data-npost="' + ev.post_id + '" data-nkind="' + ev.kind + '" style="width:100%;text-align:left;">' +
+      '<span class="avatar sm" data-profile="' + ev.actor_id + '">' + av + "</span>" +
+      '<span class="chat-main"><span style="font-size:14px;line-height:1.35;">' + text + "</span>" + snip + "</span>" +
+      '<span class="chat-time">' + esc(timeAgo(ev.created_at)) + "</span></button>";
+  });
+  host.innerHTML = html;
+}
+function loadNotifications(markSeen){
+  if (!sb || !S.user) return;
+  sb.rpc("tc_notifications").then(function(res){
+    var d = res.data;
+    if (!d || !d.ok) return;
+    S.notifEvents = d.events || [];
+    S.notifUnseen = d.unseen || 0;
+    renderNotifications();
+    paintReqBadge();
+    if (markSeen && S.notifUnseen > 0){
+      setTimeout(function(){
+        sb.rpc("tc_mark_notifs_seen").then(function(){
+          S.notifUnseen = 0;
+          paintReqBadge();
+        }).catch(function(){});
+      }, 1500);
+    }
+  }).catch(function(){});
+}
+$("notifSection").addEventListener("click", function(e){
+  var av = e.target.closest ? e.target.closest("[data-profile]") : null;
+  if (av){ openUserProfile(av.getAttribute("data-profile")); return; }
+  var row = e.target.closest ? e.target.closest("[data-npost]") : null;
+  if (row) jumpToPost(row.getAttribute("data-npost"), row.getAttribute("data-nkind") === "comment");
+});
+function jumpToPost(pid, openComments){
+  closeUserProfile();
+  showTab("wall");
+  setTimeout(function(){ ensurePostVisible(pid, openComments, 0); }, 700);
+}
+function ensurePostVisible(pid, openComments, tries){
+  var card = $("wallFeed").querySelector('[data-post="' + pid + '"]');
+  if (!card){
+    if (tries > 0) return;
+    sb.rpc("tc_post", { p_id: pid }).then(function(res){
+      if (res.data){
+        if (!findPost(pid)) S.wallPosts.unshift(res.data);
+        renderFeed();
+        setTimeout(function(){ ensurePostVisible(pid, openComments, 1); }, 80);
+      }
+    }).catch(function(){});
+    return;
+  }
+  card.scrollIntoView({ block: "center", behavior: "smooth" });
+  card.style.transition = "box-shadow .3s";
+  card.style.boxShadow = "0 0 0 2px var(--gold)";
+  setTimeout(function(){ card.style.boxShadow = ""; }, 1800);
+  if (openComments){
+    var box = $("cb-" + pid);
+    if (box && !box.classList.contains("on")){ box.classList.add("on"); loadComments(pid); }
+  }
+}
 
 </script>
 </body>
