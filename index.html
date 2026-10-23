@@ -448,6 +448,30 @@
 .ev-time{ font-size:12px; color:var(--mut); }
 .ev-amt{ font-family:"Manrope",sans-serif; font-weight:800; color:#12805C; font-size:14.5px; white-space:nowrap; }
 </style>
+
+<style>
+/* Buttons: always navy + white (2026-10-24) */
+.btn.gold, .btn.ghost, .w2-sub-btn, .w2-sub-btn.on{ background:#0B1132 !important; color:#fff !important; border-color:#0B1132 !important; }
+.cm-board-btn{ background:#0B1132 !important; color:#fff !important; }
+</style>
+
+<style>
+/* Settings pill card + iOS privacy switch (2026-10-24) */
+.prof-pill{ border-radius:30px !important; }
+.pp-row{ display:flex; align-items:center; gap:13px; }
+.pp-main{ flex:1; min-width:0; }
+.pp-edit{ background:#0B1132; color:#fff; border:0; border-radius:999px; padding:9px 20px; font-weight:800; font-size:14.5px; font-family:"Manrope",sans-serif; cursor:pointer; flex:none; }
+.pp-sub{ margin-top:11px; color:var(--mut); font-size:13px; }
+.prof-flag{ top:-3px !important; bottom:auto !important; }
+.toggle-line{ display:flex; align-items:center; gap:12px; margin-top:12px; }
+.tl-name{ font-weight:700; font-size:15px; color:var(--ink); }
+.tl-sub{ font-size:12.5px; color:var(--mut); margin-top:1px; }
+.ios-switch{ width:51px; height:31px; border-radius:999px; background:#E3E5EE; position:relative; border:0; flex:none; cursor:pointer; transition:background .2s; padding:0; }
+.ios-switch .knob{ position:absolute; top:2px; left:2px; width:27px; height:27px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(11,17,50,.3); transition:left .2s; }
+.ios-switch.on{ background:#0B1132; }
+.ios-switch.on .knob{ left:22px; }
+.info-dot{ width:24px; height:24px; border-radius:50%; border:1.6px solid #B9BDD6; color:#7A7F95; background:#fff; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none; font-family:Georgia,serif; font-style:italic; padding:0; }
+</style>
 </head>
 <body>
 <div class="phone" id="phoneRoot">
@@ -534,13 +558,6 @@
         <div class="app-head">
           <span class="avatar" id="myAvatar">?</span>
           <div class="wordmark"><span class="wm-a">TRYB</span><span class="wm-b">CHAT</span></div>
-          <span class="tn-pill"><img src="https://app.trybnetwork.com/trybcoin.png" alt=""> <span id="tnPillBal">0</span> TN</span>
-          <button class="icon-btn" id="newGroupBtn" type="button" aria-label="New group">
-            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </button>
-          <button class="icon-btn" id="addFriendsBtn" type="button" aria-label="Add friends">
-            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-          </button>
         </div>
         <div class="wa-bar"><button class="wa-dots" id="chatsMenuBtn" type="button" aria-label="Settings">•••</button><button class="wa-plus" id="chatsNewBtn" type="button" aria-label="New chat">+</button></div>
         <div class="wa-title">Chats</div>
@@ -601,6 +618,7 @@
         <div class="pad">
           <input class="search-input" id="dirSearch" type="text" placeholder="Search name or @username…" autocomplete="off">
           <div id="dirPrivateNote"></div>
+          <button class="btn navy" id="friendsNewGroupBtn" type="button" style="margin:4px 0 14px;">＋ New group</button>
           <div id="friendSection"></div>
           <div class="sect-title">All TrybChat users</div>
           <div id="dirList"></div>
@@ -757,33 +775,34 @@
     <div id="tabProfile" class="hidden" style="overflow-y:auto;flex:1;">
       <div class="pad">
         <div class="view-title">Settings</div>
-        <div class="card">
-          <div style="display:flex;align-items:center;gap:14px;">
+        <div class="card prof-pill">
+          <div class="pp-row">
             <span class="prof-av-wrap"><span class="avatar lg" id="profAvatar">?</span><span class="prof-flag" id="profFlag">🌍</span></span>
-            <div style="min-width:0;">
+            <div class="pp-main">
               <div style="font-family:Manrope,sans-serif;font-weight:800;font-size:19px;" id="profName">—</div>
               <div style="color:var(--mut);font-size:13.5px;" id="profUser">@—</div>
-              <div style="color:var(--mut);font-size:12.5px;margin-top:2px;" id="profJoined">Joined —</div>
             </div>
+            <button class="pp-edit" id="menuEditProfile" type="button">Edit</button>
           </div>
-          <p id="profMemberLine" style="margin-top:12px;">—</p>
-          <p id="profRateLine" style="margin-top:3px;font-weight:700;color:var(--ink);">—</p>
-          <button class="btn navy" id="menuEditProfile" type="button" style="margin-top:12px;">Edit profile</button>
-          <button class="btn gold" id="profMemberBtn" type="button" style="margin-top:9px;">Get membership — $12 / 6 months</button>
+          <div class="pp-sub" id="profMemberLine">—</div>
         </div>
         <button class="menu-row" id="menuCallit" type="button">
-          <span class="mr-ic">🎯</span>
           <span class="mr-main"><span class="mr-name">Call It leaderboard</span><div class="mr-sub">Top callers, wins and streaks</div></span>
           <span class="mr-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
         </button>
         <div class="card">
-          <h4>Privacy</h4>
-          <p>Listed users appear in the All TrybChat users directory and in search. Private users appear in neither.</p>
-          <div class="toggle-row">
-            <button id="listedBtn" type="button">Listed</button>
-            <button id="privateBtn" type="button">Private</button>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+            <h4 style="margin:0;">Privacy</h4>
+            <button class="info-dot" id="privInfoBtn" type="button" aria-label="About privacy">i</button>
           </div>
-          <p id="dirStateNote" style="margin-top:10px;"></p>
+          <p id="privInfoText" class="hidden" style="margin-top:8px;">Listed users appear in the All TrybChat users directory and in search. Private users appear in neither.</p>
+          <div class="toggle-line">
+            <div style="flex:1;min-width:0;">
+              <div class="tl-name">Directory listing</div>
+              <div class="tl-sub" id="dirStateNote"></div>
+            </div>
+            <button class="ios-switch" id="privSwitch" type="button" role="switch" aria-checked="true" aria-label="Directory listing"><span class="knob"></span></button>
+          </div>
         </div>
         <div class="card">
           <h4>Notifications</h4>
@@ -1041,6 +1060,7 @@ function showChatsSub(which){
   $("friendsWrap").classList.toggle("hidden", which !== "friends");
   $("groupNewWrap").classList.toggle("hidden", which !== "groupNew");
   $("groupInfoWrap").classList.toggle("hidden", which !== "groupInfo");
+  var _dk = $("dock"); if (_dk) _dk.style.display = (which === "thread" || which === "groupInfo" || which === "groupNew") ? "none" : "";
   if (which !== "thread" && which !== "groupInfo") S.currentChat = null;
   if (which !== "thread") leaveTyping();
   paintDock();
@@ -1110,7 +1130,7 @@ function refreshWallet(){
 }
 function paintWallet(){
   var coins = S.wallet ? (S.wallet.trybcoin || 0) : 0;
-  $("tnPillBal").textContent = coins;
+  var _tp = $("tnPillBal"); if (_tp) _tp.textContent = coins;
   $("profCoins").textContent = coins + " TN";
   $("pwCoins").textContent = coins + " TN";
   $("pwMain").textContent = money(S.wallet ? S.wallet.main_balance : 0);
@@ -1947,7 +1967,7 @@ function renderPickList(hostId, friends, picks){
   if (!friends.length){ host.innerHTML = '<p style="font-size:13.5px;color:var(--mut);padding:8px 0;">No friends yet — add friends first, then start a group with them.</p>'; return; }
   host.innerHTML = friends.map(function(p){ return pickRowHTML(p, !!picks[p.user_id]); }).join("");
 }
-$("newGroupBtn").addEventListener("click", function(){
+$("friendsNewGroupBtn").addEventListener("click", function(){
   S.grpPick = {};
   $("grpName").value = "";
   $("grpErr").textContent = "";
@@ -2138,10 +2158,6 @@ $("groupInfoBack").addEventListener("click", function(){
 });
 
 /* ---------------- friends ---------------- */
-$("addFriendsBtn").addEventListener("click", function(){
-  showChatsSub("friends");
-  loadRequests(); loadFriends($("dirSearch").value.trim());
-});
 $("friendsBack").addEventListener("click", function(){ showChatsSub("list"); });
 var dirTimer = null;
 $("dirSearch").addEventListener("input", function(){
@@ -2337,15 +2353,15 @@ function renderProfile(){
   paintAvatar($("profAvatar"), S.profile.full_name, S.profile.avatar_url);
   $("profName").textContent = S.profile.full_name || "";
   $("profUser").textContent = "@" + (S.profile.username || "");
-  var L = memberStateLines();
-  $("profMemberLine").textContent = L.prof;
-  $("profRateLine").textContent = L.rate;
-  $("profMemberBtn").textContent = S.access && S.access.member_active ? "Renew membership — $12 / 6 months" : "Get membership — $12 / 6 months";
   try {
     var cc = ((S.profile && S.profile.country) || "NG").toUpperCase();
     $("profFlag").textContent = cc.length === 2 ? String.fromCodePoint(127397 + cc.charCodeAt(0), 127397 + cc.charCodeAt(1)) : "🌍";
-    $("profJoined").textContent = S.profile && S.profile.created_at ? "Joined " + new Date(S.profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Joined —";
   } catch (e) {}
+  var _sub = "";
+  try { if (S.profile.created_at) _sub = "Joined " + new Date(S.profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }); } catch (e) {}
+  if (S.access && S.access.member_active) _sub += (_sub ? " · " : "") + "Premium member · " + daysLeft(S.access.member_ends_at) + " days left";
+  else if (S.access && S.access.trial_active) _sub += (_sub ? " · " : "") + "Free month · " + daysLeft(S.access.trial_ends_at) + " days left";
+  $("profMemberLine").textContent = _sub || "—";
   paintWallet();
   renderDirToggle();
   paintPushRow();
@@ -2415,20 +2431,20 @@ function togglePush(){
 }
 $("pushToggleBtn").addEventListener("click", togglePush);
 function renderDirToggle(){
-  $("listedBtn").classList.toggle("on", S.listed);
-  $("privateBtn").classList.toggle("on", !S.listed);
-  $("dirStateNote").textContent = S.listed
-    ? "You're listed — other users can find you in the directory and search."
-    : "You're private — other users can't find you in the directory or search.";
+  var sw = $("privSwitch");
+  if (sw){ sw.classList.toggle("on", !!S.listed); sw.setAttribute("aria-checked", S.listed ? "true" : "false"); }
+  var dn = $("dirStateNote"); if (!dn) return;
+  dn.textContent = S.listed
+    ? "You're listed — findable in the directory and search."
+    : "You're private — hidden from the directory and search.";
 }
 function setListed(v){
   sb.rpc("tc_set_directory_listed", { p_listed: v }).then(function(res){
     if (res.data && res.data.ok){ S.listed = v; renderDirToggle(); renderDirNote(); }
   }).catch(function(){ toast("Couldn't update", "Check your connection."); });
 }
-$("listedBtn").addEventListener("click", function(){ setListed(true); });
-$("privateBtn").addEventListener("click", function(){ setListed(false); });
-$("profMemberBtn").addEventListener("click", openSub);
+$("privSwitch").addEventListener("click", function(){ setListed(!S.listed); });
+$("privInfoBtn").addEventListener("click", function(){ $("privInfoText").classList.toggle("hidden"); });
 
 /* ---------------- subscribe ---------------- */
 function openSub(){
