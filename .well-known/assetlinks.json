@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.trybchat.app",
+      "sha256_cert_fingerprints": ["B9:0B:51:52:40:D0:73:B5:EA:67:42:BD:45:C7:D2:AB:5A:60:F5:21:A3:F3:AA:E3:51:D2:3E:05:3A:68:CA:E7"]
+    }
+  }
+]
