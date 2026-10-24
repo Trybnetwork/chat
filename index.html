@@ -527,10 +527,10 @@
     <div class="card" style="margin:0 0 14px;">
       <div class="rowline" style="display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px;"><span>Your TrybCoin</span><b id="pwCoins">0 TN</b></div>
       <div class="rowline" style="display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px;"><span>Main Balance</span><b id="pwMain">$0.00</b></div>
-      <div class="rowline" style="display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px;"><span>Membership — 6 months</span><b>$12.00</b></div>
+      <div class="rowline" style="display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px;"><span>Membership — 2 months</span><b>$4.00</b></div>
     </div>
     <div class="err" id="pwErr"></div>
-    <button class="btn gold" id="pwPayBtn" type="button">Pay $12 from Main Balance</button>
+    <button class="btn gold" id="pwPayBtn" type="button">Pay $4 from Main Balance</button>
     <button class="btn ghost" id="pwOutBtn" type="button" style="margin-top:10px;">Sign out</button>
     <p class="foot">Need funds? <a href="https://app.trybnetwork.com/" target="_blank" rel="noopener">Deposit in the TrybNetwork app</a></p>
   </div>
@@ -753,9 +753,9 @@
           <p id="earnRateLine" style="margin-top:4px;font-weight:700;color:var(--ink);">—</p>
           <ul class="how-list" style="margin-top:8px;">
             <li><span>Per message you send on Premium</span><b>+5 TN</b></li>
-            <li><span>Membership price</span><b>$12 / 6 months</b></li>
+            <li><span>Membership price</span><b>$4 / 2 months</b></li>
           </ul>
-          <button class="btn gold" id="earnPremBtn" type="button" style="margin-top:12px;">Get Premium — $12 / 6 months</button>
+          <button class="btn gold" id="earnPremBtn" type="button" style="margin-top:12px;">Get Premium — $4 / 2 months</button>
         </div>
         <div class="card">
           <h4>Activities that paid you</h4>
@@ -982,11 +982,11 @@
 <div class="overlay" id="subOverlay">
   <div class="sheet" role="dialog" aria-modal="true">
     <h3 id="subTitle">TrybChat Membership</h3>
-    <p class="sheet-sub" id="subDesc">Earn 5 TN per message for 6 months — 5× the free-month rate. Chatting itself is always free.</p>
-    <div class="rowline"><span>Membership — 6 months</span><b>$12.00</b></div>
+    <p class="sheet-sub" id="subDesc">Earn 5 TN per message for 2 months — 5× the free-month rate. Chatting itself is always free.</p>
+    <div class="rowline"><span>Membership — 2 months</span><b>$4.00</b></div>
     <div class="rowline"><span>Your Main Balance</span><b id="subMainBal">$0.00</b></div>
     <div class="err" id="subErr" style="margin-top:10px;"></div>
-    <button class="btn gold" id="subPayBtn" type="button">Pay $12 — Join for 6 months</button>
+    <button class="btn gold" id="subPayBtn" type="button">Pay $4 — Join for 2 months</button>
     <button class="btn ghost" id="subCloseBtn" type="button" style="margin-top:10px;">Not now</button>
   </div>
 </div>
@@ -1320,8 +1320,8 @@ function renderPaywall(){
     ? "Your free month has ended" : "Your membership has ended";
   $("pwSub").textContent = "Your TrybCoin is yours — it stays in your TrybNetwork wallet. " +
     (trialEnded && !S.access.member_ends_at
-      ? "Get the premium membership to keep using TrybChat — $12 every 6 months."
-      : "Renew your membership to keep using TrybChat — $12 every 6 months.");
+      ? "Get the premium membership to keep using TrybChat — $4 every 2 months."
+      : "Renew your membership to keep using TrybChat — $4 every 2 months.");
   $("pwErr").textContent = "";
   paintWallet();
 }
@@ -1339,7 +1339,7 @@ function renderBanner(){
     if (dl <= 7){
       host.innerHTML = '<div class="banner renew"><h4>Membership renews soon</h4>' +
         '<p><b>' + dl + ' day' + (dl === 1 ? "" : "s") + ' left</b> — your plan ends ' + fmtDate(S.access.member_ends_at) + '. Renew to keep your 5 TN per message earning rate.</p>' +
-        '<button class="btn navy" id="bannerRenewBtn" type="button">Renew — $12 / 6 months</button></div>';
+        '<button class="btn navy" id="bannerRenewBtn" type="button">Renew — $4 / 2 months</button></div>';
       $("bannerRenewBtn").addEventListener("click", openSub);
     } else host.innerHTML = "";
     return;
@@ -1350,13 +1350,13 @@ function renderBanner(){
     host.innerHTML = '<div class="banner trial"><h4>Free month — Day ' + dayNum + ' of 30</h4>' +
       '<p>First month free — chatting is always free on TrybChat. After your free month, membership keeps you earning, at an even better rate.</p>' +
       '<p class="rate-line">You\'re earning 1 TN per message</p>' +
-      '<button class="btn navy" id="bannerSubBtn" type="button">Get membership — $12 / 6 months</button></div>';
+      '<button class="btn navy" id="bannerSubBtn" type="button">Get membership — $4 / 2 months</button></div>';
     $("bannerSubBtn").addEventListener("click", openSub);
     return;
   }
   host.innerHTML = '<div class="banner renew"><h4>Earning is paused</h4>' +
     '<p>Your free month has ended — <b>chatting stays free forever</b>. Membership turns earning back on at <b>5 TN per message</b>.</p>' +
-    '<button class="btn navy" id="bannerSubBtn2" type="button">Get membership — $12 / 6 months</button></div>';
+    '<button class="btn navy" id="bannerSubBtn2" type="button">Get membership — $4 / 2 months</button></div>';
   $("bannerSubBtn2").addEventListener("click", openSub);
 }
 </script>
@@ -2434,7 +2434,7 @@ function loadEarn(){
     $("earnCapBar").style.width = Math.min(100, (S.earnedToday / DAILY_CAP) * 100) + "%";
     $("earnCapText").textContent = S.earnedToday + " / " + DAILY_CAP + " TN daily cap";
     var pb = $("earnPremBtn");
-    if (pb) pb.textContent = S.access && S.access.member_active ? "Renew Premium — $12 / 6 months" : "Get Premium — $12 / 6 months";
+    if (pb) pb.textContent = S.access && S.access.member_active ? "Renew Premium — $4 / 2 months" : "Get Premium — $4 / 2 months";
     renderEarnEvents(results[3].data || []);
     renderMemberLines();
   }).catch(function(){ renderMemberLines(); });
@@ -2455,9 +2455,9 @@ function memberStateLines(){
   if (S.access.member_active){
     var dl = daysLeft(S.access.member_ends_at);
     return {
-      prof: "Member · 6-month plan · ends " + fmtDate(S.access.member_ends_at) + " · " + dl + " days left",
+      prof: "Member · 2-month plan · ends " + fmtDate(S.access.member_ends_at) + " · " + dl + " days left",
       rate: "You're earning 5 TN per message",
-      earn: "Member · 6-month plan"
+      earn: "Member · 2-month plan"
     };
   }
   if (S.access.trial_active){
@@ -2580,7 +2580,7 @@ $("privInfoBtn").addEventListener("click", function(){ $("privInfoText").classLi
 function openSub(){
   $("subMainBal").textContent = money(S.wallet ? S.wallet.main_balance : 0);
   $("subErr").textContent = "";
-  var btn = $("subPayBtn"); btn.disabled = false; btn.textContent = "Pay $12 — Join for 6 months";
+  var btn = $("subPayBtn"); btn.disabled = false; btn.textContent = "Pay $4 — Join for 2 months";
   $("subOverlay").classList.add("show");
 }
 function closeSub(){ $("subOverlay").classList.remove("show"); }
@@ -2592,19 +2592,19 @@ $("subPayBtn").addEventListener("click", function(){
   sb.rpc("tc_buy_membership").then(function(res){
     var d = res.data;
     if (!d || !d.ok){
-      btn.disabled = false; btn.textContent = "Pay $12 — Join for 6 months";
+      btn.disabled = false; btn.textContent = "Pay $4 — Join for 2 months";
       if (d && d.error === "insufficient_main_balance"){
-        $("subErr").textContent = "Your Main Balance is below $12 — deposit in the TrybNetwork app, then try again.";
+        $("subErr").textContent = "Your Main Balance is below $4 — deposit in the TrybNetwork app, then try again.";
       } else {
         $("subErr").textContent = "Payment didn't go through — check your connection and try again.";
       }
       return;
     }
     closeSub();
-    toast("Membership active", "Your 6-month membership runs until " + fmtDate(d.ends_at) + ".");
+    toast("Membership active", "Your 2-month membership runs until " + fmtDate(d.ends_at) + ".");
     refreshWallet().then(function(){ refreshAccess().then(gate); });
   }).catch(function(){
-    btn.disabled = false; btn.textContent = "Pay $12 — Join for 6 months";
+    btn.disabled = false; btn.textContent = "Pay $4 — Join for 2 months";
     $("subErr").textContent = "Payment didn't go through — check your connection and try again.";
   });
 });
