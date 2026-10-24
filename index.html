@@ -481,6 +481,18 @@
 .ios-switch.na{ opacity:.35; pointer-events:none; }
 .app-head .wa-plus{ width:42px; height:42px; font-size:25px; }
 </style>
+
+<style>
+/* Twitter-style compose (2026-10-24) */
+#composeFab{ position:fixed; right:18px; bottom:calc(104px + env(safe-area-inset-bottom)); width:56px; height:56px; border-radius:50%; background:#0B1132; color:#fff; font-size:31px; line-height:1; border:0; box-shadow:0 10px 24px rgba(11,17,50,.35); z-index:110; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.cmp-ov{ position:fixed; inset:0; background:#fff; z-index:320; display:flex; flex-direction:column; padding-top:env(safe-area-inset-top); }
+.cmp-top{ display:flex; align-items:center; padding:10px 14px; border-bottom:1px solid #EFF0F6; }
+.cmp-x{ width:38px; height:38px; border-radius:50%; background:#F1F2F8; border:0; font-size:15px; color:#0B1132; cursor:pointer; }
+.cmp-body{ display:flex; gap:11px; padding:14px 16px; flex:1; }
+.cmp-body textarea{ flex:1; border:0; outline:none; resize:none; font-size:17px; font-family:inherit; color:var(--ink); }
+.cmp-tools{ display:flex; align-items:center; gap:10px; padding:10px 14px calc(10px + env(safe-area-inset-bottom)); border-top:1px solid #EFF0F6; }
+.cmp-tool{ width:38px; height:38px; border-radius:50%; background:#F1F2F8; border:0; font-size:18px; font-weight:800; color:#0B1132; cursor:pointer; }
+</style>
 </head>
 <body>
 <div class="phone" id="phoneRoot">
@@ -540,25 +552,8 @@
       <div class="wall-sub" style="padding:10px 16px 0;">Share something worth reading — good posts earn TrybCoin.</div>
       <div class="stories-row" id="storiesRow"></div>
       <input id="storyFile" type="file" accept="image/*" class="hidden">
-      <div class="composer-card">
-        <div class="composer-top">
-          <span class="avatar" id="wallMeAvatar"></span>
-          <textarea id="wallInput" rows="2" maxlength="2000" placeholder="Post a thread… tips, lessons, wins, questions"></textarea>
-        </div>
-        <div class="wall-photo-strip" id="wallPhotoStrip">
-          <img id="wallPhotoThumb" alt="">
-          <span style="font-size:13px;color:var(--mut);">Photo attached</span>
-          <button class="rm" id="wallPhotoRemove" type="button">Remove</button>
-        </div>
-        <div class="composer-row">
-          <button class="photo-btn" id="wallPhotoBtn" type="button" aria-label="Add a photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg></button>
-          <input id="wallPhotoFile" type="file" accept="image/*" class="hidden">
-          <span class="sp"></span>
-          <span style="font-size:11.5px;color:var(--mut);">Text + photo only · no links</span>
-          <button class="btn navy" id="wallPostBtn" type="button" style="width:auto;padding:9px 22px;">Post</button>
-        </div>
-      </div>
       <div id="wallFeed"></div>
+      <button id="composeFab" type="button" aria-label="New post">+</button>
       <button class="load-more hidden" id="wallMore" type="button">Load more</button>
     </div>
 
@@ -836,7 +831,34 @@
       </div>
     </div>
 
-    <div class="sheet-overlay" id="sheetOverlay"><div class="sheet-card" id="sheetCard"></div></div>
+
+    <!-- Compose overlay (Twitter-style) -->
+    <div id="composeOverlay" class="cmp-ov hidden">
+      <div class="cmp-top">
+        <button class="btn navy" id="wallPostBtn" type="button" style="width:auto;padding:9px 26px;">Post</button>
+        <span style="flex:1;"></span>
+        <button class="cmp-x" id="composeClose" type="button" aria-label="Cancel">✕</button>
+      </div>
+      <div class="cmp-body">
+        <span class="avatar" id="wallMeAvatar"></span>
+        <textarea id="wallInput" rows="6" maxlength="2000" placeholder="Share an update… tips, lessons, wins, questions"></textarea>
+      </div>
+      <div class="wall-photo-strip" id="wallPhotoStrip" style="margin:0 16px;">
+        <img id="wallPhotoThumb" alt="">
+        <span style="font-size:13px;color:var(--mut);">Photo attached</span>
+        <button class="rm" id="wallPhotoRemove" type="button">Remove</button>
+      </div>
+      <div class="cmp-tools">
+        <button class="photo-btn" id="wallPhotoBtn" type="button" aria-label="Add a photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg></button>
+        <input id="wallPhotoFile" type="file" accept="image/*" class="hidden">
+        <button class="cmp-tool" id="cmpHashBtn" type="button" aria-label="Add hashtag">#</button>
+        <span class="sp"></span>
+        <span id="cmpCount" style="font-size:12px;color:var(--mut);">0 / 2,000</span>
+        <span style="font-size:11.5px;color:var(--mut);">Text + photo only · no links</span>
+      </div>
+    </div>
+
+        <div class="sheet-overlay" id="sheetOverlay"><div class="sheet-card" id="sheetCard"></div></div>
     <div class="lightbox" id="lightbox"><img id="lightboxImg" alt="Photo"></div>
 
     <!-- Dock -->
@@ -2331,9 +2353,9 @@ function loadEarn(){
 function renderEarnEvents(rows){
   var host = $("earnEvents"); if (!host) return;
   if (!rows.length){ host.innerHTML = '<div class="empty-note">Nothing yet — send a message, post an update, get a story view, or call a Call It right and it will show up here.</div>'; return; }
-  var META = { message: ["\U0001F4AC", "Message sent"], post: ["\U0001F4DD", "Update posted"], story_view: ["\U0001F441", "Your story was viewed"], callit: ["\U0001F3AF", "Call It win"], tip: ["\U0001F4B8", "TrybCoin tip received"] };
+  var META = { message: ["💬", "Message sent"], post: ["📝", "Update posted"], story_view: ["👁", "Your story was viewed"], callit: ["🎯", "Call It win"], tip: ["💸", "TrybCoin tip received"] };
   host.innerHTML = rows.map(function(r){
-    var m = META[r.kind] || ["\U0001FA99", "Earning"];
+    var m = META[r.kind] || ["🪙", "Earning"];
     var when = "";
     try { when = new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " · " + fmtTime(r.created_at); } catch (e) {}
     return '<div class="ev-row"><span class="ev-ic">' + m[0] + '</span><span class="ev-main"><span class="ev-name">' + m[1] + '</span><span class="ev-time">' + esc(when) + '</span></span><span class="ev-amt">+' + r.amount + ' TN</span></div>';
@@ -3162,6 +3184,8 @@ $("wallPostBtn").addEventListener("click", function(){
         return;
       }
       $("wallInput").value = "";
+      var _co = $("composeOverlay"); if (_co) _co.classList.add("hidden");
+      var _cc2 = $("cmpCount"); if (_cc2) _cc2.textContent = "0 / 2,000";
       clearWallPhoto();
       if (path) S.mediaUrls[path] = wp.url;
       loadFeed(true);
@@ -4195,3 +4219,25 @@ loadChannelSection = function(){ if (S.seg === "channels") renderSegChannels($("
 
 <script>function loadChannelSection(){ /* channels live in their own dock tab now */ }
 var epb = document.getElementById("earnPremBtn"); if (epb) epb.addEventListener("click", openSub);</script>
+
+<script>
+(function(){
+  var fab = document.getElementById("composeFab");
+  if (fab) fab.addEventListener("click", function(){
+    document.getElementById("composeOverlay").classList.remove("hidden");
+    setTimeout(function(){ var i = document.getElementById("wallInput"); if (i) i.focus(); }, 60);
+  });
+  var cx = document.getElementById("composeClose");
+  if (cx) cx.addEventListener("click", function(){ document.getElementById("composeOverlay").classList.add("hidden"); });
+  var hb = document.getElementById("cmpHashBtn");
+  if (hb) hb.addEventListener("click", function(){
+    var i = document.getElementById("wallInput"); if (!i) return;
+    var st = i.selectionStart || i.value.length;
+    i.value = i.value.slice(0, st) + "#" + i.value.slice(st);
+    i.focus(); i.selectionStart = i.selectionEnd = st + 1;
+    i.dispatchEvent(new Event("input"));
+  });
+  var wi = document.getElementById("wallInput");
+  if (wi) wi.addEventListener("input", function(){ var c = document.getElementById("cmpCount"); if (c) c.textContent = wi.value.length + " / 2,000"; });
+})();
+</script>
