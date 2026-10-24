@@ -463,6 +463,8 @@
 .pp-edit{ background:#0B1132; color:#fff; border:0; border-radius:999px; padding:9px 20px; font-weight:800; font-size:14.5px; font-family:"Manrope",sans-serif; cursor:pointer; flex:none; }
 .pp-sub{ margin-top:11px; color:var(--mut); font-size:13px; }
 .prof-flag{ top:-3px !important; bottom:auto !important; }
+.uflag-wrap{ position:relative; display:inline-flex; flex:none; }
+.uflag{ position:absolute; top:-3px; right:-3px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 5px rgba(11,17,50,.3); line-height:1; pointer-events:none; z-index:3; }
 .toggle-line{ display:flex; align-items:center; gap:12px; margin-top:12px; }
 .tl-name{ font-weight:700; font-size:15px; color:var(--ink); }
 .tl-sub{ font-size:12.5px; color:var(--mut); margin-top:1px; }
@@ -1007,7 +1009,7 @@ var S = {
   mediaUrls: {}, mediaPending: {}, pendingPhoto: null, sendingPhoto: false,
   reactions: {}, reads: [], pins: [], chatSettings: null, memberCache: {}, editTarget: null, mentionPicks: {},
   wallPosts: [], wallPhoto: null, wallBefore: null, wallComments: {},
-  profilePosts: [], upoUser: null, upoBefore: null, upoProfile: null, reqCount: 0, notifUnseen: 0, notifEvents: []
+  profilePosts: [], upoUser: null, upoBefore: null, upoProfile: null, reqCount: 0, notifUnseen: 0, notifEvents: [], flagCache: {}
 };
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -1037,6 +1039,90 @@ function paintAvatar(el, name, url){
   if (!el) return;
   if (url) el.innerHTML = '<img src="' + esc(url) + '" alt="">';
   else el.textContent = initials(name);
+}
+/* ---------------- country flags on avatars ----------------
+   Any element with data-fuid="<user_id>" gets a flag chip (the pictured
+   user's TrybNetwork signup country) pinned at its top-right rim.
+   Countries resolve in batches via tn_user_countries into S.flagCache. */
+function flagEmoji(cc){
+  cc = String(cc || "").toUpperCase();
+  return cc.length === 2 ? String.fromCodePoint(127397 + cc.charCodeAt(0), 127397 + cc.charCodeAt(1)) : "";
+}
+var flagInflight = {};
+function drawFlag(el, code){
+  if (!el || !el.parentElement) return;
+  el.setAttribute("data-fdone", "1");
+  var emoji = flagEmoji(code);
+  if (!emoji) return;
+  var host = el.parentElement, wrap = host;
+  if (!(host.classList.contains("av-wrap") || host.classList.contains("story-ring") || host.classList.contains("prof-av-wrap"))){
+    wrap = document.createElement("span");
+    wrap.className = "uflag-wrap";
+    host.insertBefore(wrap, el);
+    wrap.appendChild(el);
+  }
+  for (var i = 0; i < wrap.children.length; i++){
+    if (wrap.children[i].classList && wrap.children[i].classList.contains("uflag")) return;
+  }
+  var d = el.offsetWidth || (el.classList.contains("lg") ? 64 : (el.classList.contains("sm") ? 38 : 44));
+  var s = Math.max(12, Math.round(d * 0.34));
+  var chip = document.createElement("span");
+  chip.className = "uflag";
+  chip.textContent = emoji;
+  chip.style.width = s + "px";
+  chip.style.height = s + "px";
+  chip.style.fontSize = Math.round(s * 0.6) + "px";
+  wrap.appendChild(chip);
+}
+function paintFlags(){
+  if (S.user && S.profile && S.profile.country && !Object.prototype.hasOwnProperty.call(S.flagCache, S.user.id))
+    S.flagCache[S.user.id] = String(S.profile.country).toUpperCase();
+  var els = document.querySelectorAll("[data-fuid]:not([data-fdone])");
+  if (!els.length) return;
+  var need = [];
+  els.forEach(function(el){
+    var uid = el.getAttribute("data-fuid");
+    if (!uid){ el.setAttribute("data-fdone", "1"); return; }
+    if (Object.prototype.hasOwnProperty.call(S.flagCache, uid)) drawFlag(el, S.flagCache[uid]);
+    else if (!flagInflight[uid]){ flagInflight[uid] = true; need.push(uid); }
+  });
+  if (!need.length || !sb) return;
+  var settle = function(map){
+    need.forEach(function(id){
+      delete flagInflight[id];
+      if (!Object.prototype.hasOwnProperty.call(S.flagCache, id))
+        S.flagCache[id] = (map && map[id]) ? String(map[id]).toUpperCase() : null;
+    });
+    document.querySelectorAll("[data-fuid]:not([data-fdone])").forEach(function(el){
+      var uid = el.getAttribute("data-fuid");
+      if (uid && Object.prototype.hasOwnProperty.call(S.flagCache, uid)) drawFlag(el, S.flagCache[uid]);
+    });
+  };
+  try {
+    sb.rpc("tn_user_countries", { p_ids: need }).then(function(res){ settle(res && res.data ? res.data : null); }).catch(function(){ settle(null); });
+  } catch (e) { settle(null); }
+}
+function setFlagUid(el, uid){
+  if (!el) return;
+  var cur = el.getAttribute("data-fuid");
+  if (uid && cur === uid && el.getAttribute("data-fdone")) return;
+  var host = el.parentElement;
+  if (host){
+    var olds = host.querySelectorAll(":scope > .uflag");
+    for (var i = 0; i < olds.length; i++) olds[i].remove();
+  }
+  if (uid) el.setAttribute("data-fuid", uid); else el.removeAttribute("data-fuid");
+  el.removeAttribute("data-fdone");
+  paintFlags();
+}
+function ownFlag(el){ if (el && S.user) setFlagUid(el, S.user.id); }
+var flagKickT = null;
+function kickFlags(){
+  if (flagKickT) return;
+  flagKickT = setTimeout(function(){ flagKickT = null; paintFlags(); }, 60);
+}
+if (window.MutationObserver && document.body){
+  new MutationObserver(kickFlags).observe(document.body, { childList: true, subtree: true });
 }
 function fmtDate(ts){
   try { return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Africa/Lagos" }); }
@@ -1228,6 +1314,7 @@ function gate(){
 }
 function renderPaywall(){
   paintAvatar($("pwAvatar"), S.profile.full_name, S.profile.avatar_url);
+  ownFlag($("pwAvatar"));
   var trialEnded = !S.access.member_active;
   $("pwTitle").textContent = S.access.trial_ends_at && new Date(S.access.trial_ends_at) > new Date(0) && !S.access.member_ends_at
     ? "Your free month has ended" : "Your membership has ended";
@@ -1240,6 +1327,7 @@ function renderPaywall(){
 }
 function paintHeader(){
   paintAvatar($("myAvatar"), S.profile.full_name, S.profile.avatar_url);
+  ownFlag($("myAvatar"));
   paintWallet();
 }
 
@@ -1331,7 +1419,7 @@ function renderChatList(){
     shown++;
     var av = d.avatarUrl ? '<img src="' + esc(d.avatarUrl) + '" alt="">' : esc(initials(d.avatarName));
     var avBlock = c.kind === "dm"
-      ? '<span class="av-wrap"><span class="avatar" data-profile="' + c.peer_id + '">' + av + '</span><span class="pdot' + (c.peer_online ? " on" : "") + '"></span></span>'
+      ? '<span class="av-wrap"><span class="avatar" data-profile="' + c.peer_id + '" data-fuid="' + c.peer_id + '">' + av + '</span><span class="pdot' + (c.peer_online ? " on" : "") + '"></span></span>'
       : '<span class="avatar">' + av + '</span>';
     var mcount = c.kind === "group" ? '<span class="mcount">' + (c.member_count || 0) + ((c.member_count === 1) ? " member" : " members") + '</span>' : '';
     html += '<button class="chat-row' + (c.unread > 0 ? " unread" : "") + '" type="button" data-chat="' + c.chat_id + '">' +
@@ -1355,7 +1443,7 @@ function renderStrip(){
     var p = S.profileCache[pid]; if (!p) return;
     var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
     var sdot = (S.presence && S.presence[pid] !== undefined) ? '<span class="pdot' + (S.presence[pid] ? " on" : "") + '"></span>' : '';
-    html += '<button class="s-item" type="button" data-stripdm="' + pid + '"><span class="av-wrap"><span class="avatar">' + av + '</span>' + sdot + '</span><span>' + esc((p.full_name || "").split(" ")[0] || "Friend") + '</span></button>';
+    html += '<button class="s-item" type="button" data-stripdm="' + pid + '"><span class="av-wrap"><span class="avatar" data-fuid="' + pid + '">' + av + '</span>' + sdot + '</span><span>' + esc((p.full_name || "").split(" ")[0] || "Friend") + '</span></button>';
   });
   host.innerHTML = html;
   host.style.display = html ? "" : "none";
@@ -1389,6 +1477,7 @@ function openChat(c){
   S.currentChat = c;
   var d = chatDisplay(c);
   paintAvatar($("threadAvatar"), d.avatarName, d.avatarUrl);
+  setFlagUid($("threadAvatar"), c.kind === "dm" ? c.peer_id : null);
   var td = $("threadDot");
   if (td){
     if (c.kind === "dm"){ td.style.display = ""; td.className = "pdot" + (c.peer_online ? " on" : ""); }
@@ -1551,7 +1640,7 @@ function threadCardHTML(){
   if (c.kind === "dm") meta = (d.sub ? esc(d.sub) + "<br>" : "") + "You're friends on TrybChat";
   else if (c.chat_id === COMMUNITY_ID) meta = "The official TrybNetwork community chat";
   else meta = esc(d.sub) + " · Group chat";
-  return '<div class="thread-card"><span class="avatar lg">' + av + '</span><div class="tc-name">' + esc(d.name) + '</div><div class="tc-meta">' + meta + '</div></div>';
+  return '<div class="thread-card"><span class="avatar lg"' + (c.kind === "dm" ? ' data-fuid="' + c.peer_id + '"' : '') + '>' + av + '</span><div class="tc-name">' + esc(d.name) + '</div><div class="tc-meta">' + meta + '</div></div>';
 }
 function seenLineHTML(){
   if (!S.currentChat || !S.reads || !S.reads.length) return "";
@@ -2000,7 +2089,7 @@ function tcHeartbeat(){
 }
 function pickRowHTML(p, picked){
   var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
-  return '<div class="user-row pick-row' + (picked ? " picked" : "") + '" data-pick="' + p.user_id + '"><span class="avatar sm">' + av + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span><span class="pick-dot">' + (picked ? "✓" : "+") + '</span></div>';
+  return '<div class="user-row pick-row' + (picked ? " picked" : "") + '" data-pick="' + p.user_id + '"><span class="avatar sm" data-fuid="' + p.user_id + '">' + av + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span><span class="pick-dot">' + (picked ? "✓" : "+") + '</span></div>';
 }
 function renderPickList(hostId, friends, picks){
   var host = $(hostId); if (!host) return;
@@ -2087,7 +2176,7 @@ function renderGroupInfo(){
       btns += '<button class="mini-btn ghost" type="button" data-ban="' + p.user_id + '" style="margin-left:6px;color:#C0392B;">Ban</button>';
     }
     var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
-    return '<div class="user-row"><span class="av-wrap"><span class="avatar sm">' + av + '</span><span class="pdot' + (p.online ? " on" : "") + '"></span></span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + tags + '</div><div class="uname">@' + esc(p.username || "") + "</div></span>" + btns + "</div>";
+    return '<div class="user-row"><span class="av-wrap"><span class="avatar sm" data-fuid="' + p.user_id + '">' + av + '</span><span class="pdot' + (p.online ? " on" : "") + '"></span></span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + tags + '</div><div class="uname">@' + esc(p.username || "") + "</div></span>" + btns + "</div>";
   }).join("");
   renderGiSettings(d);
   var bc = $("giBansCard");
@@ -2095,7 +2184,7 @@ function renderGroupInfo(){
     bc.style.display = "";
     $("giBans").innerHTML = d.bans.map(function(p){
       var av = esc(initials(p.full_name || "?"));
-      return '<div class="user-row"><span class="avatar sm">' + av + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span><button class="mini-btn ghost" type="button" data-unban="' + p.user_id + '">Unban</button></div>';
+      return '<div class="user-row"><span class="avatar sm" data-fuid="' + p.user_id + '">' + av + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span><button class="mini-btn ghost" type="button" data-unban="' + p.user_id + '">Unban</button></div>';
     }).join("");
   } else bc.style.display = "none";
 }
@@ -2221,7 +2310,7 @@ function userRowHTML(p, actionHTML){
   var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name));
   var pid = p.user_id || p.id;
   var dot = (pid && S.presence && S.presence[pid] !== undefined) ? '<span class="pdot' + (S.presence[pid] ? " on" : "") + '"></span>' : '';
-  return '<div class="user-row"><span class="av-wrap"><span class="avatar sm"' + (pid ? ' data-profile="' + pid + '"' : '') + '>' + av + '</span>' + dot + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + actionHTML + '</div>';
+  return '<div class="user-row"><span class="av-wrap"><span class="avatar sm"' + (pid ? ' data-profile="' + pid + '" data-fuid="' + pid + '"' : '') + '>' + av + '</span>' + dot + '</span><span class="chat-main"><div class="chat-name">' + esc(p.full_name || "") + '</div><div class="uname">@' + esc(p.username || "") + '</div></span>' + actionHTML + '</div>';
 }
 function renderRequests(){
   var host = $("reqSection"); if (!host) return;
@@ -2808,7 +2897,7 @@ $("msgInput").addEventListener("input", function(){
     }).slice(0, 6);
     if (!hits.length){ pop.classList.remove("on"); return; }
     pop.innerHTML = hits.map(function(p){
-      return '<div class="mp-row" data-mention="' + esc(p.username || "") + '" data-uid="' + p.user_id + '"><span class="avatar sm">' + esc(initials(p.full_name || "?")) + '</span><span><b>' + esc(p.full_name || "") + "</b> <span style=\"color:var(--mut);\">@" + esc(p.username || "") + "</span></span></div>";
+      return '<div class="mp-row" data-mention="' + esc(p.username || "") + '" data-uid="' + p.user_id + '"><span class="avatar sm" data-fuid="' + p.user_id + '">' + esc(initials(p.full_name || "?")) + '</span><span><b>' + esc(p.full_name || "") + "</b> <span style=\"color:var(--mut);\">@" + esc(p.username || "") + "</span></span></div>";
     }).join("");
     pop.classList.add("on");
   });
@@ -3075,7 +3164,7 @@ function loadFeed(reset){
 }
 function postAvatarHTML(p){
   var inner = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
-  return '<span class="avatar sm" data-profile="' + p.user_id + '">' + inner + "</span>";
+  return '<span class="avatar sm" data-profile="' + p.user_id + '" data-fuid="' + p.user_id + '">' + inner + "</span>";
 }
 function postHTML(p, pfx){
   pfx = pfx || "";
@@ -3108,7 +3197,7 @@ function postHTML(p, pfx){
 }
 function commentHTML(c){
   var inner = c.avatar_url ? '<img src="' + esc(c.avatar_url) + '" alt="">' : esc(initials(c.full_name || "?"));
-  return '<div class="comment-row"><span class="avatar sm" data-profile="' + c.user_id + '">' + inner + '</span><span class="comment-bubble"><span class="cn">' + esc(c.full_name || "") + '</span><br><span class="cb">' + esc(c.body) + "</span></span></div>";
+  return '<div class="comment-row"><span class="avatar sm" data-profile="' + c.user_id + '" data-fuid="' + c.user_id + '">' + inner + '</span><span class="comment-bubble"><span class="cn">' + esc(c.full_name || "") + '</span><br><span class="cb">' + esc(c.body) + "</span></span></div>";
 }
 function renderFeed(){
   var host = $("wallFeed"); if (!host) return;
@@ -3331,6 +3420,7 @@ function paintWallMe(){
   var el = $("wallMeAvatar"); if (!el) return;
   var p = S.profile || {};
   el.innerHTML = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || (S.user ? S.user.email : "?") || "?"));
+  ownFlag(el);
 }
 $("wallBellBtn").addEventListener("click", function(){ showTab("notifications"); loadRequests(); loadNotifications(true); });
 $("wallSearchBtn").addEventListener("click", function(){
@@ -3373,7 +3463,7 @@ function openUserProfile(uid){
     var joined = "";
     try { joined = new Date(d.joined_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }); } catch (e) {}
     $("upoCard").innerHTML = '<div class="upo-card">' +
-      '<span class="avatar lg">' + av + "</span>" +
+      '<span class="avatar lg" data-fuid="' + d.user_id + '">' + av + "</span>" +
       '<div style="font-size:19px;font-weight:800;margin-top:10px;">' + esc(d.full_name || "") + "</div>" +
       '<div class="uname">@' + esc(d.username || "") + "</div>" +
       '<div style="margin-top:11px;"><span class="tn-pill">\uD83E\uDE99 ' + (d.trybcoin || 0).toLocaleString() + " TN</span></div>" +
@@ -3433,7 +3523,7 @@ function renderNotifications(){
       : "<b>" + esc(ev.actor_name || "") + "</b> commented: \u201C" + esc(ev.comment_body || "") + "\u201D";
     var snip = ev.snippet ? '<div class="uname" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\u201C' + esc(ev.snippet) + "\u201D</div>" : "";
     html += '<button class="chat-row" type="button" data-npost="' + ev.post_id + '" data-nkind="' + ev.kind + '" style="width:100%;text-align:left;">' +
-      '<span class="avatar sm" data-profile="' + ev.actor_id + '">' + av + "</span>" +
+      '<span class="avatar sm" data-profile="' + ev.actor_id + '" data-fuid="' + ev.actor_id + '">' + av + "</span>" +
       '<span class="chat-main"><span style="font-size:14px;line-height:1.35;">' + text + "</span>" + snip + "</span>" +
       '<span class="chat-time">' + esc(timeAgo(ev.created_at)) + "</span></button>";
   });
@@ -3658,9 +3748,9 @@ function w2Upload(path, blob){
   return sb.storage.from("tc-media").upload(path, blob, { contentType: "image/jpeg", upsert: true })
     .then(function(res){ if (res.error) throw res.error; return path; });
 }
-function w2Avatar(p, cls){
+function w2Avatar(p, cls, uid){
   var av = p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : esc(initials(p.full_name || "?"));
-  return '<span class="avatar ' + (cls || "") + '">' + av + "</span>";
+  return '<span class="avatar ' + (cls || "") + '"' + (uid ? ' data-fuid="' + uid + '"' : '') + '>' + av + "</span>";
 }
 
 /* ------------------------------- STORIES ---------------------------------- */
@@ -3681,12 +3771,12 @@ function renderStoriesRow(){
   S.storyGroups.forEach(function(g){ if (g.mine) mine = g; });
   var myAv = S.profile ? { full_name: S.profile.full_name, avatar_url: S.profile.avatar_url } : { full_name: "?", avatar_url: null };
   var html = '<button class="story-it" id="storyMineBtn" type="button"><span class="story-ring' + (mine ? "" : " seen") + '">' +
-    (S.profile && S.profile.avatar_url ? '<span class="avatar"><img src="' + esc(S.profile.avatar_url) + '" alt=""></span>' : '<span class="avatar">' + esc(initials(myAv.full_name)) + "</span>") +
+    (S.profile && S.profile.avatar_url ? '<span class="avatar" data-fuid="' + S.user.id + '"><img src="' + esc(S.profile.avatar_url) + '" alt=""></span>' : '<span class="avatar" data-fuid="' + S.user.id + '">' + esc(initials(myAv.full_name)) + "</span>") +
     '<span class="story-plus">+</span></span><span class="story-nm">' + (mine ? "Your story" : "Add story") + "</span></button>";
   S.storyGroups.forEach(function(g, gi){
     if (g.mine) return;
     var unseen = g.stories.some(function(st){ return !st.viewed_by_me; });
-    html += '<button class="story-it" data-story-group="' + gi + '" type="button"><span class="story-ring' + (unseen ? "" : " seen") + '"><span class="avatar">' +
+    html += '<button class="story-it" data-story-group="' + gi + '" type="button"><span class="story-ring' + (unseen ? "" : " seen") + '"><span class="avatar" data-fuid="' + g.user_id + '">' +
       (g.avatar_url ? '<img src="' + esc(g.avatar_url) + '" alt="">' : esc(initials(g.full_name || "?"))) +
       '</span></span><span class="story-nm">' + esc((g.full_name || "").split(" ")[0]) + "</span></button>";
   });
@@ -3752,6 +3842,7 @@ function paintStory(){
     return '<span class="sv-seg' + (xi < sv.i ? " done" : "") + '"><i id="svSegFill' + xi + '"></i></span>';
   }).join("");
   paintAvatar($("svAvatar"), g.full_name, g.avatar_url);
+  setFlagUid($("svAvatar"), g.user_id || null);
   $("svName").textContent = g.full_name || "";
   $("svTime").textContent = timeAgo(st.created_at) + " ago · expires in " + Math.max(1, Math.round((new Date(st.expires_at) - new Date()) / 3600000)) + "h";
   $("svCapText").textContent = st.caption || "";
@@ -3812,7 +3903,10 @@ $("svViews").addEventListener("click", function(){
   sb.rpc("tc_story_viewers", { p_story: st.id }).then(function(res){
     var d = res.data; if (!d || !d.ok) return;
     $("svViewers").innerHTML = (d.viewers || []).length
-      ? d.viewers.map(function(v){ return "<div>" + esc(v.full_name || "") + " · " + timeAgo(v.viewed_at) + " ago</div>"; }).join("")
+      ? d.viewers.map(function(v){
+          var av = v.avatar_url ? '<img src="' + esc(v.avatar_url) + '" alt="">' : esc(initials(v.full_name || "?"));
+          return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;"><span class="avatar" style="width:26px;height:26px;font-size:11px;" data-fuid="' + v.user_id + '">' + av + "</span><span>" + esc(v.full_name || "") + " · " + timeAgo(v.viewed_at) + " ago</span></div>";
+        }).join("")
       : "<div>No views yet.</div>";
     clearTimeout(sv.timer);
   }).catch(function(){});
@@ -4075,7 +4169,7 @@ function openCallitBoard(){
     }
     var medals = ["🥇", "🥈", "🥉"];
     $("ciTop").innerHTML = (d.top || []).length ? d.top.map(function(r, i){
-      return '<div class="w2-row" data-board-user="' + r.user_id + '">' + w2Avatar(r, "") +
+      return '<div class="w2-row" data-board-user="' + r.user_id + '">' + w2Avatar(r, "", r.user_id) +
         '<span class="chat-main"><div class="chat-name">' + (medals[i] || "") + " " + esc(r.full_name || "") + (r.mine ? ' <span class="tag-chip">YOU</span>' : "") + '</div><div class="uname">@' + esc(r.username || "") + '</div></span>' +
         '<span style="text-align:right;"><b style="font-family:Manrope,sans-serif;">' + r.wins + ' wins</b><div style="font-size:12px;color:var(--mut);">🔥 ' + r.streak + " streak · " + r.calls + " calls</div></span></div>";
     }).join("") : '<div class="empty-note">No calls yet — be the first on the board.</div>';
@@ -4093,6 +4187,7 @@ function openEditProfile(){
   $("editProfileOverlay").classList.remove("hidden");
   S.epPhoto = null; S.epAvatarUrl = null;
   paintAvatar($("epAvatar"), S.profile.full_name, S.profile.avatar_url);
+  ownFlag($("epAvatar"));
   $("epName").value = S.profile.full_name || "";
   $("epUser").value = "@" + (S.profile.username || "");
   $("epBio").value = "";

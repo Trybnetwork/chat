@@ -1,7 +1,7 @@
 /* TrybChat service worker — network-first so the app is never stale;
    cache is only an offline fallback for the app shell. Supabase API and
    realtime traffic is never intercepted. */
-const CACHE = "trybchat-shell-v22";
+const CACHE = "trybchat-shell-v23";
 const SHELL = [
   "https://chat.trybnetwork.com/",
   "https://chat.trybnetwork.com/manifest.json",
