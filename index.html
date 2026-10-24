@@ -411,7 +411,7 @@
 
 <style>
 /* ===== WA-style face, floating pill dock, earnings + settings (2026-10-24) ===== */
-.dock{ position:fixed !important; left:12px !important; right:12px !important; bottom:calc(10px + env(safe-area-inset-bottom)) !important; top:auto !important; background:rgba(255,255,255,.97) !important; border:1px solid #E8EAF3 !important; border-radius:30px !important; box-shadow:0 12px 34px rgba(11,17,50,.20) !important; padding:6px 8px !important; z-index:120; display:flex !important; }
+.dock{ position:fixed !important; left:12px !important; right:12px !important; bottom:calc(10px + env(safe-area-inset-bottom)) !important; top:auto !important; background:rgba(255,255,255,.97) !important; border:1px solid #E8EAF3 !important; border-radius:30px !important; box-shadow:0 12px 34px rgba(11,17,50,.20) !important; padding:6px 8px !important; z-index:120; }
 .dock button{ flex:1; background:none; border:0; display:flex; flex-direction:column; align-items:center; gap:1px; font-size:10.5px; font-weight:600; color:#5A6070; padding:4px 0 3px; border-radius:22px; position:relative; font-family:inherit; cursor:pointer; }
 .dock button .d-ic{ display:flex; align-items:center; justify-content:center; padding:3px 15px; border-radius:999px; position:relative; }
 .dock button.active{ color:#0B1132; }
@@ -471,6 +471,15 @@
 .ios-switch.on{ background:#0B1132; }
 .ios-switch.on .knob{ left:22px; }
 .info-dot{ width:24px; height:24px; border-radius:50%; border:1.6px solid #B9BDD6; color:#7A7F95; background:#fff; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none; font-family:Georgia,serif; font-style:italic; padding:0; }
+</style>
+
+<style>
+/* Round-3 fixes (2026-10-24): dock hide that actually hides, safe-area header, notif switch */
+.dock.dock-hidden{ display:none !important; }
+#appScreen{ padding-top:env(safe-area-inset-top); }
+#authScreen{ padding-top:env(safe-area-inset-top); }
+.ios-switch.na{ opacity:.35; pointer-events:none; }
+.app-head .wa-plus{ width:42px; height:42px; font-size:25px; }
 </style>
 </head>
 <body>
@@ -558,8 +567,9 @@
         <div class="app-head">
           <span class="avatar" id="myAvatar">?</span>
           <div class="wordmark"><span class="wm-a">TRYB</span><span class="wm-b">CHAT</span></div>
+          <span style="flex:1;"></span>
+          <button class="wa-plus" id="chatsNewBtn" type="button" aria-label="New chat">+</button>
         </div>
-        <div class="wa-bar"><button class="wa-dots" id="chatsMenuBtn" type="button" aria-label="Settings">•••</button><button class="wa-plus" id="chatsNewBtn" type="button" aria-label="New chat">+</button></div>
         <div class="wa-title">Chats</div>
         <div class="chat-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chatSearch" type="text" placeholder="Search chats"></div>
         
@@ -805,10 +815,18 @@
           </div>
         </div>
         <div class="card">
-          <h4>Notifications</h4>
-          <p>Get notified when a new message arrives while TrybChat is closed. On iPhone, this works after adding TrybChat to your Home Screen.</p>
-          <button class="btn navy" id="pushToggleBtn" type="button" style="margin-top:12px;">Turn on notifications</button>
-          <p id="pushStateNote" style="margin-top:10px;"></p>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+            <h4 style="margin:0;">Notifications</h4>
+            <button class="info-dot" id="notifInfoBtn" type="button" aria-label="About notifications">i</button>
+          </div>
+          <p id="notifInfoText" class="hidden" style="margin-top:8px;">Get notified when a new message arrives while TrybChat is closed. On iPhone, this works after adding TrybChat to your Home Screen.</p>
+          <div class="toggle-line">
+            <div style="flex:1;min-width:0;">
+              <div class="tl-name">Message notifications</div>
+              <div class="tl-sub" id="pushStateNote"></div>
+            </div>
+            <button class="ios-switch" id="notifSwitch" type="button" role="switch" aria-checked="false" aria-label="Message notifications"><span class="knob"></span></button>
+          </div>
         </div>
         <div class="card">
           <h4>TrybCoin balance</h4>
@@ -1060,7 +1078,7 @@ function showChatsSub(which){
   $("friendsWrap").classList.toggle("hidden", which !== "friends");
   $("groupNewWrap").classList.toggle("hidden", which !== "groupNew");
   $("groupInfoWrap").classList.toggle("hidden", which !== "groupInfo");
-  var _dk = $("dock"); if (_dk) _dk.style.display = (which === "thread" || which === "groupInfo" || which === "groupNew") ? "none" : "";
+  var _dk = $("dock"); if (_dk) _dk.classList.toggle("dock-hidden", which === "thread" || which === "groupInfo" || which === "groupNew");
   if (which !== "thread" && which !== "groupInfo") S.currentChat = null;
   if (which !== "thread") leaveTyping();
   paintDock();
@@ -2377,32 +2395,32 @@ function b64urlToBytes(s){
   return out;
 }
 function paintPushRow(){
-  var btn = $("pushToggleBtn"), note = $("pushStateNote");
-  if (!btn) return;
+  var sw = $("notifSwitch"), note = $("pushStateNote");
+  if (!sw || !note) return;
+  function setSw(on, na){
+    sw.classList.toggle("on", !!on);
+    sw.classList.toggle("na", !!na);
+    sw.setAttribute("aria-checked", on ? "true" : "false");
+  }
   if (!pushSupported()){
-    btn.style.display = "none";
-    note.textContent = "Notifications aren't available in this browser. On iPhone, add TrybChat to your Home Screen first, then turn them on here.";
+    setSw(false, true);
+    note.textContent = "Not available in this browser — on iPhone, add TrybChat to your Home Screen first.";
     return;
   }
   if (Notification.permission === "denied"){
-    btn.style.display = "none";
-    note.textContent = "Notifications are blocked for this site in your browser settings.";
+    setSw(false, true);
+    note.textContent = "Blocked in your browser settings for this site.";
     return;
   }
   navigator.serviceWorker.ready.then(function(reg){
     reg.pushManager.getSubscription().then(function(sub){
-      if (sub){
-        btn.textContent = "Turn off notifications";
-        note.textContent = "On — you'll be notified about new messages.";
-      } else {
-        btn.textContent = "Turn on notifications";
-        note.textContent = "Off.";
-      }
+      if (sub){ setSw(true, false); note.textContent = "On — you'll be notified about new messages."; }
+      else { setSw(false, false); note.textContent = "Off."; }
     }).catch(function(){});
   }).catch(function(){});
 }
 function togglePush(){
-  var btn = $("pushToggleBtn");
+  var btn = $("notifSwitch");
   if (!pushSupported() || !sb) return;
   btn.disabled = true;
   navigator.serviceWorker.ready.then(function(reg){
@@ -2429,7 +2447,8 @@ function togglePush(){
     }).catch(function(){ btn.disabled = false; });
   }).catch(function(){ btn.disabled = false; });
 }
-$("pushToggleBtn").addEventListener("click", togglePush);
+$("notifSwitch").addEventListener("click", togglePush);
+$("notifInfoBtn").addEventListener("click", function(){ $("notifInfoText").classList.toggle("hidden"); });
 function renderDirToggle(){
   var sw = $("privSwitch");
   if (sw){ sw.classList.toggle("on", !!S.listed); sw.setAttribute("aria-checked", S.listed ? "true" : "false"); }
@@ -2485,7 +2504,6 @@ $("dockChannels").addEventListener("click", function(){ showTab("channels"); });
 $("dockEarn").addEventListener("click", function(){ showTab("earn"); });
 $("dockChats").addEventListener("click", function(){ showTab("chats"); showChatsSub("list"); });
 $("dockMenu").addEventListener("click", function(){ showTab("profile"); });
-$("chatsMenuBtn").addEventListener("click", function(){ showTab("profile"); });
 $("chatsNewBtn").addEventListener("click", function(){ showChatsSub("friends"); });
 $("earnBack").addEventListener("click", function(){ showTab("profile"); });
 window.addEventListener("focus", function(){
