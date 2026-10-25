@@ -4312,18 +4312,17 @@ loadChannelSection = function(){ if (S.seg === "channels") renderSegChannels($("
 
 <!-- tn-visit-tracker (chat) -->
 <script>
-/* TrybNetwork visitor tracker — logs one anonymous visit per site per
-   browser session (and at most one per 30 min per site): IP, country,
+/* TrybNetwork visitor tracker — logs one anonymous landing per site +
+   page per browser session; the server folds repeat landings from the
+   same IP + page into one record with a hit counter. IP, country and
    device type. Fire-and-forget; never breaks or delays the page. */
 (function () {
   try {
     var SITE = "chat";
     try {
-      if (sessionStorage.getItem("tn_visit_" + SITE)) return;
-      var last = +(localStorage.getItem("tn_visit_ts_" + SITE) || 0);
-      if (Date.now() - last < 30 * 60 * 1000) return;
-      sessionStorage.setItem("tn_visit_" + SITE, "1");
-      localStorage.setItem("tn_visit_ts_" + SITE, String(Date.now()));
+      var skey = "tn_visit_" + SITE + "|" + (location.pathname || "/");
+      if (sessionStorage.getItem(skey)) return;
+      sessionStorage.setItem(skey, "1");
     } catch (e) {}
     var vid = null;
     try {
