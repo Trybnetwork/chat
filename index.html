@@ -4420,6 +4420,62 @@ loadChannelSection = function(){ if (S.seg === "channels") renderSegChannels($("
 })();
 
 </script>
+<!-- TN auto-translate: matches the TrybNetwork app (Google Translate, 32 languages, device-language auto-apply on first visit) -->
+<style>
+#google_translate_element { position:absolute; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden; }
+.goog-te-banner-frame.skiptranslate, .goog-te-gadget-icon { display:none !important; }
+.skiptranslate iframe { display:none !important; }
+body { top:0 !important; }
+</style>
+<div id="google_translate_element" aria-hidden="true"></div>
+<script>
+(function(){
+  var SUPPORTED = ["en","fr","es","pt","ar","ha","yo","ig","sw","hi","ur","zh-CN","de","it","ru","tr","id","vi","th","tl","ta","te","bn","pa","ml","am","so","zu","sn","ja","ko","fa"];
+  function cookieLang(){
+    var m = document.cookie.match(/(?:^|;\s*)googtrans=\/en\/([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function setTransCookie(lang){
+    var v = "/en/" + lang;
+    document.cookie = "googtrans=" + v + "; path=/";
+    document.cookie = "googtrans=" + v + "; path=/; domain=" + location.hostname;
+  }
+  function clearTransCookie(){
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=" + location.hostname;
+  }
+  function deviceLang(){
+    var l = (navigator.language || "en").toLowerCase();
+    if (l.indexOf("zh") === 0) return "zh-CN";
+    var base = l.split("-")[0];
+    return SUPPORTED.indexOf(base) >= 0 ? base : "en";
+  }
+  window.__tnSetLang = function(lang){
+    try { localStorage.setItem("tn_lang", lang); } catch(e){}
+    if (lang === "en") { clearTransCookie(); } else { setTransCookie(lang); }
+    location.reload();
+  };
+  window.googleTranslateElementInit = function(){
+    try {
+      new google.translate.TranslateElement({ pageLanguage: "en", autoDisplay: false }, "google_translate_element");
+    } catch(e){}
+    var saved = null;
+    try { saved = localStorage.getItem("tn_lang"); } catch(e){}
+    if (!saved) {
+      var dev = deviceLang();
+      if (dev !== "en" && cookieLang() !== dev) {
+        setTransCookie(dev);
+        setTimeout(function(){ location.reload(); }, 600);
+      }
+    }
+  };
+  var s = document.createElement("script");
+  s.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+  s.async = true;
+  document.head.appendChild(s);
+})();
+</script>
+
 </body>
 </html>
 
